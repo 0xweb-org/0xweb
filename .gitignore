@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+ts-temp/
+logs/
+web3m/
+web3m.json
+cache/
+bin/
+test/bin/
+de_**.bat

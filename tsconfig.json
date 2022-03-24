@@ -1,0 +1,26 @@
+{
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@core/*": [ "src/*" ],
+            "@dequanto/*": [ "dequanto/src/*" ],
+            "@dequanto-contracts/*": [ "dequanto/contracts/*" ]
+        },
+        "outDir": "ts-temp",
+        "lib": ["es2015", "es2015.promise"],
+        "typeRoots": [
+            "node_modules/@types",
+            "typings/globals",
+            "typings-other"
+        ],
+        "types": ["node", "assertion", "atma-utest"],
+        "declaration": true,
+        "target": "es5",
+        "module": "commonjs",
+        "sourceMap": false,
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}

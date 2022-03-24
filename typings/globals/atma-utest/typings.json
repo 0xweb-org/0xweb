@@ -1,0 +1,10 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/atmajs/utest/master/typings.json",
+    "raw": "github:atmajs/utest",
+    "main": "types/index.d.ts",
+    "global": true,
+    "name": "atma-utest"
+  }
+}

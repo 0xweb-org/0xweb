@@ -1,0 +1,23 @@
+{
+    "files": ["src/export.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@core/*": [ "src/*" ],
+            "@dequanto/*": [ "dequanto/src/*" ]
+        },
+
+        "outDir": "ts-temp",
+        "lib": ["es2015", "es2015.promise"],
+        "types": ["node"],
+        "declaration": true,
+        "target": "es5",
+        "sourceMap": false,
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "module": "AMD",
+        "moduleResolution": "node"
+
+    }
+}

@@ -1,0 +1,3 @@
+[submodule "dequanto"]
+	path = dequanto
+	url = https://github.com/tenbits/dequanto

@@ -1,0 +1,10 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/atmajs/assertion/master/typings.json",
+    "raw": "github:atmajs/assertion",
+    "main": "types/assertion.d.ts",
+    "global": true,
+    "name": "assertion"
+  }
+}
