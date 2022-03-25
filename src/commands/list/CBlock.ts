@@ -1,8 +1,5 @@
-import di from 'a-di';
-import appcfg from 'appcfg';
 import { ICommand } from '../ICommand';
 import { $validate } from '@core/utils/$validate';
-import { PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { $require } from '@dequanto/utils/$require';
 import { $date } from '@dequanto/utils/$date';
 import { $block } from '@dequanto/utils/$block';

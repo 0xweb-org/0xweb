@@ -1,7 +1,7 @@
 {
     "name": "web3m",
     "description": "web3 tools and contract package manager",
-    "version": "0.9.4",
+    "version": "0.9.5",
     "main": "./lib/web3m.js",
     "types": "./lib/web3m.d.ts",
     "bin": {
