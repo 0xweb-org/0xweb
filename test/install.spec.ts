@@ -16,4 +16,5 @@ UTest({
 
         has_(json.contracts.eth['0xd152f549545093347a162dce210e7293f1452150'].main, 'DisperseContract.ts');
     }
+
 })

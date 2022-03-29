@@ -1,5 +1,5 @@
 import { $console } from '@core/utils/$console';
-import { ChainAccount } from '@dequanto/ChainAccounts';
+import { ChainAccount, ChainAccountProvider } from '@dequanto/ChainAccounts';
 import appcfg from 'appcfg';
 
 export class AccountsService {
@@ -38,12 +38,22 @@ export class AccountsService {
 
     async get(name: string): Promise<ChainAccount> {
         let accounts = await this.list();
-        let account = accounts.find(x => x.name === name);
+        let account = this.getAccount(name);
         if (account == null) {
             $console.log('Available accounts:');
             $console.log(accounts.map(x => x.name).join('\n'));
             throw new Error(`Account ${name} not found.`);
         }
+        return account;
+    }
+    async create (name: string): Promise<ChainAccount> {
+        let current = await this.getAccount(name);
+        if (current != null) {
+            $console.log(`Account green<bold<${name}>> already exists`);
+            return null;
+        }
+        let account = await ChainAccountProvider.generate({ name, platform: 'eth' });
+        await this.add(account);
         return account;
     }
 
@@ -62,6 +72,11 @@ export class AccountsService {
             source.config = {};
         }
         return source;
+    }
+    private async getAccount (name: string): Promise<ChainAccount | null> {
+        let accounts = await this.list();
+        let account = accounts.find(x => x.name === name);
+        return account;
     }
     private async save (accounts) {
         let source = this.getConfig();

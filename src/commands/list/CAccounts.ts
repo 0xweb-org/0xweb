@@ -91,6 +91,31 @@ export const CAccounts = <ICommand>{
                 let str = accounts.map(x => ` - ${x.name} [${x.address}]`).join('\n');
                 $console.log(str);
             }
+        },
+        {
+            command: 'new',
+            description: [
+                'Create new account'
+            ],
+            params: {
+                '-n, --name': {
+                    description: 'Name of the account to create',
+                    required: true,
+                },
+            },
+            async process (args: string[], params, app: App) {
+                let service = di.resolve(AccountsService, app.config);
+                let account = await service.create(params.name);
+                if (account == null) {
+                    return;
+                }
+                $console.log(`yellow<You must backup the key bold<!!!>>`)
+                $console.table([
+                    [ 'Name', account.name ],
+                    [ 'Address', account.address ],
+                    [ 'Key', account.key ],
+                ]);
+            }
         }
     ],
     params: {

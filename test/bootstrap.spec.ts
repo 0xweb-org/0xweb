@@ -47,7 +47,7 @@ UTest({
 
         has_(json.contracts.eth['0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'].main, 'oracle-eth.ts');
     },
-    async 'execute check' () {
+    async 'execute api' () {
         await File.writeAsync(`${path_ROOT}check.ts`, `
 
             import { ChainlinkOracleEth } from './web3m/eth/chainlink/oracle-eth/oracle-eth';
@@ -75,5 +75,10 @@ UTest({
         let match = /ETH Price (?<price>[\d\.]+)/.exec(stdout.join(''));
         let val = Number(match?.groups.price);
         eq_(isNaN(val), false, stdout.join(''));
+    },
+    async '!execute via cli' () {
+        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer`);
+        let str = stdout.join('');
+        has_(str, /\d{10,}n/, 'Should contain BigInt as the ETH price');
     }
 })
