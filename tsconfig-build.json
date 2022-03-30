@@ -16,6 +16,7 @@
         "sourceMap": false,
         "experimentalDecorators": true,
         "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "module": "AMD",
         "moduleResolution": "node"
 

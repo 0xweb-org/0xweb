@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-let 0xweb = require('./lib/cli');
+let cli = require('./lib/cli');
 
-0xweb.runFromCli();
+cli.runFromCli();
