@@ -1,4 +1,3 @@
-import appcfg from 'appcfg';
 import { Generator } from '@dequanto/gen/Generator';
 import { ICommand } from '../ICommand';
 import { TPlatform } from '@dequanto/models/TPlatform';
@@ -32,7 +31,7 @@ export const CInstall = <ICommand> {
             description: 'Set chain ID or Symbol. Can be used also via address prefix, e.g. eth:0x..'
         },
         '-o, --output': {
-            description: 'Output directory. Default: ./web3m/'
+            description: 'Output directory. Default: ./0xweb/'
         }
     },
 
@@ -49,7 +48,7 @@ export const CInstall = <ICommand> {
         $validate.platform(platform, `Chain not set. Use as prefix "eth:0x.." or flag "--chain eth"`);
         $validate.config.blockchainExplorer(platform);
 
-        let output = class_Uri.combine(params.output ?? `./web3m/`, platform);
+        let output = class_Uri.combine(params.output ?? `./0xweb/`, platform);
 
         let generator = new Generator({
             name: params.name,
@@ -63,7 +62,7 @@ export const CInstall = <ICommand> {
         });
         let { main } = await generator.generate();
 
-        let packagePath = `web3m.json`
+        let packagePath = `0xweb.json`
         let json = {} as any;
         if (await File.existsAsync(packagePath)) {
             json = await File.readAsync(packagePath);

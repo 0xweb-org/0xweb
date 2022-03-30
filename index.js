@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-let web3m = require('./lib/cli');
+let 0xweb = require('./lib/cli');
 
-web3m.runFromCli();
+0xweb.runFromCli();

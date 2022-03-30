@@ -2,8 +2,8 @@ node_modules
 npm-debug.log
 ts-temp/
 logs/
-web3m/
-web3m.json
+0xweb/
+0xweb.json
 cache/
 bin/
 test/bin/

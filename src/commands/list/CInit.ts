@@ -264,7 +264,7 @@ class InitWorker {
             ? "node_modules/dequanto/contracts/*"
             : "dequanto/contracts/*";
 
-        pckg.compilerOptions.paths['@web3m/*'] = "./web3m/*"
+        pckg.compilerOptions.paths['@0xweb/*'] = "./0xweb/*"
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);

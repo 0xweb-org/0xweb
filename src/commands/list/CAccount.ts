@@ -15,7 +15,7 @@ export const CAccount = <ICommand>{
     subcommands: [
         {
             command: 'balance',
-            //example: 'web3m account balance <accountName> <tokenSymbol> -p <pin>',
+            //example: '0xweb account balance <accountName> <tokenSymbol> -p <pin>',
             description: [
                 'Get account balance '
             ],
@@ -71,7 +71,7 @@ export const CAccount = <ICommand>{
     },
 
     async process(args: string[], params, app: App) {
-        console.warn(`Command for an "accounts" not found: ${args[0]}. Call "web3m accounts --help" to view the list of commands`);
+        console.warn(`Command for an "accounts" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
     }
 }
 

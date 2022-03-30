@@ -17,7 +17,7 @@ export const CToken = <ICommand>{
     subcommands: [
         {
             command: 'price',
-            example: 'web3m token price ETH -b <blockNumber>',
+            example: '0xweb token price ETH -b <blockNumber>',
             description: [
                 'Get token price'
             ],
@@ -73,7 +73,7 @@ export const CToken = <ICommand>{
     },
 
     async process(args: string[], params, app: App) {
-        console.warn(`Command for an "token" not found: ${args[0]}. Call "web3m token --help" to view the list of commands`);
+        console.warn(`Command for an "token" not found: ${args[0]}. Call "0xweb token --help" to view the list of commands`);
     }
 }
 

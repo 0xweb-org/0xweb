@@ -14,10 +14,10 @@ export const CHelp: ICommand & { printCommand }= {
         let json = await File.readAsync<any>( path);
 
         $console.log('');
-        $console.log('! We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<web3m config -e>!');
+        $console.log('! We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<0xweb config -e>');
 
         $console.log('');
-        $console.log(`web3m@${json.version} Commands`);
+        $console.log(`0xweb@${json.version} Commands`);
         $console.log('');
 
         for (let command of app.commands.list) {

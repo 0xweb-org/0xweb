@@ -57,6 +57,6 @@ export const CBlock = <ICommand>{
     },
 
     async process(args: string[], params, app: App) {
-        console.warn(`Command for an "account" not found: ${args[0]}. Call "web3m accounts --help" to view the list of commands`);
+        console.warn(`Command for an "account" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
     }
 }

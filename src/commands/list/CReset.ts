@@ -12,16 +12,16 @@ export const CReset: ICommand = {
         {
             command: 'accounts',
             description: [
-                'Remove accounts data'
+                'Remove all accounts'
             ],
             params: {
                 '--config-accounts': {
-                    description: 'Optional. File path. Default is gray<%app_data%/.web3m/accounts.json>'
+                    description: 'Optional. File path. Default is gray<%appdata%/.0xweb/accounts.json>'
                 }
             },
             async process () {
                 let configPathAccounts = $cli.getParamValue('config-accounts')
-                    ?? env.appdataDir.combine('./.web3m/accounts.json').toString();
+                    ?? env.appdataDir.combine('./.0xweb/accounts.json').toString();
 
                 let exists = await File.existsAsync(configPathAccounts);
                 if (exists === false) {
@@ -34,7 +34,7 @@ export const CReset: ICommand = {
         {
             command: 'config',
             description: [
-                'Remove global config file: bold<%APPDATA%/.dequanto/config.yml>'
+                'Remove global config file: bold<%appdata%/.dequanto/config.yml>'
             ],
             params: {
 

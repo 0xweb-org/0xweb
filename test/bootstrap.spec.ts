@@ -37,12 +37,12 @@ UTest({
         },
     },
     async 'install contract' () {
-        let { stdout } = await run(`node index.js i eth:0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}web3m/`);
+        let { stdout } = await run(`node index.js i eth:0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}0xweb/`);
 
-        let content = await File.readAsync<string>(`${path_ROOT}/web3m/eth/chainlink/oracle-eth/oracle-eth.ts`, { skipHooks: true });
+        let content = await File.readAsync<string>(`${path_ROOT}/0xweb/eth/chainlink/oracle-eth/oracle-eth.ts`, { skipHooks: true });
         has_(content, 'class ChainlinkOracleEth extends ContractBase');
 
-        let packagePath = 'web3m.json';
+        let packagePath = '0xweb.json';
         let json = await File.readAsync<any>(packagePath);
 
         has_(json.contracts.eth['0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'].main, 'oracle-eth.ts');
@@ -50,7 +50,7 @@ UTest({
     async 'execute api' () {
         await File.writeAsync(`${path_ROOT}check.ts`, `
 
-            import { ChainlinkOracleEth } from './web3m/eth/chainlink/oracle-eth/oracle-eth';
+            import { ChainlinkOracleEth } from './0xweb/eth/chainlink/oracle-eth/oracle-eth';
             import { Config } from '@dequanto/Config';
             import { $bigint } from '@dequanto/utils/$bigint';
 

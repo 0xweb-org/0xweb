@@ -16,8 +16,8 @@ export class PackageService {
     }
 
     async list () {
-        let web3m = await File.readAsync<IPackageJson>('web3m.json');
-        let contracts = web3m.contracts;
+        let $0xweb = await File.readAsync<IPackageJson>('0xweb.json');
+        let contracts = $0xweb.contracts;
         let list = [] as IPackageItem[];
 
         for (let platform in contracts) {

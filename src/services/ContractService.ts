@@ -58,7 +58,7 @@ export class ContractService {
 
         let abiItem = abi.find(x => x.name === method && x.type === 'function');
         if (abiItem == null) {
-            throw new Error(`Method ${method} not found. gray<web3m c abi <name>> to view available methods`);
+            throw new Error(`Method ${method} not found. gray<0xweb c abi <name>> to view available methods`);
         }
 
         let methodSignature = this.stringifyAbi(abiItem);
@@ -163,7 +163,7 @@ export class ContractService {
         let packageService = di.resolve(PackageService, this.app.chain);
         let pckg = await packageService.getPackage(name);
         if (pckg == null) {
-            throw new Error(`Package ${name} not found. gray<web3m c list> to view all installed contracts`);
+            throw new Error(`Package ${name} not found. gray<0xweb c list> to view all installed contracts`);
         }
         return pckg;
     }

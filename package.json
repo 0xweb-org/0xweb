@@ -1,11 +1,11 @@
 {
-    "name": "web3m",
-    "description": "web3 tools and contract package manager",
+    "name": "0xweb",
+    "description": "Contract package manager and other web3 tools",
     "version": "0.9.7",
-    "main": "./lib/web3m.js",
-    "types": "./lib/web3m.d.ts",
+    "main": "./lib/0xweb.js",
+    "types": "./lib/0xweb.d.ts",
     "bin": {
-        "web3m": "index.js"
+        "0xweb": "index.js"
     },
     "author": {
         "name": "Alex Kit",
@@ -13,7 +13,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/dequanto/web3m"
+        "url": "https://github.com/tenbits/0xweb"
     },
     "keywords": [
         "web3",

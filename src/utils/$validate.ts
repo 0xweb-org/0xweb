@@ -35,7 +35,7 @@ export namespace $validate {
                     }
                 }
             };
-            let msg = `${platform} nodes not configurated. Run "web3m config -e" and set node urls in web3.${platform}.endpoints`;
+            let msg = `${platform} nodes not configurated. Run "0xweb config -e" and set node urls in web3.${platform}.endpoints`;
             console.error(msg);
             console.error('Current: ', endpoints, 'Expected: ');
             console.dir(example, { depth: null });
@@ -57,7 +57,7 @@ export namespace $validate {
                     }
                 }
             };
-            let msg = `${platform} blockchain explorer not configurated. Run "web3m config -e" and set node host and key in web3.${platform}`;
+            let msg = `${platform} blockchain explorer not configurated. Run "0xweb config -e" and set node host and key in web3.${platform}`;
             console.error(msg);
             console.error('Current: ', scan, 'Expected: ');
             console.dir(example, { depth: null });

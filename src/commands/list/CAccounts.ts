@@ -85,7 +85,7 @@ export const CAccounts = <ICommand>{
                 let service = di.resolve(AccountsService, app.config);
                 let accounts = await service.list();
                 if (accounts.length === 0) {
-                    console.warn(`No accounts added. Add with "web3m accounts add -n <name> -a <address> -k <key> -p <pin>"`);
+                    console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);
                     return;
                 }
                 let str = accounts.map(x => ` - ${x.name} [${x.address}]`).join('\n');
@@ -126,6 +126,6 @@ export const CAccounts = <ICommand>{
     },
 
     async process(args: string[], params, app: App) {
-        console.warn(`Command for an "accounts" not found: ${args[0]}. Call "web3m accounts --help" to view the list of commands`);
+        console.warn(`Command for an "accounts" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
     }
 }
