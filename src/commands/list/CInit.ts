@@ -164,10 +164,12 @@ class InitWorker {
                 if (Array.isArray(val) && val.length > 0) {
                     let targetArr = target[key];
                     if (Array.isArray(targetArr) === false) {
+                        console.dir(targetArr, { depth: null});
                         throw new Error(`Target value in ${key} is not an array`);
                     }
                     for (let item of val) {
                         if (typeof item === 'object') {
+                            console.dir(item, { depth: null});
                             throw new Error(`Not implemented. Only strings in array are supported`)
                         }
                         if (targetArr.includes(item) === false) {
@@ -178,10 +180,17 @@ class InitWorker {
                     continue;
                 }
                 if (typeof val === 'object') {
-                    if (typeof target[key] !== 'object') {
+                    let targetObj = target[key];
+
+                    if (typeof targetObj !== 'object') {
+                        if (typeof targetObj === 'string' && targetObj.startsWith('#import')) {
+                            // using appcfg partial loaders, dismiss for now, @todo for the future - follow the link, and extend values there
+                            continue;
+                        }
+                        console.dir(targetObj, { depth: null });
                         throw new Error(`Target value in ${key} is not an object`);
                     }
-                    let $modified = extendWithDefaultValues(target[key], val);
+                    let $modified = extendWithDefaultValues(targetObj, val);
                     modified = $modified || modified;
                 }
             }
@@ -212,8 +221,12 @@ class InitWorker {
                 added.push(name);
             }
         }
+        if (added.length === 0) {
+            $console.toast(`Required dependencies are already bold<green<installed>>`);
+            return;
+        }
 
-        $console.toast(`Save new gray<package.json> with new deps: ${added}`);
+        $console.log(`Extending gray<package.json> with new dependencies: \n ${added.map(x => `   bold<${x}>`).join('\n')}`);
         await filePackageCurrent.writeAsync(pckgCurrent);
         $console.log(`Starting gray<npm install>`);
         await run({
@@ -258,13 +271,13 @@ class InitWorker {
 
         let isNpm = this.params.source === 'npm';
         pckg.compilerOptions.paths['@dequanto/*'] = isNpm
-            ? "node_modules/dequanto/src/*"
-            : "dequanto/src/*";
+            ? [ "node_modules/dequanto/src/*" ]
+            : [ "dequanto/src/*" ];
         pckg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
-            ? "node_modules/dequanto/contracts/*"
-            : "dequanto/contracts/*";
+            ? [ "node_modules/dequanto/contracts/*" ]
+            : [ "dequanto/contracts/*" ];
 
-        pckg.compilerOptions.paths['@0xweb/*'] = "./0xweb/*"
+        pckg.compilerOptions.paths['@0xweb/*'] = [ "0xweb/*" ]
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);

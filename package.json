@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.9.10",
+    "version": "0.9.11",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -35,6 +35,7 @@
         "ethers": "^5.5.1",
         "everlog": "^1.0.9",
         "memd": "^0.3.10",
+        "shellbee": "^0.5.22",
         "web3": "^1.6.0",
         "web3-core": "^1.6.0",
         "web3-core-subscriptions": "^1.6.0"
@@ -45,7 +46,6 @@
         "atma": "^0.12.18",
         "atma-loader-ts": "^1.1.12",
         "dts-bundle": "^0.7.3",
-        "shellbee": "^0.5.22",
         "typedoc": "^0.21.5"
     },
     "scripts": {
