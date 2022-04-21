@@ -6,7 +6,8 @@
 
 ----
 [![Website Link](https://img.shields.io/badge/%F0%9F%8C%90-website-green.svg)](https://0xweb.org)
-[![Build Status](https://travis-ci.com/tenbits/0xweb.svg?branch=master)](https://travis-ci.com/tenbits/0xweb)
+[![Documentation Link](https://img.shields.io/badge/%E2%9D%93-documentation-green.svg)](https://docs.0xweb.org)
+[![Build Status](https://travis-ci.com/0xweb-org/0xweb.svg?branch=master)](https://travis-ci.com/0xweb-org/0xweb)
 [![NPM version](https://badge.fury.io/js/0xweb.svg)](http://badge.fury.io/js/0xweb)
 
 
@@ -14,9 +15,9 @@
 
 Generate TypeScript classes for contracts fetched from Etherscan and Co.
 
-> We use [📦 dequanto library](https://github.com/tenbits/dequanto) for the wrapped classes
+> We use [📦 dequanto library](https://github.com/0xweb-org/dequanto) for the wrapped classes
 
-Here the example of generated classes: [tenbits/0xweb-sample 🔗](https://github.com/tenbits/0xweb-sample)
+Here the example of generated classes: [0xweb-org/0xweb-sample 🔗](https://github.com/0xweb-org/0xweb-sample)
 
 
 ### Install
