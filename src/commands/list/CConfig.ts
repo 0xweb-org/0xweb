@@ -38,7 +38,7 @@ export const CConfig = <ICommand>{
                 await File.writeAsync(path, json);
             }
             let sysPath = new class_Uri(path).toLocalFile();
-            $console.log(`Open cyan<bold<${sysPath}>>`);
+            $console.log(`Open cyan<bold<file://${sysPath}>>`);
             Os.open(sysPath);
             await $promise.wait(500);
             return;

@@ -16,12 +16,12 @@ export const CReset: ICommand = {
             ],
             params: {
                 '--config-accounts': {
-                    description: 'Optional. File path. Default is gray<%appdata%/.0xweb/accounts.json>'
+                    description: 'Optional. File path. Default is gray<%appdata%/.dequanto/accounts.json>'
                 }
             },
             async process () {
                 let configPathAccounts = $cli.getParamValue('config-accounts')
-                    ?? env.appdataDir.combine('./.0xweb/accounts.json').toString();
+                    ?? env.appdataDir.combine('./.dequanto/accounts.json').toString();
 
                 let exists = await File.existsAsync(configPathAccounts);
                 if (exists === false) {
