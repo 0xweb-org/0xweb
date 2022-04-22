@@ -7,8 +7,8 @@
 ----
 [![Website Link](https://img.shields.io/badge/%F0%9F%8C%90-website-green.svg)](https://0xweb.org)
 [![Documentation Link](https://img.shields.io/badge/%E2%9D%93-documentation-green.svg)](https://docs.0xweb.org)
-[![Build Status](https://travis-ci.com/0xweb-org/0xweb.svg?branch=master)](https://travis-ci.com/0xweb-org/0xweb)
 [![NPM version](https://badge.fury.io/js/0xweb.svg)](http://badge.fury.io/js/0xweb)
+[![CircleCI](https://circleci.com/gh/0xweb-org/0xweb.svg?style=svg)](https://circleci.com/gh/0xweb-org/0xweb)
 
 
 ## Contract Package Manager
@@ -99,7 +99,7 @@ $ 0xweb token price WETH
 
 ### `accounts`
 
-**🔐 Ledger** feature allows to store accounts in encrypted local storage. We use local machine KEY and provided PIN in arguments to create cryptographically strong secrets 🔑 for encryption.
+**🔐 Wallet** feature allows to store accounts in encrypted local storage. We use local machine KEY and provided PIN in arguments to create cryptographically strong secrets 🔑 for encryption.
 
 When calling contracts `WRITE` methods, you should first add an account to the wallet, and then use PIN to unlock the storage
 
