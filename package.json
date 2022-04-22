@@ -93,6 +93,7 @@
                 "^@ethereumjs",
                 "^ethers",
                 "^web3$",
+                "^web3-utils$",
                 "^axios$",
                 "^path$",
                 "^child_process$",
@@ -114,6 +115,25 @@
                         "@core": "src/{0}",
                         "@dequanto": "dequanto/src/{0}",
                         "@dequanto-contracts": "dequanto/contracts/{0}"
+                    }
+                }
+            },
+            "settings": {
+                "atma-loader-ts": {
+                    "typescript": {
+                        "compilerOptions": {
+                            "#if (TEST)": {
+                                "module": "AMD"
+                            },
+                            "#if (!TEST)": {
+                                "module": "commonjs"
+                            },
+                            "sourceMap": false,
+                            "experimentalDecorators": true,
+                            "esModuleInterop": true,
+                            "allowSyntheticDefaultImports": true,
+                            "target": "ES2020"
+                        }
                     }
                 }
             }
