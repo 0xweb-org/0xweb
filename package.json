@@ -27,7 +27,7 @@
         "@solidity-parser/parser": "^0.13.2",
         "@typechain/ethers-v5": "^7.0.1",
         "a-di": "^1.0.25",
-        "alot": "^0.2.93",
+        "alot": "^0.2.99",
         "appcfg": "^0.4.64",
         "atma-io": "^1.2.60",
         "atma-io-middleware-yml": "^1.1.25",
@@ -42,9 +42,9 @@
     },
     "devDependencies": {
         "@types/node": "^12.6.2",
-        "app-bundler": "^0.0.99",
-        "atma": "^0.12.18",
-        "atma-loader-ts": "^1.1.12",
+        "app-bundler": "^0.1.5",
+        "atma": "^0.15.15",
+        "atma-loader-ts": "^1.1.18",
         "dts-bundle": "^0.7.3",
         "typedoc": "^0.21.5"
     },
