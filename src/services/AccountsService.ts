@@ -1,5 +1,5 @@
 import { $console } from '@core/utils/$console';
-import { ChainAccount, ChainAccountProvider } from '@dequanto/ChainAccounts';
+import { ChainAccount, ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import appcfg from 'appcfg';
 
 export class AccountsService {
@@ -13,6 +13,7 @@ export class AccountsService {
             console.warn(`Account ${params.name} already exists`);
         } else {
             accounts.push(params);
+            console.log(accounts);
             await this.save(accounts);
         }
         return accounts;

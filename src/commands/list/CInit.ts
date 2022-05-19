@@ -105,6 +105,17 @@ class InitWorker {
             command: 'git init',
             cwd: this.directory.toLocalDir(),
         });
+
+        await this.ensureFile('./.gitignore', {
+            create () {
+                return [
+                    'node_modules'
+                ].join('\n');
+            },
+            edit (content) {
+                return null;
+            }
+        })
     }
 
     private async ensurePackageJson() {
@@ -281,5 +292,22 @@ class InitWorker {
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);
+    }
+
+    private async ensureFile (filename: string, handler: {
+        create: () => string
+        edit: (content: string) => string | null
+    }) {
+        if (await File.existsAsync(filename) === false) {
+            let content = handler.create();
+            await File.writeAsync(filename, content, { skipHooks: true });
+            return;
+        }
+        let current = await File.readAsync<string>(filename, { skipHooks: true });
+        let modified = handler.edit(current);
+        if (modified != null && modified !== current) {
+            await File.writeAsync(filename, modified, { skipHooks: true });
+            return;
+        }
     }
 }

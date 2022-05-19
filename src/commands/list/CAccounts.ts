@@ -1,7 +1,7 @@
 import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
-import { ChainAccountProvider } from '@dequanto/ChainAccounts';
+import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
@@ -20,7 +20,7 @@ export const CAccounts = <ICommand>{
             ],
             params: {
                 '-k, --key': {
-                    description: 'Private key. Optional, only if READ actions will be used.',
+                    description: 'Private key. Optional for READs, required if WRITE actions.',
                 },
                 '-a, --address': {
                     description: 'Address. Optional, if key is also set',

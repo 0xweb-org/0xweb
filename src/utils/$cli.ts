@@ -2,8 +2,8 @@ import * as readline from 'readline';
 import alot from 'alot';
 import { $command } from '@core/commands/utils/$command';
 import { $is } from '@dequanto/utils/$is';
-import { $color } from './$color';
 import { $console } from './$console';
+import { $color } from '@dequanto/utils/$color';
 
 export namespace $cli {
 

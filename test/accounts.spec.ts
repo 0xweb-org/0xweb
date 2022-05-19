@@ -1,4 +1,4 @@
-import { ChainAccountProvider } from '@dequanto/ChainAccounts';
+import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { File } from 'atma-io';
 import { run } from 'shellbee';
 

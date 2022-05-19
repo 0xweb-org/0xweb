@@ -1,6 +1,7 @@
-import { $color } from './$color';
 import * as rl from 'readline';
 import alot from 'alot';
+import { $color } from '@dequanto/utils/$color';
+import { $logger } from '@dequanto/utils/$logger';
 
 export namespace $console {
 
@@ -14,10 +15,10 @@ export namespace $console {
             console.dir(str, { depth: null });
             return;
         }
-        write({ str: $color(str) });
+        write({ str });
     }
     export function toast(str: string) {
-        write({ str: $color(str), isToast: true });
+        write({ str, isToast: true });
     }
 
     export function table(arr: string[][]) {
@@ -49,9 +50,9 @@ export namespace $console {
             rl.cursorTo(process.stdout, 0, null);
         }
         if (params?.isToast) {
-            process.stdout.write(params.str);
+            process.stdout.write( $color(params.str) );
         } else {
-            console.log(params.str);
+            console.log( $color(params.str) );
         }
 
         std.unshift(params);
