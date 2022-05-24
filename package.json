@@ -49,23 +49,26 @@
         "atma": "^0.15.15",
         "atma-loader-ts": "^1.1.18",
         "dts-bundle": "^0.7.3",
-        "typedoc": "^0.21.5"
+        "typedoc": "^0.21.5",
+        "typescript": "^4.6.4"
     },
     "scripts": {
         "build": "npm run build-bundle",
         "build-bundle": "app-bundler",
         "build-dts": "tsc -p tsconfig-build.json && atma run tools/build-dts",
-        "build-typedoc": "typedoc --tsconfig ./tsconfig-typedoc.json && atma task copy",
         "watch": "app-bundler -watch",
         "release": "echo \"Run atma pub -m \"message\"\"",
-        "test": "atma test",
-        "server": "atma server"
+        "test": "atma test"
     },
     "app-bundler": {
         "apps": {
             "cli": {
                 "file": "src/cli.ts",
                 "outputMain": "lib/cli.js"
+            },
+            "lib": {
+                "file": "src/export.ts",
+                "outputMain": "lib/0xweb.js"
             }
         },
         "common": {

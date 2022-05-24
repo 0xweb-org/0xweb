@@ -7,9 +7,14 @@ import { $color } from '@dequanto/utils/$color';
 
 export namespace $cli {
 
-    export function getParamValue(flag: string): string | null {
-        let args = process.argv;
+    let $argv = process.argv;
 
+    export function setParams (argv: string[]) {
+        $argv = argv;
+    }
+
+    export function getParamValue(flag: string): string | null {
+        let args = $argv;
         let aliases = $command.getAliases(flag);
         return alot(aliases)
             .map(x => {

@@ -22,7 +22,7 @@ export interface ICommand {
         }
     }
     subcommands?: ICommand[]
-    process: (args: any[], params?, app?: App) => Promise<void>
+    process: (args: any[], params?, app?: App) => Promise<void | any>
 }
 
 export abstract class Command implements ICommand {
@@ -36,5 +36,5 @@ export abstract class Command implements ICommand {
         };
     };
     subcommands?: ICommand[];
-    process: (args: any[], params?: any, app?: App) => Promise<void>;
+    process: (args: any[], params?: any, app?: App) => Promise<void | any>;
 }

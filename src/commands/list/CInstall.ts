@@ -79,6 +79,7 @@ export const CInstall = <ICommand> {
             main
         };
         await File.writeAsync(packagePath, json);
+        return { main };
     }
 }
 

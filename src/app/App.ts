@@ -46,13 +46,16 @@ export class App {
             ;
     }
 
-    async execute (): Promise<void> {
+    async execute (argv?: string[]): Promise<void> {
+        if (argv?.length > 0) {
+            $cli.setParams(argv);
+        }
 
         let platform = $cli.getParamValue('-c, --chain') ?? 'eth';
         $console.toast('Load config');
         let config = this.config = await Config.fetch();
 
-        let { params, args } = config.$cli;
+        let { params, args } = argv?.length > 0 ? parseArgs(argv) : config.$cli;
         let i = args.findIndex(x => /\bindex(\.(ts|js))?\b/i.test(x));
         if (i > -1) {
             args = args.slice(i + 1);
@@ -66,7 +69,7 @@ export class App {
         if (name) {
             $console.toast(`Process command gray<${args[0]}>`);
         }
-        await this.commands.process(args, params, this);
+        return await this.commands.process(args, params, this);
     }
 
     async runFromCli () {
@@ -80,4 +83,27 @@ export class App {
         }
         process.exit(0);
     }
+}
+
+function parseArgs (argv: string[]) {
+    let params = {};
+    let args = [];
+    for (let i = 0; i < argv.length; i++) {
+        if (argv[i].startsWith('--')) {
+            let key = argv[i].substring(2);
+            let value = argv[i + 1];
+            params[key] = value;
+            i += 1;
+            continue;
+        }
+
+        if (argv[i].startsWith('-')) {
+            let key = argv[i].substring(1);
+            params[key] = true;
+            continue;
+        }
+
+        args.push(argv[i]);
+    }
+    return { params, args };
 }

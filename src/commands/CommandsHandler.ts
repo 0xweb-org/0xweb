@@ -25,7 +25,6 @@ export class CommandsHandler  {
 
 
     async process (cliArgs: string[], cliParams, app: App) {
-        let config = app.config;
         let name = null;
         let command: ICommand;
         if (cliArgs.length === 0) {
@@ -43,8 +42,8 @@ export class CommandsHandler  {
         }
 
         if (cliParams.help) {
-            CHelp.printCommand(command);
-            return;
+            let result = await CHelp.printCommand(command);
+            return result;
         }
 
         let params = $command.getParams(cliParams, command.params);

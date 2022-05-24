@@ -1,24 +1,25 @@
 {
     "files": ["src/export.ts"],
-    "exclude": ["node_modules"],
+    "exclude": ["node_modules", "dequanto"],
     "compilerOptions": {
         "baseUrl": "./",
         "paths": {
             "@core/*": [ "src/*" ],
-            "@dequanto/*": [ "dequanto/src/*" ]
+            "@dequanto/*": [ "dequanto/src/*" ],
+            "@dequanto-contracts/*": [ "dequanto/contracts/*" ]
         },
 
         "outDir": "ts-temp",
-        "lib": ["es2015", "es2015.promise"],
+        "lib": ["es2020", "dom"],
+        "target": "ES2021",
+
         "types": ["node"],
         "declaration": true,
-        "target": "es5",
         "sourceMap": false,
         "experimentalDecorators": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "module": "AMD",
         "moduleResolution": "node"
-
     }
 }

@@ -2,21 +2,12 @@
     "include": ["src/**/*"],
     "exclude": ["node_modules", "ts-temp", "lib", "test", "typings"],
     "compilerOptions": {
-        "lib": ["es2015", "es2015.promise", "es2016", "dom"],
+        "lib": ["es2022", "dom"],
 
         "declaration": true,
-        "target": "es2020",
+        "target": "ES2022",
         "module": "commonjs",
         "sourceMap": false,
         "experimentalDecorators": true
-    },
-    "typedocOptions": {
-        "name": "",
-        "entryPoints": [
-            "./src/scheduler/Scheduler.ts",
-            "./src/models/IJob.ts",
-            "./src/models/IScheduler.ts"
-        ],
-        "out": "docs"
     }
 }
