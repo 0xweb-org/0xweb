@@ -5,7 +5,7 @@ import { $require } from '@dequanto/utils/$require';
 
 export namespace $validate {
 
-    export const platforms = ['eth', 'polygon', 'bsc'];
+    export const platforms = ['eth', 'polygon', 'bsc', 'hardhat'];
 
     export function platform (platform: TPlatform, message?: string) {
         $require.notNull(platform, message);
@@ -43,7 +43,9 @@ export namespace $validate {
         }
 
         export function blockchainExplorer (platform: TPlatform) {
-
+            if (platform === 'hardhat') {
+                return;
+            }
             let scan = $config.get(`blockchainExplorer.${platform}`);
             if (scan?.host && scan?.key) {
                 return;
