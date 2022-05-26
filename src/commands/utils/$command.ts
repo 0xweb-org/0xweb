@@ -70,6 +70,9 @@ export namespace $command {
             return value;
         }
         if (def.type === 'number') {
+            if (typeof value === 'number') {
+                return value;
+            }
             let num = Number(value);
             if (isNaN(num)) {
                 throw new Error(`Not a number (${value}) for "${def.description}"`);
@@ -77,6 +80,9 @@ export namespace $command {
             return num;
         }
         if (def.type === 'boolean') {
+            if (typeof value === 'boolean') {
+                return value;
+            }
             if (value == null || value === 'true' || value === '1') {
                 return true;
             }
