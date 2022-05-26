@@ -50,7 +50,7 @@ export const CInit: ICommand = {
 }
 
 class InitWorker {
-    repo = `https://github.com/0xweb/dequanto.git`;
+    repo = `https://github.com/0xweb-org/dequanto.git`;
 
     constructor(public directory: class_Uri, public params: IInitOptions) {
 
