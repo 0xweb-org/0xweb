@@ -3,10 +3,13 @@ import { ICommand } from '../ICommand';
 import { Shell, run } from 'shellbee';
 import { class_Uri } from 'atma-utils';
 import { $console } from '@core/utils/$console';
+import { $cli } from '@core/utils/$cli';
+import { $path } from '@core/utils/$path';
 
 interface IInitOptions {
     dir?: string
     source?: 'git' | 'npm'
+    hardhat?: boolean
 }
 export const CInit: ICommand = {
     command: 'init',
@@ -19,6 +22,10 @@ export const CInit: ICommand = {
         },
         '-s, --source': {
             description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module'
+        },
+        '--hardhat': {
+            description: 'Initialize also Hardhat project',
+            type: 'boolean'
         }
     },
     async process(args: string[], params: IInitOptions) {
@@ -34,6 +41,8 @@ export const CInit: ICommand = {
             directory = cwd;
         }
 
+
+
         $console.log(`Prepair dequanto package in bold<${directory.toLocalDir()}>`);
         let worker = new InitWorker(directory, params);
         await worker.init();
@@ -41,7 +50,7 @@ export const CInit: ICommand = {
 }
 
 class InitWorker {
-    repo = `https://github.com/tenbits/dequanto.git`;
+    repo = `https://github.com/0xweb/dequanto.git`;
 
     constructor(public directory: class_Uri, public params: IInitOptions) {
 
@@ -53,6 +62,8 @@ class InitWorker {
         await this.ensureDequanto();
         await this.ensureTsConfig();
         await this.ensureDependencies();
+        await this.ensureHardhatConfig();
+
         $console.log(`green<bold<Completed>>`);
     }
 
@@ -224,11 +235,24 @@ class InitWorker {
             pckgCurrent.dependencies = {};
         }
 
+        let requiredDeps = pckgDequanto.dependencies;
+
+        if (this.params.hardhat) {
+            requiredDeps = {
+                ...requiredDeps,
+                'hardhat': 'latest',
+                '@nomiclabs/hardhat-web3': 'latest',
+                '@nomiclabs/hardhat-waffle': 'latest',
+                '@nomiclabs/hardhat-etherscan': 'latest',
+                '@0xweb/hardhat': 'latest'
+            };
+        }
+
         let added = [];
         let deps = pckgCurrent.dependencies;
-        for (let name in pckgDequanto.dependencies) {
+        for (let name in requiredDeps) {
             if (name in deps === false) {
-                deps[name] = pckgDequanto.dependencies[name];
+                deps[name] = requiredDeps[name];
                 added.push(name);
             }
         }
@@ -292,6 +316,28 @@ class InitWorker {
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);
+    }
+
+    private async ensureHardhatConfig () {
+        const template = await File.readAsync<string>($path.resolve('/templates/hardhat.config.js'), { skipHooks: true });
+        this.ensureFile(`hardhat.config.js`, {
+            create () {
+                return template;
+            },
+            edit (content: string) {
+
+                let requires = template
+                    .split('\n')
+                    .map(line => /require\("(?<name>[^"]+)"\)/.exec(line))
+                    .filter(x => x != null)
+                    .map(x => x.groups.name)
+                    .filter(name => content.includes(name) === false)
+                    .map(name => `require("${name}")`)
+                    .join(env.newLine);
+
+                return requires + env.newLine + content;
+            }
+        });
     }
 
     private async ensureFile (filename: string, handler: {

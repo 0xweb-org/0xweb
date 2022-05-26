@@ -34,6 +34,11 @@ UTest({
 
                 eq_(exists, true, path);
             }).toArrayAsync();
+
+            let packageJson = await File.readAsync<any>(`${path_ROOT}/package.json`);
+            eq_('web3' in packageJson.dependencies, true);
+            eq_('ethers' in packageJson.dependencies, true);
+            eq_('hardhat' in packageJson.dependencies, false, 'Command without --hardhat flag still has the hardhat library');
         },
     },
     async 'install contract' () {
