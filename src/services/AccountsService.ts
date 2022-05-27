@@ -13,7 +13,6 @@ export class AccountsService {
             console.warn(`Account ${params.name} already exists`);
         } else {
             accounts.push(params);
-            console.log(accounts);
             await this.save(accounts);
         }
         return accounts;

@@ -118,12 +118,12 @@ class InitWorker {
         });
 
         await this.ensureFile('./.gitignore', {
-            create () {
+            create() {
                 return [
                     'node_modules'
                 ].join('\n');
             },
-            edit (content) {
+            edit(content) {
                 return null;
             }
         })
@@ -149,22 +149,11 @@ class InitWorker {
                         "extentionDefault": {
                             "js": "ts"
                         },
-                        "routes": {
-                            "@core": "src/{0}",
-                            "@dequanto": "dequanto/src/{0}"
-                        }
+                        "routes": "#import ./tsconfig.json compilerOptions.paths"
                     },
                     "atma-loader-ts": {
-                        "typescript": {
-                            "compilerOptions": {
-                                "module": "AMD",
-                                "sourceMap": false,
-                                "experimentalDecorators": true,
-                                "esModuleInterop": true,
-                                "allowSyntheticDefaultImports": true,
-                                "target": "ES2020"
-                            }
-                        }
+                        "sourceMap": true,
+                        "typescript": "#import ./tsconfig.json"
                     }
                 }
             }
@@ -174,7 +163,7 @@ class InitWorker {
             await file.writeAsync(pckg);
         }
 
-        function extendWithDefaultValues (target, source) {
+        function extendWithDefaultValues(target, source) {
             let modified = false;
             for (let key in source) {
                 let val = source[key];
@@ -186,12 +175,12 @@ class InitWorker {
                 if (Array.isArray(val) && val.length > 0) {
                     let targetArr = target[key];
                     if (Array.isArray(targetArr) === false) {
-                        console.dir(targetArr, { depth: null});
+                        console.dir(targetArr, { depth: null });
                         throw new Error(`Target value in ${key} is not an array`);
                     }
                     for (let item of val) {
                         if (typeof item === 'object') {
-                            console.dir(item, { depth: null});
+                            console.dir(item, { depth: null });
                             throw new Error(`Not implemented. Only strings in array are supported`)
                         }
                         if (targetArr.includes(item) === false) {
@@ -283,8 +272,8 @@ class InitWorker {
             pckg.compilerOptions = {
                 "baseUrl": "./",
                 "declaration": true,
-                "target": "es5",
-                "module": "commonjs",
+                "target": "ES2020",
+                "module": "AMD",
                 "sourceMap": false,
                 "experimentalDecorators": true,
                 "esModuleInterop": true,
@@ -306,26 +295,25 @@ class InitWorker {
 
         let isNpm = this.params.source === 'npm';
         pckg.compilerOptions.paths['@dequanto/*'] = isNpm
-            ? [ "node_modules/dequanto/src/*" ]
-            : [ "dequanto/src/*" ];
+            ? ["node_modules/dequanto/src/*"]
+            : ["dequanto/src/*"];
         pckg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
-            ? [ "node_modules/dequanto/contracts/*" ]
-            : [ "dequanto/contracts/*" ];
+            ? ["node_modules/dequanto/contracts/*"]
+            : ["dequanto/contracts/*"];
 
-        pckg.compilerOptions.paths['@0xweb/*'] = [ "0xweb/*" ]
+        pckg.compilerOptions.paths['@0xweb/*'] = ["0xweb/*"]
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);
     }
 
-    private async ensureHardhatConfig () {
+    private async ensureHardhatConfig() {
         const template = await File.readAsync<string>($path.resolve('/templates/hardhat.config.js'), { skipHooks: true });
-        this.ensureFile(`hardhat.config.js`, {
-            create () {
+        await this.ensureFile(`hardhat.config.js`, {
+            create() {
                 return template;
             },
-            edit (content: string) {
-
+            edit(content: string) {
                 let requires = template
                     .split('\n')
                     .map(line => /require\("(?<name>[^"]+)"\)/.exec(line))
@@ -340,17 +328,17 @@ class InitWorker {
         });
     }
 
-    private async ensureFile (filename: string, handler: {
-        create: () => string
-        edit: (content: string) => string | null
+    private async ensureFile(filename: string, handler: {
+        create: () => string | Promise<string>
+        edit: (content: string) => string | null | Promise<string | null>
     }) {
         if (await File.existsAsync(filename) === false) {
-            let content = handler.create();
+            let content = await handler.create();
             await File.writeAsync(filename, content, { skipHooks: true });
             return;
         }
         let current = await File.readAsync<string>(filename, { skipHooks: true });
-        let modified = handler.edit(current);
+        let modified = await handler.edit(current);
         if (modified != null && modified !== current) {
             await File.writeAsync(filename, modified, { skipHooks: true });
             return;
