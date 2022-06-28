@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.9.26",
+    "version": "0.9.27",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -27,6 +27,8 @@
     "dependencies": {
         "@ethereumjs/common": "^2.5.0",
         "@ethereumjs/tx": "^3.3.2",
+        "@gnosis.pm/safe-core-sdk": "^2.1.0",
+        "@gnosis.pm/safe-service-client": "^1.1.2",
         "@gnosis.pm/safe-web3-lib": "^1.1.0",
         "@solidity-parser/parser": "^0.13.2",
         "@typechain/ethers-v5": "^7.0.1",
@@ -46,7 +48,7 @@
     },
     "devDependencies": {
         "@types/node": "^12.6.2",
-        "app-bundler": "^0.1.8",
+        "app-bundler": "^0.1.10",
         "atma": "^0.15.15",
         "atma-loader-ts": "^1.1.18",
         "dts-bundle": "^0.7.3",
@@ -107,7 +109,8 @@
                 "^crypto$",
                 "^readline$",
                 "^hardhat$",
-                "^@gnosis.pm"
+                "^@gnosis.pm",
+                "ethereumjs-util"
             ],
             "middlewares": {
                 "ts": [
