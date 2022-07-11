@@ -2,6 +2,7 @@ import { ICommand } from '@core/commands/ICommand';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { $config } from '@dequanto/utils/$config';
 import { $require } from '@dequanto/utils/$require';
+import { $console } from './$console';
 
 export namespace $validate {
 
@@ -68,7 +69,7 @@ export namespace $validate {
     }
 
 
-    export function args (command: ICommand, args: string[]) {
+    export function args (command: ICommand, args: string[], options?: { inputFailed?: boolean }): Promise<void> {
         let definition = command.arguments;
         if (definition == null || definition.length === 0) {
             return;
@@ -82,6 +83,29 @@ export namespace $validate {
             let val = args[i];
             if (val == null) {
                 throw new Error(`Argument ${def.name ?? i} is required`);
+            }
+        }
+    }
+
+    export function params (command: ICommand, paramsDef: ICommand['params'], params) {
+        for (let key in paramsDef) {
+            let def = paramsDef[key];
+            let val = params[key];
+
+            if (Array.isArray(def.oneOf)) {
+                $require.oneOf(val, def.oneOf);
+            }
+            if (def.validate) {
+                try {
+                    def.validate(val);
+                } catch (error) {
+                    $console.log(`Parameter '${def.key}' is invalid:`);
+                    $console.table([
+                        ['Info', def.description ],
+                    ]);
+
+                    throw error;
+                }
             }
         }
     }

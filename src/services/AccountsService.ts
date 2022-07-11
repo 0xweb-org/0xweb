@@ -1,5 +1,6 @@
 import { $console } from '@core/utils/$console';
-import { ChainAccount, ChainAccountProvider } from '@dequanto/ChainAccountProvider';
+import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
+import { ChainAccount, SafeAccount } from '@dequanto/models/TAccount';
 import appcfg from 'appcfg';
 
 export class AccountsService {
@@ -7,7 +8,7 @@ export class AccountsService {
 
     }
 
-    async add (params: ChainAccount) {
+    async add (params: ChainAccount | SafeAccount) {
         let accounts = this.getAccounts();
         if (accounts.find(x => x.name === params.name)) {
             console.warn(`Account ${params.name} already exists`);
@@ -30,13 +31,13 @@ export class AccountsService {
         return accounts;
     }
 
-    async list (): Promise<ChainAccount[]> {
+    async list (): Promise<(ChainAccount | SafeAccount)[]> {
         let source = this.getConfig();
         let accounts = source.config?.accounts ?? [];
         return accounts;
     }
 
-    async get(name: string): Promise<ChainAccount> {
+    async get(name: string): Promise<(ChainAccount | SafeAccount)> {
         let accounts = await this.list();
         let account = this.getAccount(name);
         if (account == null) {
@@ -73,7 +74,7 @@ export class AccountsService {
         }
         return source;
     }
-    private async getAccount (name: string): Promise<ChainAccount | null> {
+    private async getAccount (name: string): Promise<ChainAccount | SafeAccount | null> {
         let accounts = await this.list();
         let account = accounts.find(x => x.name === name);
         return account;

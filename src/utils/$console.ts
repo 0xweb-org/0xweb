@@ -21,9 +21,9 @@ export namespace $console {
         write({ str, isToast: true });
     }
 
-    export function table(arr: string[][]) {
+    export function table(arr: (string | number)[][]) {
         let lengths = arr[0].map((row, i) => {
-            let size = alot(arr).max(x => x[i].length);
+            let size = alot(arr).max(x => String(x[i]).length);
             return size;
         });
 

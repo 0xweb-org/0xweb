@@ -16,7 +16,7 @@ export const CAccounts = <ICommand>{
         {
             command: 'add',
             description: [
-                'Add account'
+                'Add existing account'
             ],
             params: {
                 '-k, --key': {

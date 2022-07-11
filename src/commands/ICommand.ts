@@ -19,6 +19,10 @@ export interface ICommand {
             required?: boolean
             type?: 'number' | 'string' | 'boolean',
             map?: <T>(input: string) => T
+
+            oneOf?: (string | number)[]
+            validate?: (any) => any
+            default?: any
         }
     }
     subcommands?: ICommand[]

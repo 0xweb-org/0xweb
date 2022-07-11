@@ -17,6 +17,11 @@ import { CContract } from '../commands/list/CContract';
 import { CInit } from '../commands/list/CInit';
 import { CToken } from '../commands/list/CToken';
 import { CGas } from '../commands/list/CGas';
+import { CSafe } from '@core/commands/list/CSafe';
+import { TAddress } from '@dequanto/models/TAddress';
+import { CTransfer } from '@core/commands/list/CTransfer';
+import { $color_options } from '@dequanto/utils/$color';
+import { CTokens } from '@core/commands/list/CTokens';
 
 declare const global;
 
@@ -36,7 +41,10 @@ export class App {
             .register(CContract)
             .register(CAccounts)
             .register(CAccount)
+            .register(CSafe)
             .register(CToken)
+            .register(CTokens)
+            .register(CTransfer)
             .register(CBlock)
             .register(CGas)
             .register(CConfig)
@@ -51,7 +59,12 @@ export class App {
             $cli.setParams(argv);
         }
 
+        if ($cli.getParamValue('--color') === 'none') {
+            $color_options({ type: 'none' });
+        }
+
         let platform = $cli.getParamValue('-c, --chain') ?? 'eth';
+
         $console.toast('Load config');
         let config = this.config = await Config.fetch();
 
@@ -82,6 +95,12 @@ export class App {
             $console.log(`gray<${stack}>`);
         }
         process.exit(0);
+    }
+
+    async getAccount (mix: TAddress | string) {
+        //let accounts = di.resolve(AccountsService, app.config);
+        let account = await this.chain.accounts.get(mix);
+        return account;
     }
 }
 

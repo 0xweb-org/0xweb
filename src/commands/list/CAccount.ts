@@ -5,6 +5,9 @@ import { $validate } from '@core/utils/$validate';
 import { App } from '@core/app/App';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $console } from '@core/utils/$console';
+import { TAddress } from '@dequanto/models/TAddress';
+import { $address } from '@dequanto/utils/$address';
+import { $require } from '@dequanto/utils/$require';
 
 export const CAccount = <ICommand>{
     command: 'account',
@@ -37,8 +40,16 @@ export const CAccount = <ICommand>{
             async process (args: string[], params: any, app: App) {
                 let [ accountName, tokenName ] = args;
 
-                let accounts = di.resolve(AccountsService, app.config);
-                let account = await accounts.get(accountName);
+                let address: TAddress;
+                if ($address.isValid(accountName)) {
+                    address = accountName;
+                } else {
+                    let accounts = di.resolve(AccountsService, app.config);
+                    let account = await accounts.get(accountName);
+                    address = account?.address;
+                }
+                $require.Address(address);
+
 
                 $console.toast(`Loading token ${tokenName}`);
                 let token = await app.chain.tokens.getToken(tokenName, true);
@@ -46,8 +57,8 @@ export const CAccount = <ICommand>{
                     throw new Error(`Unknown token: ${tokenName}`);
                 }
 
-                $console.toast(`Loading balance for ${account.address}`);
-                let balance = await app.chain.token.balanceOf(account.address, token);
+                $console.toast(`Loading balance for ${address}`);
+                let balance = await app.chain.token.balanceOf(address, token);
                 let eth = $bigint.toEther(balance, token.decimals);
 
                 $console.table([

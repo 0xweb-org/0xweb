@@ -46,26 +46,42 @@ export class CommandsHandler  {
             return result;
         }
 
-        let params = $command.getParams(cliParams, command.params);
         let args = cliArgs.slice(1);
 
-        if (args.length > 0 && command.subcommands?.length > 0) {
-            let subCommand = command.subcommands.find(x => x.command === args[0]);
-            if (subCommand != null) {
-                if (subCommand.params != null) {
-                    let subCommandParams = $command.getParams(cliParams, subCommand.params);
-                    params = {
-                        ...params,
-                        ...subCommandParams,
-                    };
-                }
-                args = args.slice(1);
-                $validate.args(subCommand, args);
-                return await subCommand.process(args, params, app);
-            }
+
+
+        let paramsDefinition = command.params ?? {};
+        let subCommand = command.subcommands?.find(x => x.command === args[0]);
+        if (subCommand != null) {
+            args = args.slice(1);
+
+            command = subCommand;
+            paramsDefinition = {
+                ...(paramsDefinition ?? {}),
+                ...(subCommand.params ?? {}),
+            };
         }
 
+        let params = await $command.getParams(cliParams, paramsDefinition);
+
+        // if (command.subcommands?.length > 0) {
+        //     let subCommand = command.subcommands.find(x => x.command === args[0]);
+        //     if (subCommand != null) {
+        //         if (subCommand.params != null) {
+        //             let subCommandParams = await $command.getParams(cliParams, subCommand.params);
+        //             params = {
+        //                 ...params,
+        //                 ...subCommandParams,
+        //             };
+        //         }
+        //         args = args.slice(1);
+        //         $validate.args(subCommand, args);
+        //         return await subCommand.process(args, params, app);
+        //     }
+        // }
+
         $validate.args(command, args);
+        $validate.params(command, params, paramsDefinition);
         return await command.process(args, params, app);
     }
 };
