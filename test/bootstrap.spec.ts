@@ -73,7 +73,7 @@ UTest({
         `);
 
         let { stdout } = await run({
-            command: `npx atma run ./check.ts`,
+            command: `npx atma run ./check.ts --config-global dev/null`,
             cwd: path_ROOT
         });
 
@@ -82,7 +82,7 @@ UTest({
         eq_(isNaN(val), false, stdout.join(''));
     },
     async 'execute via cli' () {
-        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer`);
+        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer --config-global dev/null`);
         let str = stdout.join('');
         has_(str, /\d{10,}n/, 'Should contain BigInt as the ETH price');
     }

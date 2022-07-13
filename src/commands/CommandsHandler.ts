@@ -51,16 +51,21 @@ export class CommandsHandler  {
 
 
         let paramsDefinition = command.params ?? {};
-        let subCommand = command.subcommands?.find(x => x.command === args[0]);
-        if (subCommand != null) {
-            args = args.slice(1);
 
+        if (command.subcommands) {
+            let subCommand = command.subcommands.find(x => x.command === args[0]);
+            if (subCommand == null) {
+                throw new Error(`Subcommand 'bold<${args[0]}>' not found`);
+            }
+
+            args = args.slice(1);
             command = subCommand;
             paramsDefinition = {
                 ...(paramsDefinition ?? {}),
                 ...(subCommand.params ?? {}),
             };
         }
+
 
         let params = await $command.getParams(cliParams, paramsDefinition);
 

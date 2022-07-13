@@ -5,7 +5,6 @@ logs/
 artifacts/
 0xweb/
 0xweb.json
-hardhat.config.js
 cache/
 bin/
 test/bin/

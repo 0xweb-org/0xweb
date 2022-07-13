@@ -9,6 +9,7 @@ import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $require } from '@dequanto/utils/$require';
+import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 
 
 export const CTransfer = <ICommand>{
@@ -41,12 +42,14 @@ export const CTransfer = <ICommand>{
         '-c, --chain': {
             description: `Default: eth. Available: ${$validate.platforms.join(', ')}`,
             required: true
+        },
+        '--safe-transport': {
+            description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
         }
     },
-    async process (args: string[], params: { from, to, chain }, app: App) {
+    async process (args: string[], params: { from, to, chain, safeTransport? }, app: App) {
         let [ amountStr, tokenMix ] = args;
-        let { from, to } = params;
-        $require.Address(to, `To address invalid`);
+
 
         $console.toast(`Loading token ${tokenMix}`);
         let token = await app.chain.tokens.getToken(tokenMix, true);
@@ -61,11 +64,17 @@ export const CTransfer = <ICommand>{
             throw new Error(`Token ${tokenMix} not found`);
         }
 
-        let accountFrom = await app.getAccount(from);
+        let accountFrom = await app.getAccount(params.from);
         if (accountFrom == null) {
-            throw new Error(`Account ${from} not found in storage`);
+            throw new Error(`Account ${params.from} not found in storage`);
         }
+        let accountTo = $is.Address(params.to)
+            ? { address: params.to }
+            : await app.getAccount(params.to);
 
+        if (accountTo == null) {
+            throw new Error(`Account ${params.to} not found in storage`);
+        }
 
         let service = di.resolve(TokenTransferService, app.chain.client);
 
@@ -91,10 +100,17 @@ export const CTransfer = <ICommand>{
             throw new Error(`Invalid amount: ${amountStr}`);
         }
 
-        $console.toast(`Transfering ${amount}${token.symbol} from ${accountFrom.address} to ${to}`);
+        $console.toast(`Transfering ${amount}${token.symbol} from ${accountFrom.address} to ${accountTo.address}`);
 
 
-        let tx = await service.transfer(accountFrom, to, token, amount);
+        let safeTransportFile = params.safeTransport;
+        if (safeTransportFile) {
+            service.$configWriter({
+                safeTransport: new FileServiceTransport(app.chain.client, accountFrom, safeTransportFile)
+            });
+        }
+
+        let tx = await service.transfer(accountFrom, accountTo.address, token, amount);
         let receipt = await tx.wait();
         $console.log(`Receipt ${receipt.transactionHash}`);
     }

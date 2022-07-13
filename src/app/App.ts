@@ -88,13 +88,14 @@ export class App {
     async runFromCli () {
         try {
             await this.execute();
+            process.exit(0);
         } catch (error) {
             $console.log(`red<${error.message}>`);
 
             let stack = error.stack.split('\n').slice(1).join('\n');
             $console.log(`gray<${stack}>`);
+            process.exit(1);
         }
-        process.exit(0);
     }
 
     async getAccount (mix: TAddress | string) {

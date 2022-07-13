@@ -54,7 +54,7 @@ export const CAccount = <ICommand>{
                 $console.toast(`Loading token ${tokenName}`);
                 let token = await app.chain.tokens.getToken(tokenName, true);
                 if (token == null) {
-                    throw new Error(`Unknown token: ${tokenName}`);
+                    throw new Error(`Unknown token: ${tokenName} for ${app.chain.tokens.platform}`);
                 }
 
                 $console.toast(`Loading balance for ${address}`);
