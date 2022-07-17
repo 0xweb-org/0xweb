@@ -4,6 +4,7 @@ import { $command } from '@core/commands/utils/$command';
 import { $is } from '@dequanto/utils/$is';
 import { $console } from './$console';
 import { $color } from '@dequanto/utils/$color';
+import { obj_setProperty } from 'atma-utils';
 
 export namespace $cli {
 
@@ -13,12 +14,17 @@ export namespace $cli {
         $argv = argv;
     }
 
-    export function getParamValue(flag: string): string | null {
+    export function getParamValue(flag: string, params?: { [key: string]: any }): string | null {
         let args = $argv;
         let aliases = $command.getAliases(flag);
+
         return alot(aliases)
             .map(x => {
                 let command = toCommand(x.name);
+                let valFromParams = params?.[command];
+                if (valFromParams != null) {
+                    return valFromParams;
+                }
                 let i = args.findIndex(x => toCommand(x) === command);
                 if (i > -1) {
                     return args[i + 1];
@@ -27,6 +33,46 @@ export namespace $cli {
             })
             .filter(x => x != null)
             .first();
+    }
+
+    export function parse (argv: string[]) {
+
+        if (argv == null) {
+            argv = process.argv;
+        }
+
+        let params = {} as any;
+        let args = [];
+        for (let i = 0; i < argv.length; i++) {
+            let x = argv[i];
+
+            if (x[0] === '-') {
+
+                let key = x.replace(/^[\-]+/, '');
+                let val;
+                if (i < argv.length - 1 && argv[i + 1][0] !== '-') {
+                    val = argv[i + 1];
+                    i++;
+                } else {
+                    val = true;
+                }
+                obj_setProperty(params, key, val);
+                continue;
+            }
+
+            args.push(argv[i]);
+        }
+
+        let i = args.findIndex(x => /\bindex(\.(ts|js))?\b/i.test(x));
+        if (i > -1) {
+            args = args.slice(i + 1);
+        }
+
+        return { params, args };
+
+
+
+
     }
 
     export function ask(question: string, type?: string) {

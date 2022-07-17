@@ -10,6 +10,8 @@ import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $fn } from '@dequanto/utils/$fn';
 import { $signRaw } from '@dequanto/utils/$signRaw';
+import { SafeUtils } from './SafeUtils';
+import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -49,11 +51,16 @@ UTest({
         await File.removeAsync(SAFE_TX);
         await TestNode.start();
     },
+    async 'parse tx' () {
+        let a = `0x6a761202000000000000000000000000b45ddddddddddddddddddddddddddddd30fad3610000000000000000000000000000000000000000000000000186cc6acd4b0000000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008271111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111116d1b000000000000000000000000000000000000000000000000000000000000`;
+        let aParsed = GnosisSafeHandler.parseSafeTx(a);
+        eq_(aParsed.args[1], $bigint.toWei(.11));
+    },
     async 'should add, list, remove safe'() {
         let account = ChainAccountProvider.generate();
 
         l`\n> add account`
-        let addedStdout = await cli(`accounts add` {
+        let addedStdout = await cli(`accounts add`, {
             '-n': 'bar',
             '-k': account.key
         });
@@ -85,30 +92,22 @@ UTest({
             '-n': 'safe/foo'
         });
         hasNot_(removeStdout, 'safe/foo');
-        hasNot_(removeStdout, account.address);
+        hasNot_(removeStdout, $address.ZERO);
 
 
         listStdout = await cli('safe list', {});
         hasNot_(listStdout, 'safe/foo');
-        hasNot_(listStdout, account.address);
+        hasNot_(listStdout, $address.ZERO);
     },
 
-    async '!create safe'() {
+    async 'create safe'() {
 
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
         let owner1 = provider.deployer();
         let owner2 = provider.deployer(1);
 
-        const { contract: proxyFactoryContract, abi: proxyFactoryAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/proxies/GnosisSafeProxyFactory.sol', {
-            client
-        });
-        const { contract: safeContract, abi: safeAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/GnosisSafe.sol', {
-            client
-        });
-        const { contract: multiSendContract, abi: multiSendAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/libraries/MultiSend.sol', {
-            client
-        });
+        let path = await SafeUtils.prepair();
 
 
         l`Adding account to storage. (Later the owner of the safe)`;
@@ -117,23 +116,10 @@ UTest({
             '--key': owner1.key
         });
 
-        let contracts = {
-            multiSendAddress: multiSendContract.address,
-            multiSendAbi: multiSendAbi,
-
-            safeMasterCopyAddress: safeContract.address,
-            safeMasterCopyAbi: safeAbi,
-
-            safeProxyFactoryAbi: proxyFactoryAbi,
-            safeProxyFactoryAddress: proxyFactoryContract.address
-        };
-
-        await File.writeAsync('./test/bin/contracts.json', contracts);
-
         let stdCreateSafe = await cli(`safe new`, {
             '--owner': owner1.address,
             '--name': 'safe/test',
-            '--contracts': './test/bin/contracts.json'
+            '--contracts': path
         });
 
         let match = /safe\/test\s+\[(?<address>[^\]]+)\]/.exec(stdCreateSafe);

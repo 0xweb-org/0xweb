@@ -2,6 +2,7 @@ import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
+import { Parameters } from '@core/utils/Paramsters';
 
 
 export const CContract = <ICommand> {
@@ -83,10 +84,7 @@ export const CContract = <ICommand> {
                     description: 'Account name. Accounts should be unlocked with gray<-p, --pin> parameter',
                     required: true,
                 },
-                '-p, --pin': {
-                    description: 'Pin to unlock accounts',
-                    required: true,
-                },
+                ...Parameters.pin,
                 '--nonce': {
                     description: 'Rewrite nonce',
                     type: 'number'

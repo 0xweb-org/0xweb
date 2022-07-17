@@ -6,7 +6,7 @@ import { $console } from './$console';
 
 export namespace $validate {
 
-    export const platforms = ['eth', 'polygon', 'bsc', 'hardhat'];
+    export const platforms = ['eth', 'polygon', 'bsc', 'xdai', 'hardhat'];
 
     export function platform (platform: TPlatform, message?: string) {
         $require.notNull(platform, message);

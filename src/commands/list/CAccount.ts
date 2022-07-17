@@ -8,6 +8,7 @@ import { $console } from '@core/utils/$console';
 import { TAddress } from '@dequanto/models/TAddress';
 import { $address } from '@dequanto/utils/$address';
 import { $require } from '@dequanto/utils/$require';
+import { Parameters } from '@core/utils/Paramsters';
 
 export const CAccount = <ICommand>{
     command: 'account',
@@ -54,7 +55,7 @@ export const CAccount = <ICommand>{
                 $console.toast(`Loading token ${tokenName}`);
                 let token = await app.chain.tokens.getToken(tokenName, true);
                 if (token == null) {
-                    throw new Error(`Unknown token: ${tokenName} for ${app.chain.tokens.platform}`);
+                    throw new Error(`Unknown token: ${tokenName} for ${app.chain.client.platform}`);
                 }
 
                 $console.toast(`Loading balance for ${address}`);
@@ -72,13 +73,8 @@ export const CAccount = <ICommand>{
 
     ],
     params: {
-        '-p, --pin': {
-            description: 'Account configuration is encrypted with a derived key from the pin and local machine key. ',
-            required: true
-        },
-        '-c, --chain': {
-            description: `Default: eth. Available: ${$validate.platforms.join(', ')}`
-        }
+        ...Parameters.pin,
+        ...Parameters.chain,
     },
 
     async process(args: string[], params, app: App) {

@@ -49,18 +49,20 @@ export namespace $command {
         for (let key in paramsDef) {
             let definition = paramsDef[key];
             let value = params[definition.key];
+            if (value != null) {
+                if (definition.map != null) {
+                    params[definition.key] = definition.map(value);
+                }
+            }
+
             if (value == null && definition.default != null) {
                 value = params[definition.key] = definition.default;
             }
-
             if (value == null && definition.required) {
                 params[definition.key] = await $cli.ask(
-                    `\n"--${definition.key}" is required. ${definition.description}. Input: `,
+                    `\n${definition.description}\n--${definition.key}: `,
                     definition.type
                 );
-            }
-            if (definition.map != null) {
-                params[definition.key] = definition.map(value);
             }
         }
 

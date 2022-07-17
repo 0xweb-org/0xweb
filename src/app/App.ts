@@ -54,7 +54,7 @@ export class App {
             ;
     }
 
-    async execute (argv?: string[]): Promise<void> {
+    async execute (argv?: string[]): Promise<any> {
         if (argv?.length > 0) {
             $cli.setParams(argv);
         }
@@ -63,26 +63,30 @@ export class App {
             $color_options({ type: 'none' });
         }
 
-        let platform = $cli.getParamValue('-c, --chain') ?? 'eth';
+        let { params: cliParams, args: cliArgs } = $cli.parse(argv);
+        let { command, params, args, paramsDefinition } = await this.commands.findCommand(cliArgs, cliParams);
 
-        $console.toast('Load config');
-        let config = this.config = await Config.fetch();
-
-        let { params, args } = argv?.length > 0 ? parseArgs(argv) : config.$cli;
-        let i = args.findIndex(x => /\bindex(\.(ts|js))?\b/i.test(x));
-        if (i > -1) {
-            args = args.slice(i + 1);
+        if ('help' in cliParams) {
+            await CHelp.printCommand(command, paramsDefinition);
+            return null;
         }
 
-        this.chain = await di
-            .resolve(PlatformFactory)
-            .get(platform as any);
+        $console.toast('Loading config');
+        this.config = await Config.fetch(params);
+
+        let platform = $cli.getParamValue('-c, --chain', params);
+        if (platform) {
+            this.chain = await di
+                .resolve(PlatformFactory)
+                .get(platform as any);
+        }
 
         let name = args[0];
         if (name) {
             $console.toast(`Process command gray<${args[0]}>`);
         }
-        return await this.commands.process(args, params, this);
+        //await this.commands.process(args, params, this);
+        return await command.process(args, params, this);
     }
 
     async runFromCli () {
@@ -105,25 +109,3 @@ export class App {
     }
 }
 
-function parseArgs (argv: string[]) {
-    let params = {};
-    let args = [];
-    for (let i = 0; i < argv.length; i++) {
-        if (argv[i].startsWith('--')) {
-            let key = argv[i].substring(2);
-            let value = argv[i + 1];
-            params[key] = value;
-            i += 1;
-            continue;
-        }
-
-        if (argv[i].startsWith('-')) {
-            let key = argv[i].substring(1);
-            params[key] = true;
-            continue;
-        }
-
-        args.push(argv[i]);
-    }
-    return { params, args };
-}

@@ -10,6 +10,8 @@ import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $require } from '@dequanto/utils/$require';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
+import { ChainAccount } from '@dequanto/models/TAccount';
+import { Parameters } from '@core/utils/Paramsters';
 
 
 export const CTransfer = <ICommand>{
@@ -39,10 +41,8 @@ export const CTransfer = <ICommand>{
             description: 'Receivers name or address. ',
             required: true
         },
-        '-c, --chain': {
-            description: `Default: eth. Available: ${$validate.platforms.join(', ')}`,
-            required: true
-        },
+        ...Parameters.chain,
+        ...Parameters.pin,
         '--safe-transport': {
             description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
         }
@@ -69,11 +69,14 @@ export const CTransfer = <ICommand>{
             throw new Error(`Account ${params.from} not found in storage`);
         }
         let accountTo = $is.Address(params.to)
-            ? { address: params.to }
+            ? <ChainAccount> { address: params.to }
             : await app.getAccount(params.to);
 
         if (accountTo == null) {
             throw new Error(`Account ${params.to} not found in storage`);
+        }
+        if (accountTo.platform && accountTo.platform !== app.chain.client.platform) {
+            throw new Error(`Chain missmatch. Account ${accountTo.address} required ${accountTo.platform}, but got ${app.chain.client.platform}`);
         }
 
         let service = di.resolve(TokenTransferService, app.chain.client);

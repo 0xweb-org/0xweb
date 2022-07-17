@@ -25,8 +25,11 @@ export const CHelp: ICommand & { printCommand }= {
         }
     },
 
-    printCommand (c: ICommand) {
-        let str = print.command(c);
+    printCommand (command: ICommand, paramsDefinition?) {
+        let str = print.command({
+            ...command,
+            params: paramsDefinition ?? void 0
+        });
         $console.log(str);
     }
 }

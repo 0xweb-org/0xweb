@@ -11,6 +11,8 @@ import { $require } from '@dequanto/utils/$require';
 import { CAccounts } from './CAccounts';
 import { File } from 'atma-io';
 import { HardhatWeb3Client } from '@dequanto/clients/HardhatWeb3Client';
+import alot from 'alot';
+import { Parameters } from '@core/utils/Paramsters';
 
 export const CSafe = <ICommand>{
     command: 'safe',
@@ -97,6 +99,10 @@ export const CSafe = <ICommand>{
                 },
                 '-m, --members': {
                     description: 'Additional owners. Comma-seperated addresses.',
+                    default: [],
+                    map (line) {
+                        return line.split(',').map(x => x.trim()).filter(Boolean);
+                    }
                 },
                 '--contracts': {
                     description: 'Optionally, JSON serialized file with multiSend, masterCopy and proxyFactory contracts'
@@ -112,28 +118,19 @@ export const CSafe = <ICommand>{
                 let account = await app.chain.accounts.get(params.owner, params.chain);
                 $require.notNull(account, `Account ${params.owner} not found`);
 
-                let owners = [
-                    account.address,
-                    ...(params.members?.split(',').map(x => x.trim()) ?? [])
-                ];
+                let owners = alot([
+                        account.address,
+                        ...params.members
+                    ])
+                    .distinct()
+                    .forEach(owner => $require.Address(owner))
+                    .toArray();
 
-                owners.forEach(owner => {
-                    $require.Address(owner);
-                });
-
-
-                app.chain.client = new HardhatWeb3Client({
-                    chainId: 1337,
-                    endpoints: [
-                        { url: 'http://127.0.0.1:8545' }
-                    ]
-                });
 
                 let gnosisSafe = await GnosisSafeFactory.create(account, app.chain.client, {
                     owners,
                     contracts: {
-                        [app.chain.client.chainId]: contracts,
-                        [31337]: contracts
+                        [app.chain.client.chainId]: contracts ?? void 0
                     },
                 });
                 $console.log(`bold<Created green<${gnosisSafe.safeAddress}>>`);
@@ -150,15 +147,8 @@ export const CSafe = <ICommand>{
         }
     ],
     params: {
-        '-p, --pin': {
-            description: 'Account configuration is encrypted with a derived key from the pin and local machine key. ',
-            required: true
-        },
-        '-c, --chain': {
-            description: `Available: ${$validate.platforms.join(', ')}`,
-            required: true,
-            oneOf: $validate.platforms
-        }
+        ...Parameters.pin,
+        ...Parameters.chain,
     },
 
     async process(args: string[], params, app: App) {

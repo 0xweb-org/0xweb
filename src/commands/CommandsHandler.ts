@@ -23,6 +23,59 @@ export class CommandsHandler  {
         return this;
     }
 
+    async findCommand (cliArgs: string[], cliParams): Promise<{
+        command?: ICommand,
+        args?: any[],
+        params?
+        paramsDefinition?
+    }> {
+        let name = null;
+        let command: ICommand;
+        if (cliArgs.length === 0) {
+            name = Object.keys(cliParams)[0];
+            command = this.flags[name];
+        } else {
+            name = cliArgs[0];
+            command = this.commands[name];
+        }
+        if (name == null) {
+            command = this.commands['help'];
+        }
+        if (command == null) {
+            throw new Error(`Unknown command: ${name}`);
+        }
+
+        let args = cliArgs.slice(1);
+        let paramsDefinition = command.params ?? {};
+        let isHelp = 'help' in cliParams;
+
+        if (command.subcommands) {
+            let subCommand = command.subcommands.find(x => x.command === args[0]);
+            if (subCommand) {
+                args = args.slice(1);
+                command = subCommand;
+                paramsDefinition = {
+                    ...(paramsDefinition ?? {}),
+                    ...(subCommand.params ?? {}),
+                };
+            } else {
+                if (isHelp === false) {
+                    throw new Error(`Subcommand 'bold<${args[0]}>' of 'bold<${name}>' not found`);
+                }
+            }
+        }
+
+        if (isHelp) {
+            return { command, paramsDefinition };
+        }
+
+
+        let params = await $command.getParams(cliParams, paramsDefinition);
+        $validate.args(command, args);
+        $validate.params(command, params, paramsDefinition);
+        return { command, args, params };
+    }
+
 
     async process (cliArgs: string[], cliParams, app: App) {
         let name = null;
@@ -68,23 +121,6 @@ export class CommandsHandler  {
 
 
         let params = await $command.getParams(cliParams, paramsDefinition);
-
-        // if (command.subcommands?.length > 0) {
-        //     let subCommand = command.subcommands.find(x => x.command === args[0]);
-        //     if (subCommand != null) {
-        //         if (subCommand.params != null) {
-        //             let subCommandParams = await $command.getParams(cliParams, subCommand.params);
-        //             params = {
-        //                 ...params,
-        //                 ...subCommandParams,
-        //             };
-        //         }
-        //         args = args.slice(1);
-        //         $validate.args(subCommand, args);
-        //         return await subCommand.process(args, params, app);
-        //     }
-        // }
-
         $validate.args(command, args);
         $validate.params(command, params, paramsDefinition);
         return await command.process(args, params, app);

@@ -5,6 +5,7 @@ import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
+import { Parameters } from '@core/utils/Paramsters';
 
 export const CAccounts = <ICommand>{
     command: 'accounts',
@@ -119,10 +120,7 @@ export const CAccounts = <ICommand>{
         }
     ],
     params: {
-        '-p, --pin': {
-            description: 'Account configuration is encrypted with a derived key from the pin and local machine key. ',
-            required: true
-        }
+        ...Parameters.pin,
     },
 
     async process(args: string[], params, app: App) {

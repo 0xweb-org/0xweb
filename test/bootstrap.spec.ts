@@ -82,8 +82,8 @@ UTest({
         eq_(isNaN(val), false, stdout.join(''));
     },
     async 'execute via cli' () {
-        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer --config-global dev/null`);
+        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer --config-global dev/null --chain eth`);
         let str = stdout.join('');
-        has_(str, /\d{10,}n/, 'Should contain BigInt as the ETH price');
+        has_(str, /\d{10,}n/, `"${str}" - Should contain BigInt as the ETH price`);
     }
 })
