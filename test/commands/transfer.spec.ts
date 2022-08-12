@@ -89,17 +89,14 @@ UTest({
             eq_($bigint.toEther(balance), 1.5);
         },
     },
-    async 'transfer ERC20' () {
+    async '!transfer ERC20' () {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
         let owner1 = provider.deployer();
         let owner2 = provider.deployer(1);
 
         l`>Deploy ERC20 token`;
-        let { contract } = await provider.deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
-            client
-        });
-
+        let contract = await TestUtils.deployFreeToken(client)
         await contract.airdrop();
 
         let erc20 = new ERC20(contract.address, client);
@@ -156,5 +153,47 @@ UTest({
         let balanceTwoAfter = Number(balanceTwoStr);
         l`> Balance two after ${balanceTwoAfter}`;
         eq_(balanceTwoAfter, 6);
+
+
+        l`> Call ERC20 interface with built-in openzeppelin contract`
+        stdBalanceTwo = await TestUtils.cli(`contract read erc20 balanceOf`, {
+            '--chain': 'hardhat',
+            '--address': contract.address,
+            '--account': owner1.address,
+        });
+        has_(stdBalanceTwo, '4000000000000000000n');
+    },
+
+    async 'transfer ERC20 with file signature' () {
+        let provider = new HardhatProvider();
+        let client = provider.client('localhost');
+        let owner1 = provider.deployer();
+        let owner2 = provider.deployer(1);
+
+        l`>Deploy ERC20 token`;
+        let contract = await TestUtils.deployFreeToken(client)
+        await contract.airdrop();
+
+        let erc20 = new ERC20(contract.address, client);
+
+
+        l`> Add to known tokens`
+        await TestUtils.cli(`tokens add`, {
+            '--address': contract.address,
+            '--symbol': 'FRT',
+            '--decimals': 18,
+            '--chain': 'hardhat'
+        });
+
+        l`> Adding account to storage`;
+        let stdAddOne = await TestUtils.cli(`accounts add`, {
+            '--name': 'nokeyAcc',
+            '--address': owner1.address,
+        });
+
+        await TestUtils.cli(`transfer 6 FRT --from nokeyAcc --to ${owner2.address}`, {
+            '--sig-transport': './test/bin/tx.json'
+        });
+
     }
 })

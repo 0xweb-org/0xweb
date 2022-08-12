@@ -1,14 +1,11 @@
 import di from 'a-di';
 import { ICommand } from '../ICommand';
-import { $validate } from '@core/utils/$validate';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { $is } from '@dequanto/utils/$is';
 import { IToken } from '@dequanto/models/IToken';
-import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
-import { $require } from '@dequanto/utils/$require';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { ChainAccount } from '@dequanto/models/TAccount';
 import { Parameters } from '@core/utils/Paramsters';
@@ -45,9 +42,12 @@ export const CTransfer = <ICommand>{
         ...Parameters.pin,
         '--safe-transport': {
             description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
+        },
+        '--sig-transport': {
+            description: `Optionally the file where we save the tx and wait until the signature for the TX is provided.`,
         }
     },
-    async process (args: string[], params: { from, to, chain, safeTransport? }, app: App) {
+    async process (args: string[], params: { from, to, chain, safeTransport?, sigTransport? }, app: App) {
         let [ amountStr, tokenMix ] = args;
 
 
@@ -111,6 +111,12 @@ export const CTransfer = <ICommand>{
             service.$configWriter({
                 safeTransport: new FileServiceTransport(app.chain.client, accountFrom, safeTransportFile)
             });
+        }
+        let sigTransportFile = params.sigTransport;
+        if (sigTransportFile) {
+            service.$configWriter({
+                sigTransport: sigTransportFile
+            })
         }
 
         let tx = await service.transfer(accountFrom, accountTo.address, token, amount);

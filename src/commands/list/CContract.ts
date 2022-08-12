@@ -44,7 +44,7 @@ export const CContract = <ICommand> {
                 {
                     description: 'Method name',
                     required: true
-                }
+                },
             ],
             params: {
                 '-b, --block': {
@@ -52,6 +52,9 @@ export const CContract = <ICommand> {
                 },
                 '-c, --chain': {
                     description: `Default: The chain will be taken from the installed contract. `
+                },
+                '--address': {
+                    description: `Overwrite contracts address.`
                 },
             },
             async process (args, params, app) {

@@ -1,3 +1,7 @@
+import { Web3Client } from '@dequanto/clients/Web3Client';
+import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
+import { l } from '@dequanto/utils/$logger';
+import di from 'a-di';
 import alot from 'alot';
 import { File } from 'atma-io';
 import { run } from 'shellbee';
@@ -35,5 +39,11 @@ export const TestUtils = {
 
         }
         return stdout.join('\n');
+    },
+    async deployFreeToken (client: Web3Client) {
+        let { contract } = await di.resolve(HardhatProvider).deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
+            client
+        });
+        return contract;
     }
 }

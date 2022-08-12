@@ -1,28 +1,30 @@
-import { IPlatformTools } from '@dequanto/chains/PlatformFactory';
 import di from 'a-di';
+import alot from 'alot';
 import { File, env } from 'atma-io';
 import { PackageService } from './PackageService';
 import { AbiItem, AbiInput } from 'web3-utils'
 import { GeneratorFromAbi } from '@dequanto/gen/GeneratorFromAbi';
 import { IPackageItem } from '@core/models/IPackageJson';
-import alot from 'alot';
 import { $cli } from '@core/utils/$cli';
 import { $console } from '@core/utils/$console';
 import { ContractReader } from '@dequanto/contracts/ContractReader';
 import { TxTopicInMemoryProvider } from '@dequanto/txs/receipt/TxTopicInMemoryProvider';
 import { ContractWriter } from '@dequanto/contracts/ContractWriter';
 import { AccountsService } from './AccountsService';
-import appcfg from 'appcfg';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { App } from '@core/app/App';
 import { ITxConfig } from '@dequanto/txs/ITxConfig';
 import { ITxWriterOptions } from '@dequanto/txs/TxWriter';
+import { TAddress } from '@dequanto/models/TAddress';
+import { PlatformFactory } from '@dequanto/chains/PlatformFactory';
+import { $require } from '@dequanto/utils/$require';
 
 interface ICallParams {
     block?: string | number
     account?: string
     chain?: TPlatform
     nonce?: number
+    address?: TAddress
 }
 
 export class ContractService {
@@ -63,11 +65,17 @@ export class ContractService {
 
         let methodSignature = this.stringifyAbi(abiItem);
         let isRead = await  GeneratorFromAbi.Gen.isReader(abiItem);
+        let platform = params.chain ?? pckg.platform;
+        if (platform !== this.app?.chain?.client.platform) {
+            this.app.chain = await di
+                .resolve(PlatformFactory)
+                .get(platform as any);
+        }
 
         $console.log('')
         $console.table([
-            ['Contract', pckg.address],
-            ['Platform', pckg.platform],
+            ['Contract', params.address ?? pckg.address],
+            ['Platform', platform],
             ['Action', isRead ? 'READ' : 'WRITE'],
             ['Method',  methodSignature.trim()],
         ]);
@@ -75,13 +83,18 @@ export class ContractService {
 
         if (isRead) {
             await this.$read(pckg, abiItem, params);
+        } else {
+            await this.$write(pckg, abiItem, params);
         }
     }
 
-    private async $read (pckg: IPackageItem, abi: AbiItem, params) {
+    private async $read (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
+        let address = params.address ?? pckg.address;
+        $require.Address(address, 'Contracts address invalid');
+
         let args = await this.getArguments(abi, params);
         let reader = await this.getContractReader(params);
-        let result = await reader.readAsync(pckg.address, abi, ...args);
+        let result = await reader.readAsync(address, abi, ...args);
 
         $console.log(result);
     }
@@ -92,7 +105,6 @@ export class ContractService {
         }
         return reader;
     }
-
     private async $write (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
         let args = await this.getArguments(abi, params);
         let writer = await this.getContractWriter(pckg, abi, params);
@@ -111,22 +123,20 @@ export class ContractService {
         let receipt = await tx.onCompleted;
         $console.log(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
     }
-    private async getContractWriter (pckg: IPackageItem, abi: AbiItem, params) {
+    private async getContractWriter (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
 
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
 
-        let writer = di.resolve(ContractWriter, pckg.address, this.app.chain.client);
+        let writer = di.resolve(ContractWriter, params.address ?? pckg.address, this.app.chain.client);
         return writer;
     }
-
     private async getArguments (abi: AbiItem, params) {
         let args = await alot(abi.inputs).mapAsync(async x => {
             return this.getArgument(x, params);
         }).toArrayAsync({ threads: 1 });
         return args;
     }
-
     private async getArgument (abi: AbiInput, params) {
         if (abi.components != null) {
             $console.log('gray<Object input>');
@@ -158,12 +168,14 @@ export class ContractService {
         }
         return $cli.ask(`Value for bold<${abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
     }
-
     private async getPackage (name: string) {
         let packageService = di.resolve(PackageService, this.app.chain);
         let pckg = await packageService.getPackage(name);
         if (pckg == null) {
-            throw new Error(`Package ${name} not found. gray<0xweb c list> to view all installed contracts`);
+            pckg = await packageService.getBuiltIn(name)
+            if (pckg == null) {
+                throw new Error(`Package ${name} not found. gray<0xweb c list> to view all installed contracts`);
+            }
         }
         return pckg;
     }
@@ -171,7 +183,6 @@ export class ContractService {
         let abi = await File.readAsync<AbiItem[]>(pckg.main.replace('.ts', '.json'));
         return abi;
     }
-
     private stringifyAbi (abi: AbiItem) {
         let str = GeneratorFromAbi.Gen.serializeMethodAbi(abi, true);
         let line = '  ' + str.replace('function', '').trim();

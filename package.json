@@ -37,7 +37,7 @@
         "appcfg": "^0.4.68",
         "atma-io": "^1.2.60",
         "atma-io-middleware-yml": "^1.1.25",
-        "atma-utils": "^0.1.38",
+        "atma-utils": "^0.2.60",
         "ethers": "^5.5.1",
         "everlog": "^1.0.9",
         "memd": "^0.3.10",
