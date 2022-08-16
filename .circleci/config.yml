@@ -10,14 +10,15 @@ jobs:
     # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
     # https://circleci.com/developer/images/image/cimg/node
     docker:
-      - image: cimg/node:16.10
+      - image: cimg/node:18.7
     steps:
       - checkout
       - run:
           name: Checkout submodules
           command: git submodule update --init --recursive
-      - node/install-packages:
-          pkg-manager: npm
+      - run:
+          name: NPM Install
+          command: npm install --force
       - run:
           name: Build Project
           command: npm run build
