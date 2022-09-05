@@ -18,6 +18,10 @@ import { ITxWriterOptions } from '@dequanto/txs/TxWriter';
 import { TAddress } from '@dequanto/models/TAddress';
 import { PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { $require } from '@dequanto/utils/$require';
+import memd from 'memd';
+import { Web3Client } from '@dequanto/clients/Web3Client';
+import { IBlockChainExplorer } from '@dequanto/BlockchainExplorer/IBlockChainExplorer';
+import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
 
 interface ICallParams {
     block?: string | number
@@ -88,6 +92,20 @@ export class ContractService {
         }
     }
 
+    @memd.deco.memoize({
+        keyResolver (address: TAddress, client: Web3Client, explorer: IBlockChainExplorer) {
+            return `${client.platform}:${address}`
+        },
+        persistance: new memd.FsTransport({
+            path: env.appdataDir.combine('./0xweb/cache/contracts.json')
+        })
+    })
+    async getAbiByAddress (address: TAddress, client: Web3Client, explorer: IBlockChainExplorer): Promise<AbiItem[]> {
+        let resolver = new ContractAbiProvider(client, explorer);
+        let result = await resolver.getAbi(address);
+        return result.abiJson;
+    }
+
     private async $read (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
         let address = params.address ?? pckg.address;
         $require.Address(address, 'Contracts address invalid');
@@ -154,12 +172,13 @@ export class ContractService {
             }
 
             let arr = await alot(abi.components).mapAsync(async x => {
-                let value = await this.getArgument(x, obj);
+                let value:any = await this.getArgument(x, obj);
                 return {
                     key: x.name,
-                    value: x.value
+                    value: value
                 };
             }).toArrayAsync({ threads: 1 });
+
             return alot(arr).toDictionary(x => x.key, x => x.value);
         }
         let val = params[abi.name];

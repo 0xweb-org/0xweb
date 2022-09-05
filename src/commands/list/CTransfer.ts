@@ -7,8 +7,9 @@ import { IToken } from '@dequanto/models/IToken';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
-import { ChainAccount } from '@dequanto/models/TAccount';
+import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
 import { Parameters } from '@core/utils/Paramsters';
+import { l } from '@dequanto/utils/$logger';
 
 
 export const CTransfer = <ICommand>{
@@ -121,7 +122,8 @@ export const CTransfer = <ICommand>{
 
         let tx = await service.transfer(accountFrom, accountTo.address, token, amount);
         let receipt = await tx.wait();
-        $console.log(`Receipt ${receipt.transactionHash}`);
+
+        l`Transfered. Receipt: bold<${receipt.transactionHash}>`;
     }
 }
 

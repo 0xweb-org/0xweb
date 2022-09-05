@@ -38,7 +38,7 @@ export const CAccounts = <ICommand>{
                 }
                 if (key) {
                     let addr = ChainAccountProvider.getAddressFromKey(key);
-                    if (address != null && $address.eq(addr, address)) {
+                    if (address != null && $address.eq(addr, address) === false) {
                         throw new Error(`Provided key resolves to ${addr} address, but ${address} was provided.`);
                     }
                     address = addr;

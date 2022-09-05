@@ -22,22 +22,40 @@ export namespace $console {
     }
 
     export function table(arr: (string | number)[][]) {
+
+        arr = arr.filter(x => x != null && x.length > 0);
+
         let lengths = arr[0].map((row, i) => {
-            let size = alot(arr).max(x => String(x[i]).length);
+            let size = alot(arr).max(x => {
+                let str = String(x[i]);
+                let lines = str.split('\n');
+                return alot(lines).max(x => x.length);
+            });
             return size;
         });
 
+
         let lines = arr.map(row => {
-            return row
-                .map((x, i) => {
-                    let size = lengths[i];
-                    let str = String(x).padEnd(size, ' ');
-                    if (i % 2 === 1) {
-                        str = `bold<${str}>`;
-                    }
-                    return str;
+
+            let multiLines = row.map(x => String(x).split('\n'));
+            let multiLinesCount = alot(multiLines).max(x => x.length);
+            return alot
+                .fromRange(0, multiLinesCount)
+                .map(y => {
+
+                    return row.map((_, i) => {
+                        let x = multiLines[i][y];
+                        let size = lengths[i];
+                        let str = String(x ?? '').padEnd(size, ' ');
+                        if (i % 2 === 1) {
+                            str = `bold<${str}>`;
+                        }
+                        return str;
+                    })
+                    .join(' ');
                 })
-                .join(' ');
+                .toArray()
+                .join('\n')
         });
 
         log(lines.join('\n'));

@@ -22,6 +22,8 @@ import { TAddress } from '@dequanto/models/TAddress';
 import { CTransfer } from '@core/commands/list/CTransfer';
 import { $color_options } from '@dequanto/utils/$color';
 import { CTokens } from '@core/commands/list/CTokens';
+import { IAccount } from '@dequanto/models/TAccount';
+import { CTx } from '@core/commands/list/CTx';
 
 declare const global;
 
@@ -45,6 +47,8 @@ export class App {
             .register(CToken)
             .register(CTokens)
             .register(CTransfer)
+            .register(CTx)
+
             .register(CBlock)
             .register(CGas)
             .register(CConfig)
@@ -81,11 +85,11 @@ export class App {
                 .get(platform as any);
         }
 
-        let name = args[0];
-        if (name) {
-            $console.toast(`Process command gray<${args[0]}>`);
-        }
-        //await this.commands.process(args, params, this);
+        // let name = args[0];
+        // if (name) {
+            $console.toast(`Process command gray<${ command.command }>`);
+        //}
+
         return await command.process(args, params, this);
     }
 
@@ -102,10 +106,10 @@ export class App {
         }
     }
 
-    async getAccount (mix: TAddress | string) {
+    async getAccount <T extends IAccount = IAccount> (mix: TAddress | string): Promise<T> {
         //let accounts = di.resolve(AccountsService, app.config);
         let account = await this.chain.accounts.get(mix);
-        return account;
+        return account as T;
     }
 }
 

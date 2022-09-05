@@ -9,18 +9,19 @@ import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { SafeUtils } from './SafeUtils';
 import { TestUtils } from '../TestUtils';
 import { $address } from '@dequanto/utils/$address';
+import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 
 
 UTest({
     $config: {
         timeout: 2 * 60 * 1000
     },
-    async '$before' () {
+    async '$before'() {
         await TestUtils.clean();
         await TestNode.start();
     },
     'transfer ETH': {
-        async 'EOA to EOA' () {
+        async 'EOA to EOA'() {
             let provider = new HardhatProvider();
             let client = provider.client('localhost');
             let owner1 = provider.deployer();
@@ -38,7 +39,7 @@ UTest({
             let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalanceOne)[1];
             let balanceOne = Number(balanceOneStr);
             l`> Balance one ${balanceOne}`;
-            eq_(balanceOne, $bigint.toEther( await client.getBalance(owner1.address) ));
+            eq_(balanceOne, $bigint.toEther(await client.getBalance(owner1.address)));
 
 
             l`> Get balance two`;
@@ -46,7 +47,7 @@ UTest({
             let balanceTwoStr = /Balance\s+([\d\.]+)/.exec(stdBalanceTwo)[1];
             let balanceTwo = Number(balanceTwoStr);
             l`> Balance two ${balanceTwo}`;
-            eq_(balanceTwo, $bigint.toEther( await client.getBalance(owner2.address) ));
+            eq_(balanceTwo, $bigint.toEther(await client.getBalance(owner2.address)));
 
             l`> Transfer`;
             await TestUtils.cli(`transfer 5 ETH --from one --to ${owner2.address}`, {});
@@ -67,7 +68,7 @@ UTest({
             l`Balance two after ${balanceTwoAfter}`;
             eq_(balanceTwoAfter, balanceTwo + 5);
         },
-        async 'EOA to SAFE' () {
+        async 'EOA to SAFE'() {
             let provider = new HardhatProvider();
             let owner1 = provider.deployer();
             let client = provider.client('localhost');
@@ -89,7 +90,7 @@ UTest({
             eq_($bigint.toEther(balance), 1.5);
         },
     },
-    async '!transfer ERC20' () {
+    async 'transfer ERC20'() {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
         let owner1 = provider.deployer();
@@ -126,7 +127,7 @@ UTest({
         l`> Balance one ${balanceOne}`;
 
         eq_(balanceOne, 10);
-        eq_(balanceOne, $bigint.toEther( await erc20.balanceOf(owner1.address) ));
+        eq_(balanceOne, $bigint.toEther(await erc20.balanceOf(owner1.address)));
 
 
         l`> Get balance two`;
@@ -135,7 +136,7 @@ UTest({
         let balanceTwo = Number(balanceTwoStr);
         l`> Balance two ${balanceTwo}`;
         eq_(balanceTwo, 0n);
-        eq_(balanceTwo, $bigint.toEther( await erc20.balanceOf(owner2.address) ));
+        eq_(balanceTwo, $bigint.toEther(await erc20.balanceOf(owner2.address)));
 
         l`> Transfer`;
         await TestUtils.cli(`transfer 6 FRT --from one --to ${owner2.address}`, {});
@@ -164,10 +165,24 @@ UTest({
         has_(stdBalanceTwo, '4000000000000000000n');
     },
 
-    async 'transfer ERC20 with file signature' () {
+    async 'transfer ETH with key'() {
+        let provider = new HardhatProvider();
+        let acc1 = provider.deployer(0);
+
+        let acc = await ChainAccountProvider.generate();
+
+        l`> Transfer`;
+        await TestUtils.cli(`transfer 1.1 ETH --from ${acc1.key} --to ${acc.address}`, {});
+
+        let stdBalance = await TestUtils.cli(`account balance ${acc.address} ETH`, {});
+        let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalance)[1];
+        let balanceOneAfter = Number(balanceOneStr);
+        eq_(balanceOneAfter, 1.1);
+    },
+    async 'transfer ERC20 with file signature'() {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
-        let owner1 = provider.deployer();
+        let owner1 = provider.deployer(0);
         let owner2 = provider.deployer(1);
 
         l`>Deploy ERC20 token`;
@@ -188,12 +203,26 @@ UTest({
         l`> Adding account to storage`;
         let stdAddOne = await TestUtils.cli(`accounts add`, {
             '--name': 'nokeyAcc',
-            '--address': owner1.address,
+            '--address': owner1.address
         });
 
-        await TestUtils.cli(`transfer 6 FRT --from nokeyAcc --to ${owner2.address}`, {
+        let transferShell = await TestUtils.cliParallel(`transfer 6 FRT --from nokeyAcc --to ${owner2.address}`, {
             '--sig-transport': './test/bin/tx.json'
+        }, {
+            matchReady: /Waiting for the signature/
         });
 
+        await transferShell.onReadyAsync();
+
+        let signStdout = await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
+            '--account': owner1.key,
+        });
+
+        await transferShell.onCompleteAsync();
+
+        let stdBalance = await TestUtils.cli(`account balance ${owner2.address} FRT`, {});
+        let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalance)[1];
+        let balanceOneAfter = Number(balanceOneStr);
+        eq_(balanceOneAfter, 6);
     }
 })

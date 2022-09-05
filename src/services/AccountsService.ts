@@ -37,7 +37,16 @@ export class AccountsService {
         return accounts;
     }
 
-    async get(name: string): Promise<(ChainAccount | SafeAccount)> {
+    async get(name: string): Promise<(ChainAccount | SafeAccount)>
+    async get(key: string): Promise<(ChainAccount | SafeAccount)>
+    async get(mix: string): Promise<(ChainAccount | SafeAccount)> {
+        // if ($is.hexString(mix) && mix.length > 32) {
+        //     return <ChainAccount> {
+        //         address: ChainAccountProvider.getAddressFromKey(mix),
+        //         key: mix
+        //     };
+        // }
+        let name = mix;
         let accounts = await this.list();
         let account = this.getAccount(name);
         if (account == null) {
