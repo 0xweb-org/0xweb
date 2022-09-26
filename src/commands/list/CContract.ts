@@ -83,7 +83,7 @@ export const CContract = <ICommand> {
                 '-c, --chain': {
                     description: `Default: The chain will be taken from the installed contract. `
                 },
-                ...Parameters.account,
+                ...Parameters.account(),
                 ...Parameters.pin,
                 '--nonce': {
                     description: 'Rewrite nonce',

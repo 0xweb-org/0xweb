@@ -82,7 +82,12 @@ export namespace $validate {
 
             let val = args[i];
             if (val == null) {
-                throw new Error(`Argument ${def.name ?? i} is required`);
+                let str = `${def.name ?? i}`;
+                if (def.description) {
+                    str += ` (${def.description})`
+                }
+
+                throw new Error(`Argument ${str} is required`);
             }
         }
     }

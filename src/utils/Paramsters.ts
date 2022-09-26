@@ -1,10 +1,12 @@
 import { $validate } from './$validate';
 
 export const Parameters = {
-    account: {
-        '-a, --account': {
-            description: 'Account name. Accounts should be unlocked with gray<-p, --pin> parameter',
-            required: true,
+    account (opts?: { required?: boolean }) {
+        return {
+            '-a, --account': {
+                description: 'Account name. Accounts should be unlocked with gray<-p, --pin> parameter',
+                required: opts?.required ?? true,
+            }
         }
     },
     pin: {

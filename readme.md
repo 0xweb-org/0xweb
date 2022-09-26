@@ -1,4 +1,5 @@
-## [`0xWeb`](https://0xweb.org)
+## [`0xWeb`](https://0xweb.org) - Contract package manager and CLI Web3 Toolkit
+
 
 <p align='center'>
     <img src='assets/background.jpg'/>
@@ -9,6 +10,7 @@
 [![Documentation Link](https://img.shields.io/badge/%E2%9D%93-documentation-green.svg)](https://docs.0xweb.org)
 [![NPM version](https://badge.fury.io/js/0xweb.svg)](http://badge.fury.io/js/0xweb)
 [![CircleCI](https://circleci.com/gh/0xweb-org/0xweb.svg?style=svg)](https://circleci.com/gh/0xweb-org/0xweb)
+
 
 
 ## Contract Package Manager

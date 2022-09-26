@@ -1,7 +1,6 @@
 import * as rl from 'readline';
 import alot from 'alot';
 import { $color } from '@dequanto/utils/$color';
-import { $logger } from '@dequanto/utils/$logger';
 
 export namespace $console {
 
@@ -64,11 +63,11 @@ export namespace $console {
     function write(params: { str: string, isToast?: boolean }) {
         let prev = std[0];
         if (prev?.isToast) {
-            // rl.clearLine(process.stdout, 0);
-            // rl.cursorTo(process.stdout, 0, null);
+            rl.clearLine(process.stdout, 0);
+            rl.cursorTo(process.stdout, 0, null);
 
-            // rl.moveCursor(process.stdout, 0, -1);
-            // rl.clearLine(process.stdout, 0);
+            rl.moveCursor(process.stdout, 0, -1);
+            rl.clearLine(process.stdout, 0);
         }
         if (params?.isToast) {
             process.stdout.write( $color(params.str) + '\n' );

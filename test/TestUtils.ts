@@ -22,7 +22,7 @@ export const TestUtils = {
         await File.removeAsync(ACCOUNTS_PATH);
         await File.removeAsync(CONFIG_PATH);
     },
-    async cli (command: string, params: Record<string, string | number>) {
+    async cli (command: string, params: Record<string, string | number>, opts?: { silent?: boolean }) {
         params = {
             ...PARAMS_DEF,
             ...params
@@ -31,7 +31,7 @@ export const TestUtils = {
         let cmdStr = `node ./index.js ${command} ${paramsStr}`;
         let { stdout, stderr, lastCode } = await run({
             command: cmdStr,
-            //silent: true,
+            silent: opts?.silent ?? false,
         });
         if (lastCode !== 0) {
             console.error(stdout.join('\n'), stderr.join('\n'));
