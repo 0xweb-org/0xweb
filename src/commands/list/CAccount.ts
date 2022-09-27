@@ -21,7 +21,7 @@ export const CAccount = <ICommand>{
             command: 'balance',
             //example: '0xweb account balance <accountName> <tokenSymbol> -p <pin>',
             description: [
-                'Get account balance '
+                'Get account balance for ETH or any ERC20 token'
             ],
             arguments: [
                 {

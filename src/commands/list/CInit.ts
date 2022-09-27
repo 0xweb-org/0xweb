@@ -14,7 +14,7 @@ interface IInitOptions {
 export const CInit: ICommand = {
     command: 'init',
     description: [
-        'Clone dequanto sources and configurate aliases in tsconfig'
+        'Clone dequanto sources and configure aliases in tsconfig'
     ],
     params: {
         '-d, --dir': {

@@ -1,6 +1,7 @@
 import { $console } from '@core/utils/$console';
 import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { ChainAccount, SafeAccount } from '@dequanto/models/TAccount';
+import { $is } from '@dequanto/utils/$is';
 import appcfg from 'appcfg';
 
 export class AccountsService {
@@ -40,12 +41,12 @@ export class AccountsService {
     async get(name: string): Promise<(ChainAccount | SafeAccount)>
     async get(key: string): Promise<(ChainAccount | SafeAccount)>
     async get(mix: string): Promise<(ChainAccount | SafeAccount)> {
-        // if ($is.hexString(mix) && mix.length > 32) {
-        //     return <ChainAccount> {
-        //         address: ChainAccountProvider.getAddressFromKey(mix),
-        //         key: mix
-        //     };
-        // }
+        if ($is.hexString(mix) && mix.length > 64) {
+            return <ChainAccount> {
+                address: ChainAccountProvider.getAddressFromKey(mix),
+                key: mix
+            };
+        }
         let name = mix;
         let accounts = await this.list();
         let account = this.getAccount(name);

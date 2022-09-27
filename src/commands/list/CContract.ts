@@ -77,19 +77,18 @@ export const CContract = <ICommand> {
                 }
             ],
             params: {
-                '-b, --block': {
-                    description: 'Default: Latest. If archive node is used, READ actions can be performed at specified block number.'
-                },
                 '-c, --chain': {
                     description: `Default: The chain will be taken from the installed contract. `
                 },
                 ...Parameters.account(),
                 ...Parameters.pin,
                 '--nonce': {
-                    description: 'Rewrite nonce',
+                    description: 'Override nonce',
                     type: 'number'
-                }
-
+                },
+                '--safe-transport': {
+                    description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
+                },
             },
             async process (args, params, app) {
                 let [name, method] = args;

@@ -22,6 +22,9 @@ import memd from 'memd';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { IBlockChainExplorer } from '@dequanto/BlockchainExplorer/IBlockChainExplorer';
 import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
+import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
+import { $account } from '@dequanto/utils/$account';
+import { ChainAccount } from '@dequanto/models/TAccount';
 
 interface ICallParams {
     block?: string | number
@@ -29,6 +32,7 @@ interface ICallParams {
     chain?: TPlatform
     nonce?: number
     address?: TAddress
+    safeTransport?: string
 }
 
 export class ContractService {
@@ -130,13 +134,22 @@ export class ContractService {
         let accounts = di.resolve(AccountsService, this.app.config);
         let account = await accounts.get(params.account);
 
+        let writerConfig = <ITxWriterOptions> {
+
+        };
+        if ($account.isSafe(account) && params.safeTransport) {
+            let sender: ChainAccount = $account.getSender(account);
+            if (sender.key == null) {
+                sender = await accounts.get(sender.address ?? sender.name) as ChainAccount;
+            }
+            writerConfig.safeTransport = new FileServiceTransport(this.app.chain.client, sender, params.safeTransport);
+        }
+
         let tx = await writer.writeAsync(account, abi, args, {
             builderConfig: <ITxConfig> {
                 nonce: params.nonce
             },
-            writerConfig: <ITxWriterOptions> {
-
-            },
+            writerConfig,
         });
         let receipt = await tx.onCompleted;
         $console.log(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);

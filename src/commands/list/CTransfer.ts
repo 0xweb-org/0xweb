@@ -14,9 +14,9 @@ import { l } from '@dequanto/utils/$logger';
 
 export const CTransfer = <ICommand>{
     command: 'transfer',
-    example: '0xweb token transfer 0.1 ETH --from 0x... --to 0x... ',
+    example: '0xweb transfer 0.1 ETH --from 0x... --to 0x... ',
     description: [
-        'Get token price'
+        'Transfer ETH or ERC20'
     ],
     arguments: [
         {

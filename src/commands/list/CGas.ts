@@ -6,7 +6,7 @@ import { ICommand } from '../ICommand';
 export const CGas: ICommand = {
     command: 'gas',
     description: [
-        'Show current GAS price for a chain'
+        'Print current GAS price for a chain'
     ],
     params: {
         '-c, --chain': {

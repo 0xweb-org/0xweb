@@ -11,13 +11,13 @@ import { type App } from '@core/app/App';
 export const CBlock = <ICommand>{
     command: 'block',
     description: [
-        'View blocks info.'
+        'Block utils'
     ],
     subcommands: [
         {
             command: 'get',
             description: [
-                'Get block'
+                'Get block info'
             ],
             arguments: [
                 { description: `latest or <blockNumber>` }

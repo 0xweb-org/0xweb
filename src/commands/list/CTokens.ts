@@ -10,14 +10,14 @@ export const CTokens = <ICommand>{
     command: 'tokens',
 
     description: [
-        'Managa known tokens.'
+        'Manage known tokens.'
     ],
     subcommands: [
         {
             command: 'add',
             example: '0xweb tokens add --address 0x... --symbol FRT --decimals 18 --chain eth',
             description: [
-                'Add new token to the known list.'
+                'Add a new token to the known list.'
             ],
             params: {
                 '-a, --address': {
@@ -51,7 +51,7 @@ export const CTokens = <ICommand>{
             command: 'find',
             example: '0xweb tokens find USDC',
             description: [
-                'Add new token to the known list.'
+                'Get a token by Symbol or Address, and print the info'
             ],
             arguments: [
                 {

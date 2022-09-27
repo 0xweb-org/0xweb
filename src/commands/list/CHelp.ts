@@ -6,7 +6,7 @@ import { ICommand } from '../ICommand';
 export const CHelp: ICommand & { printCommand }= {
     command: 'help, -h, --help',
     description: [
-        'Show this overview'
+        'Print this overview'
     ],
     async process (args, params, app: App) {
 
@@ -14,7 +14,7 @@ export const CHelp: ICommand & { printCommand }= {
         let json = await File.readAsync<any>( path);
 
         $console.log('');
-        $console.log('! We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<0xweb config -e>');
+        $console.log('bold<green<!>> We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<yellow<0xweb config -e>>');
 
         $console.log('');
         $console.log(`0xweb@${json.version} Commands`);

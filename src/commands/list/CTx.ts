@@ -20,7 +20,7 @@ export const CTx: ICommand = {
 
             command: 'sign',
             description: [
-                'Sign a transaction json file'
+                'Sign a transaction in a json file'
             ],
             arguments: [
                 {

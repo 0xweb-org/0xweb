@@ -25,7 +25,7 @@ export const CSafe = <ICommand>{
         {
             command: 'add',
             description: [
-                'Add existing safe. '
+                'Add existing safe.'
             ],
             params: {
                 '-o, --owner': {
@@ -68,7 +68,7 @@ export const CSafe = <ICommand>{
         {
             command: 'list',
             description: [
-                'List account names'
+                'List safe account names'
             ],
             async process (args: string[], params, app: App) {
                 let service = di.resolve(AccountsService, app.config);
