@@ -1,18 +1,22 @@
 import di from 'a-di';
+import alot from 'alot';
 import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
-import { $validate } from '@core/utils/$validate';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
-import { SafeAccount } from '@dequanto/models/TAccount';
+import { ChainAccount, SafeAccount, TAccount } from '@dequanto/models/TAccount';
 import { $address } from '@dequanto/utils/$address';
 import { GnosisSafeFactory } from '@dequanto/safe/GnosisSafeFactory';
 import { $require } from '@dequanto/utils/$require';
 import { CAccounts } from './CAccounts';
 import { File } from 'atma-io';
-import { HardhatWeb3Client } from '@dequanto/clients/HardhatWeb3Client';
-import alot from 'alot';
 import { Parameters } from '@core/utils/Paramsters';
+import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
+import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
+import { Web3Client } from '@dequanto/clients/Web3Client';
+import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
+import { $tx } from '@core/utils/$tx';
+import { $logger } from '@dequanto/utils/$logger';
 
 export const CSafe = <ICommand>{
     command: 'safe',
@@ -115,7 +119,7 @@ export const CSafe = <ICommand>{
                     contracts = await File.readAsync<any>(params.contracts);
                 }
 
-                let account = await app.chain.accounts.get(params.owner, params.chain);
+                let account = await app.chain.accounts.get(params.owner, params.chain) as ChainAccount;
                 $require.notNull(account, `Account ${params.owner} not found`);
 
                 let owners = alot([
@@ -144,7 +148,68 @@ export const CSafe = <ICommand>{
                     chain: params.chain,
                 }, app);
             }
-        }
+        },
+        {
+            command: 'sign',
+            description: [
+                'Add confirmations to the multisig transaction in a JSON file'
+            ],
+            arguments: [
+                {
+                    description: `Path to a Tx JSON file`,
+                    required: true
+                }
+            ],
+            params: {
+                ...Parameters.account(),
+            },
+            async process (args: string[], params: { account }, app: App) {
+                let [ path ] = args;
+                let client = app.chain.client;
+                let account = await app.chain.accounts.get(params.account) as ChainAccount;
+
+                $require.notNull(account, `Account ${params.account} not found`);
+                $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
+
+
+                let safeWorker = new SafeWorker(path, this.client, account);
+                await safeWorker.sign();
+            }
+        },
+        {
+            command: 'submit,send',
+            description: [
+                'Sends a tx from the file to the blockchain. All confirmations should be already included in the file'
+            ],
+            arguments: [
+                {
+                    description: `Path to a Tx JSON file`,
+                    required: true
+                }
+            ],
+            params: {
+                ...Parameters.account(),
+            },
+            async process (args: string[], params: { account }, app: App) {
+                let [ path ] = args;
+                let client = app.chain.client;
+                let account = await app.chain.accounts.get(params.account) as ChainAccount;
+
+                $require.notNull(account, `Account ${params.account} not found`);
+                $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
+
+
+                let safeWorker = new SafeWorker(path, this.client, account);
+
+                $console.toast('Sending transaction');
+                let tx = await safeWorker.send();
+                let hash = await tx.onSent;
+                $console.toast(`Transaction ${hash} sent. Waiting for receipt`);
+
+                let receipt = await tx.onCompleted;
+                await $tx.log(client, app.chain.explorer, hash, null, receipt);
+            }
+        },
     ],
     params: {
         ...Parameters.pin,
@@ -156,3 +221,72 @@ export const CSafe = <ICommand>{
     }
 }
 
+class SafeWorker {
+    constructor (private path: string, private client: Web3Client, private account: ChainAccount) {
+
+    }
+
+    async send () {
+        let { json, gnosis } = await this.load();
+        return gnosis.submitTransaction(json.safeTxHash);
+    }
+
+    async sign () {
+        let client = this.client;
+        let path = this.path;
+        let account = this.account;
+
+
+        let { json, gnosis } = await this.load();
+
+        let confirmation = await gnosis.createTxSignature(json.safeTxHash);
+        let confirmations = json.confirmations as (typeof confirmation)[];
+        if (confirmations == null) {
+            confirmations = json.confirmations = [];
+        }
+
+        let has = confirmations.find(x => $address.eq(x.signature?.signer, this.account.address));
+        if (has) {
+            throw new Error(`Signature for ${this.account.address} already exists`);
+        }
+
+        confirmations.push(confirmation);
+        await File.writeAsync<any>(path, json);
+    }
+
+    private async load () {
+        let { client, account, path } = this;
+
+        $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
+
+        let json = await File.readAsync<any>(path);
+        $require.Address(json.safeAddress, `No "safeAddress" field in the json file: ${path}`);
+
+        let gnosis = di.resolve(GnosisSafeHandler, {
+            owner: account,
+            safeAddress: json.safeAddress,
+            client: this.client,
+            transport: new FileServiceTransport(this.client, account, path)
+        });
+
+        let safeTxHash = json.safeTxHash;
+        if (safeTxHash == null) {
+            // ensure safeTxHash
+            let builder = TxDataBuilder.fromJSON(client, account, {
+                tx: json.tx,
+                config: json.config
+            });
+            let { safeTxHash: hash } = await gnosis.createTxHash(builder);
+            safeTxHash = hash;
+
+            json.safeTxHash = safeTxHash;
+            await File.writeAsync<any>(path, json);
+        }
+
+        return {
+            json,
+            gnosis
+        };
+    }
+
+}

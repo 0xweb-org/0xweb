@@ -100,7 +100,7 @@ UTest({
         hasNot_(listStdout, $address.ZERO);
     },
 
-    async 'create safe'() {
+    async 'create safe and execute TXs'() {
 
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
@@ -110,7 +110,7 @@ UTest({
         let path = await SafeUtils.prepair();
 
 
-        l`Adding account to storage. (Later the owner of the safe)`;
+        l`> Adding account to storage. (Later the owner of the safe)`;
         await cli(`accounts add`, {
             '--name': 'one',
             '--key': owner1.key
@@ -127,7 +127,7 @@ UTest({
         eq_($address.isValid(safeAddress), true, 'Safe address not found');
 
 
-        l`>Deploy ERC20 token`;
+        l`> Deploy ERC20 token`;
         let { contract: freeTokenContract } = await provider.deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
             client
         });
@@ -142,7 +142,7 @@ UTest({
             '--chain': 'hardhat'
         });
 
-
+        l`> Fund SAFE`
         await cli(`transfer 6 FRT`, {
             '--from': 'one',
             '--to': 'safe/test',
@@ -151,6 +151,7 @@ UTest({
         eq_($bigint.toEther(await erc20.balanceOf(safeAddress)), 6);
 
 
+        l`> Send from SAFE to EOA`
         let shell = cliStart(`transfer 4 FRT`, {
             '--from': 'safe/test',
             '--to': owner2.address,
@@ -182,5 +183,16 @@ UTest({
         let { stdout } = await shell.onCompleteAsync();
 
         eq_($bigint.toEther(await erc20.balanceOf(owner2.address)), 4);
+
+        l`>> Separate steps for: create TX, sign TX, send Tx`
+
+        await File.removeAsync(SAFE_TX);
+
+        l`> Create Tx`;
+        await cli(`transfer 2 FRT`, {
+            '--from': 'safe/test',
+            '--to': owner2.address,
+            '--tx-file': SAFE_TX
+        });
     }
 })

@@ -43,11 +43,19 @@ export const CBlock = <ICommand>{
                 $console.toast(`Loading block bold<${nr}>`);
 
                 let block = await app.chain.client.getBlock(nr);
-
                 $console.table([
                     [ 'Block', nr],
+                    [ 'Hash', block.hash],
+                    [ 'Parent', block.parentHash],
+                    [ 'Miner', block.miner],
                     [ 'Time', $date.format($block.getDate(block), 'dd-MM-yyyy HH:mm:ss') ],
                     [ 'Transactions', block.transactions.length ],
+                ]);
+                let hashes = block.transactions.map((tx, i) => {
+                    return [ `#${i + 1}`, tx];
+                });
+                $console.table([
+                    ...hashes
                 ]);
             }
         },
@@ -57,6 +65,6 @@ export const CBlock = <ICommand>{
     },
 
     async process(args: string[], params, app: App) {
-        console.warn(`Command for an "account" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
+        console.warn(`A sub-command for "block" not found: ${args[0]}. Call "0xweb block --help" to view the list of commands`);
     }
 }

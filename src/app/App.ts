@@ -24,6 +24,8 @@ import { $color_options } from '@dequanto/utils/$color';
 import { CTokens } from '@core/commands/list/CTokens';
 import { IAccount } from '@dequanto/models/TAccount';
 import { CTx } from '@core/commands/list/CTx';
+import { IWeb3EndpointOptions } from '@dequanto/clients/interfaces/IWeb3EndpointOptions';
+import { CInfo } from '@core/commands/list/CInfo';
 
 declare const global;
 
@@ -54,6 +56,7 @@ export class App {
             .register(CConfig)
             .register(CVersion)
             .register(CReset)
+            .register(CInfo)
             .register(CHelp)
             ;
     }
@@ -80,9 +83,18 @@ export class App {
 
         let platform = $cli.getParamValue('-c, --chain', params);
         if (platform) {
+            let opts = <IWeb3EndpointOptions> {};
+            let network = $cli.getParamValue('--network', params);
+            if (network) {
+                opts.endpoints = [ {url: network } ]
+            }
+
             this.chain = await di
                 .resolve(PlatformFactory)
-                .get(platform as any);
+                .get(platform as any, opts);
+
+
+
         }
 
         // let name = args[0];

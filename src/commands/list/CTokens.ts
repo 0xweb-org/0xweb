@@ -4,6 +4,13 @@ import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { IToken } from '@dequanto/models/IToken';
 import { $require } from '@dequanto/utils/$require';
+import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
+import alot from 'alot';
+import di from 'a-di';
+import { TokenService } from '@dequanto/tokens/TokenService';
+import { TokensService } from '@dequanto/tokens/TokensService';
+import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
+import { $bigint } from '@dequanto/utils/$bigint';
 
 
 export const CTokens = <ICommand>{
@@ -75,6 +82,86 @@ export const CTokens = <ICommand>{
                 } catch (error) {
                     throw new Error(`Token '${query}' not found for '${params.chain}'`);
                 }
+            }
+        },
+        {
+            command: 'for',
+            example: '0xweb tokens for 0x...',
+            description: [
+                'Get all tokens for the address'
+            ],
+            arguments: [
+                {
+                    address: '<address>'
+                }
+            ],
+            params: {
+
+            },
+            async process (args: string[], params: any, app: App) {
+
+                let [ eoa ] = args;
+                $require.Address(eoa, 'Provide the valid address to get the tokens for');
+
+                $console.toast('Loading Transfer events...');
+                let erc20 = new ERC20('', app.chain.client);
+                let trasfers = await erc20.getPastLogsTransfer({
+                    params: {
+                        to: eoa
+                    }
+                });
+
+                let tokenAddresses = alot(trasfers)
+                    .map(x => x.address)
+                    .distinct()
+                    .toArray();
+
+                $console.log(`Got bold<cyan<${tokenAddresses.length}>> tokens for ${eoa}`);
+
+                $console.toast(`Loading tokens info...`);
+                let tokensService = di.resolve(TokensService, app.chain.platform);
+                let tokens = await alot(tokenAddresses)
+                    .mapAsync(async address => {
+                        return tokensService.getKnownToken(address);
+                    })
+                    .toArrayAsync({ errors: 'include'});
+
+                let knownTokens = tokens
+                    .filter(x => 'error' in x === false)
+
+
+                let priceService = di.resolve(TokenPriceService, app.chain.client, app.chain.explorer);
+
+                $console.toast(`Loading account balances...`);
+                let balances = await alot(knownTokens)
+                    .mapAsync(async token => {
+                        $console.toast(`Loading balance for ${token.symbol}...`);
+                        let balance = await new ERC20(token.address, app.chain.client).balanceOf(eoa)
+                        let priceInfo = await priceService.getPrice(token, {
+                            amountWei: balance
+                        });
+                        return {
+                            token,
+                            balance: $bigint.toEther(balance, token.decimals),
+                            priceInfo
+                        };
+                    })
+                    .toArrayAsync();
+
+                let table = balances.map(result => {
+                    return [
+                        result.token.symbol ?? result.token.name,
+                        result.token.address,
+                        `${result.balance}`,
+                        result.priceInfo.error
+                            ? result.priceInfo.error.message
+                            : `${result.priceInfo.price}$`,
+                    ]
+                });
+                $console.table([
+                    [ 'Token', 'Address', 'Balance(Ξ)', '$'],
+                    ...table,
+                ]);
             }
         },
     ],
