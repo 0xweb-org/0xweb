@@ -124,11 +124,12 @@ export const CTokens = <ICommand>{
                     .mapAsync(async address => {
                         return tokensService.getKnownToken(address);
                     })
-                    .toArrayAsync({ errors: 'include'});
+                    .toArrayAsync({ errors: 'include' });
 
                 let knownTokens = tokens
-                    .filter(x => 'error' in x === false)
+                    .filter(x => x instanceof Error === false)
 
+                $console.log(`Got bold<cyan<${knownTokens.length}>> known ERC20 tokens`);
 
                 let priceService = di.resolve(TokenPriceService, app.chain.client, app.chain.explorer);
 
