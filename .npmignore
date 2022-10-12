@@ -1,3 +1,5 @@
+assets/
+artifacts/
 test/
 bin/
 tools/
@@ -10,6 +12,7 @@ tsconfig-build.json
 tsconfig.json
 typings.json
 .travis.yml
+.circleci/
 .vscode/
 
 dequanto/.vscode/
@@ -24,3 +27,4 @@ dequanto/*.js
 0xweb/
 de_**.bat
 /hardhat.config.js
+/tsconfig-typedoc.json
