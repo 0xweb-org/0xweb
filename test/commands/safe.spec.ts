@@ -192,7 +192,7 @@ UTest({
         await cli(`transfer 2 FRT`, {
             '--from': 'safe/test',
             '--to': owner2.address,
-            '--tx-file': SAFE_TX
+            '--tx-output': SAFE_TX
         });
     }
 })

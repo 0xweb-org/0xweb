@@ -71,8 +71,12 @@ $ 0xweb contract chainlink/oracle-eth latestAnswer
 
 ```bash
 $ 0xweb config --edit
+
+## optionally, you can provide the Nodes Endpoint with `--endpoint` flag
+$ 0xweb COMMAND --endpoint https://my-node-url-here
 ```
 
+## [Commands overview 🔗](https://docs.0xweb.org/cli/commands-overview)
 
 ## Various Blockchain tools
 

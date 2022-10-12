@@ -84,17 +84,14 @@ export class App {
         let platform = $cli.getParamValue('-c, --chain', params);
         if (platform) {
             let opts = <IWeb3EndpointOptions> {};
-            let network = $cli.getParamValue('--network', params);
-            if (network) {
-                opts.endpoints = [ {url: network } ]
+            let endpoint = $cli.getParamValue('--endpoint', params);
+            if (endpoint) {
+                opts.endpoints = [ { url: endpoint } ]
             }
 
             this.chain = await di
                 .resolve(PlatformFactory)
                 .get(platform as any, opts);
-
-
-
         }
 
         // let name = args[0];
