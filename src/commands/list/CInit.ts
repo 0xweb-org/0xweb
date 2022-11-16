@@ -277,7 +277,8 @@ class InitWorker {
                 "sourceMap": false,
                 "experimentalDecorators": true,
                 "esModuleInterop": true,
-                "allowSyntheticDefaultImports": true
+                "allowSyntheticDefaultImports": true,
+                "moduleResolution": "node",
             };
         }
         if (pckg.compilerOptions.paths == null) {
@@ -290,6 +291,10 @@ class InitWorker {
 
         if (pckg.compilerOptions.baseUrl == null) {
             pckg.compilerOptions.baseUrl = './';
+        }
+
+        if (pckg.compilerOptions.moduleResolution == null) {
+            pckg.compilerOptions.moduleResolution = 'node';
         }
 
 
