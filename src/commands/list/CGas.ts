@@ -10,7 +10,7 @@ export const CGas: ICommand = {
     ],
     params: {
         '-c, --chain': {
-            description: `Default: eth. Available: ${$validate.platforms.join(', ')}`
+            description: `Default: eth. Available: ${$validate.platforms().join(', ')}`
         }
     },
     async process (args, params, app) {

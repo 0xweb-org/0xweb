@@ -17,9 +17,9 @@ export const Parameters = {
     },
     chain: {
         '-c, --chain': {
-            description: `Available chains: ${$validate.platforms.join(', ')}`,
+            description: `Available chains: ${$validate.platforms().join(', ')}`,
             required: true,
-            oneOf: $validate.platforms
+            oneOf: $validate.platforms()
         }
     }
 }

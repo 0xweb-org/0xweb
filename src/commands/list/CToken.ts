@@ -68,7 +68,7 @@ export const CToken = <ICommand>{
     ],
     params: {
         '-c, --chain': {
-            description: `Default: eth. Available: ${$validate.platforms.join(', ')}`
+            description: `Default: eth. Available: ${$validate.platforms().join(', ')}`
         }
     },
 

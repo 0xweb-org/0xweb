@@ -6,11 +6,15 @@ import { $console } from './$console';
 
 export namespace $validate {
 
-    export const platforms = ['eth', 'polygon', 'bsc', 'xdai', 'hardhat'];
+    export function platforms () {
+        let web3Config = $config.get('web3');
+        let keys = Object.keys(web3Config);
+        return keys;
+    }
 
     export function platform (platform: TPlatform, message?: string) {
         $require.notNull(platform, message);
-        $require.oneOf(platform, platforms, message);
+        $require.oneOf(platform, platforms(), message);
     }
 
     export namespace config {

@@ -24,7 +24,7 @@ export const CBlock = <ICommand>{
             ],
             params: {
                 '-c, --chain': {
-                    description: `Default: eth. Available: ${$validate.platforms.join(', ')}`
+                    description: `Default: eth. Available: ${$validate.platforms().join(', ')}`
                 },
             },
             async process (args: string[], params: any, app: App) {

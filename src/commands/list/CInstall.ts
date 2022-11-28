@@ -5,13 +5,14 @@ import { $require } from '@dequanto/utils/$require';
 import { $validate } from '@core/utils/$validate';
 import { class_Uri } from 'atma-utils';
 import { File } from 'atma-io';
+import { Parameters } from '@core/utils/Paramsters';
 
 export const CInstall = <ICommand> {
     command: 'i, install',
 
     description: [
         `Download contracts ABI and generate the TS class for it.`,
-        `Supported chains: ${$validate.platforms.join(', ') }`,
+        `Supported chains: ${$validate.platforms().join(', ') }`,
     ],
     arguments: [
         {
@@ -27,9 +28,7 @@ export const CInstall = <ICommand> {
         '-p, --proxy-target': {
             description: 'We can detect proxies by standart proxy implementations, in some edge cases you can set the implementation address manually.'
         },
-        '-c, --chain': {
-            description: 'Set chain ID or Symbol. Can be used also via address prefix, e.g. eth:0x..'
-        },
+        ...Parameters.chain,
         '-o, --output': {
             description: 'Output directory. Default: ./0xweb/'
         }
