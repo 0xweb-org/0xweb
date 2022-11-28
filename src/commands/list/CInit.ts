@@ -1,9 +1,8 @@
 import { File, env, Directory } from 'atma-io';
 import { ICommand } from '../ICommand';
-import { Shell, run } from 'shellbee';
+import { run } from 'shellbee';
 import { class_Uri } from 'atma-utils';
 import { $console } from '@core/utils/$console';
-import { $cli } from '@core/utils/$cli';
 import { $path } from '@core/utils/$path';
 
 interface IInitOptions {
@@ -11,42 +10,44 @@ interface IInitOptions {
     source?: 'git' | 'npm'
     hardhat?: boolean
 }
-export const CInit: ICommand = {
-    command: 'init',
-    description: [
-        'Clone dequanto sources and configure aliases in tsconfig'
-    ],
-    params: {
-        '-d, --dir': {
-            description: 'Target directory. Default: current working directory'
-        },
-        '-s, --source': {
-            description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module'
-        },
-        '--hardhat': {
-            description: 'Initialize also Hardhat project',
-            type: 'boolean'
-        }
-    },
-    async process(args: string[], params: IInitOptions) {
-        let cwd = new class_Uri(`file://${process.cwd()}/`);
-        let directory: class_Uri;
-        if (params.dir) {
-            directory = new class_Uri(params.dir + '/');
-            if (directory.isRelative()) {
-                directory = cwd.combine(directory);
+export function CInit() {
+    return <ICommand>{
+        command: 'init',
+        description: [
+            'Clone dequanto sources and configure aliases in tsconfig'
+        ],
+        params: {
+            '-d, --dir': {
+                description: 'Target directory. Default: current working directory'
+            },
+            '-s, --source': {
+                description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module'
+            },
+            '--hardhat': {
+                description: 'Initialize also Hardhat project',
+                type: 'boolean'
             }
-            await Directory.ensureAsync(directory.toString());
-        } else {
-            directory = cwd;
+        },
+        async process(args: string[], params: IInitOptions) {
+            let cwd = new class_Uri(`file://${process.cwd()}/`);
+            let directory: class_Uri;
+            if (params.dir) {
+                directory = new class_Uri(params.dir + '/');
+                if (directory.isRelative()) {
+                    directory = cwd.combine(directory);
+                }
+                await Directory.ensureAsync(directory.toString());
+            } else {
+                directory = cwd;
+            }
+
+
+
+            $console.log(`Prepair dequanto package in bold<${directory.toLocalDir()}>`);
+            let worker = new InitWorker(directory, params);
+            await worker.init();
         }
-
-
-
-        $console.log(`Prepair dequanto package in bold<${directory.toLocalDir()}>`);
-        let worker = new InitWorker(directory, params);
-        await worker.init();
-    }
+    };
 }
 
 class InitWorker {

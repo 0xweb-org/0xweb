@@ -3,39 +3,41 @@ import { $console } from '@core/utils/$console';
 import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
 
-export const CHelp: ICommand & { printCommand }= {
-    command: 'help, -h, --help',
-    description: [
-        'Print this overview'
-    ],
-    async process (args, params, app: App) {
+export function CHelp() {
+    const Help = <ICommand & { printCommand }>{
+        command: 'help, -h, --help',
+        description: [
+            'Print this overview'
+        ],
+        async process(args, params, app: App) {
 
-        let path = env.applicationDir.combine(`/package.json`).toString();
-        let json = await File.readAsync<any>( path);
+            let path = env.applicationDir.combine(`/package.json`).toString();
+            let json = await File.readAsync<any>(path);
 
-        $console.log('');
-        $console.log('bold<green<!>> We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<yellow<0xweb config -e>>');
+            $console.log('');
+            $console.log('bold<green<!>> We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<yellow<0xweb config -e>>');
 
-        $console.log('');
-        $console.log(`0xweb@${json.version} Commands`);
-        $console.log('');
+            $console.log('');
+            $console.log(`0xweb@${json.version} Commands`);
+            $console.log('');
 
-        for (let command of app.commands.list) {
-            CHelp.printCommand(command);
+            for (let command of app.commands.list) {
+                Help.printCommand(command);
+            }
+        },
+
+        printCommand(command: ICommand, paramsDefinition?) {
+            let str = print.command({
+                ...command,
+                params: paramsDefinition ?? void 0
+            });
+            $console.log(str);
         }
-    },
-
-    printCommand (command: ICommand, paramsDefinition?) {
-        let str = print.command({
-            ...command,
-            params: paramsDefinition ?? void 0
-        });
-        $console.log(str);
-    }
+    };
+    return Help;
 }
-
 namespace print {
-    export function command (c: ICommand, prefix = '') {
+    export function command(c: ICommand, prefix = '') {
         let lines = [];
 
         lines.push(`yellow<bold<${c.command}>>`);

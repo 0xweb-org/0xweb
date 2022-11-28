@@ -8,6 +8,8 @@ export namespace $validate {
 
     export function platforms () {
         let web3Config = $config.get('web3');
+        $require.notNull(web3Config, `Configration was not loaded, or is invalid. "web3" field not found`);
+
         let keys = Object.keys(web3Config);
         return keys;
     }

@@ -69,7 +69,6 @@ export class CommandsHandler  {
             return { command, paramsDefinition };
         }
 
-
         let params = await $command.getParams(cliParams, paramsDefinition);
         $validate.args(command, args);
         $validate.params(command, params, paramsDefinition);

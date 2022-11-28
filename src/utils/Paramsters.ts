@@ -11,7 +11,7 @@ export const Parameters = {
     },
     pin: {
         '-p, --pin': {
-            description: 'Account configuration is encrypted with a derived key from the pin and local machine key. ',
+            description: 'Account configuration is encrypted with a derived key from the pin and the local machine key. ',
             required: true
         },
     },

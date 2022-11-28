@@ -37,28 +37,6 @@ export class App {
 
     constructor() {
         global.app = this;
-
-        this
-            .commands
-            .register(CInstall)
-            .register(CInit)
-            .register(CContract)
-            .register(CAccounts)
-            .register(CAccount)
-            .register(CSafe)
-            .register(CToken)
-            .register(CTokens)
-            .register(CTransfer)
-            .register(CTx)
-
-            .register(CBlock)
-            .register(CGas)
-            .register(CConfig)
-            .register(CVersion)
-            .register(CReset)
-            .register(CInfo)
-            .register(CHelp)
-            ;
     }
 
     async execute (argv?: string[]): Promise<any> {
@@ -71,15 +49,38 @@ export class App {
         }
 
         let { params: cliParams, args: cliArgs } = $cli.parse(argv);
+
+        $console.toast('Loading config');
+        this.config = await Config.fetch(cliParams);
+
+        this
+            .commands
+            .register(CInstall())
+            .register(CInit())
+            .register(CContract())
+            .register(CAccounts())
+            .register(CAccount())
+            .register(CSafe())
+            .register(CToken())
+            .register(CTokens())
+            .register(CTransfer())
+            .register(CTx())
+
+            .register(CBlock())
+            .register(CGas())
+            .register(CConfig())
+            .register(CVersion)
+            .register(CReset())
+            .register(CInfo())
+            .register(CHelp())
+            ;
+
         let { command, params, args, paramsDefinition } = await this.commands.findCommand(cliArgs, cliParams);
 
         if ('help' in cliParams) {
-            await CHelp.printCommand(command, paramsDefinition);
+            await CHelp().printCommand(command, paramsDefinition);
             return null;
         }
-
-        $console.toast('Loading config');
-        this.config = await Config.fetch(params);
 
         let platform = $cli.getParamValue('-c, --chain', params);
         if (platform) {
@@ -94,10 +95,7 @@ export class App {
                 .get(platform as any, opts);
         }
 
-        // let name = args[0];
-        // if (name) {
-            $console.toast(`Process command gray<${ command.command }>`);
-        //}
+        $console.toast(`Process command gray<${ command.command }>`);
 
         return await command.process(args, params, this);
     }
