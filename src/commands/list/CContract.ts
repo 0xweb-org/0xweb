@@ -82,7 +82,7 @@ export function CContract() {
                         description: `Default: The chain will be taken from the installed contract. `
                     },
                     ...Parameters.account(),
-                    ...Parameters.pin,
+                    ...Parameters.pin(),
                     '--nonce': {
                         description: 'Override nonce',
                         type: 'number'

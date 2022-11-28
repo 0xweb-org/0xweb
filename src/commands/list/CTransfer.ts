@@ -40,8 +40,8 @@ export function CTransfer() {
                 description: 'Receivers name or address. ',
                 required: true
             },
-            ...Parameters.chain,
-            ...Parameters.pin,
+            ...Parameters.chain(),
+            ...Parameters.pin(),
             '--safe-transport': {
                 description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
             },

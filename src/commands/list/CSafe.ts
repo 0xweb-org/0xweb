@@ -213,8 +213,8 @@ export function CSafe() {
             },
         ],
         params: {
-            ...Parameters.pin,
-            ...Parameters.chain,
+            ...Parameters.pin(),
+            ...Parameters.chain(),
         },
 
         async process(args: string[], params, app: App) {

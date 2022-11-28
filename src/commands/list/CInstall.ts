@@ -29,7 +29,7 @@ export function CInstall() {
             '-p, --proxy-target': {
                 description: 'We can detect proxies by standart proxy implementations, in some edge cases you can set the implementation address manually.'
             },
-            ...Parameters.chain,
+            ...Parameters.chain(),
             '-o, --output': {
                 description: 'Output directory. Default: ./0xweb/'
             }

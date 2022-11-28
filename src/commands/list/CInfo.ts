@@ -19,7 +19,7 @@ export function CInfo() {
                     'Show Network info'
                 ],
                 params: {
-                    ...Parameters.chain
+                    ...Parameters.chain()
                 },
                 async process(args, params, app: App) {
                     let client = app.chain.client;

@@ -121,7 +121,7 @@ export function CAccounts() {
             }
         ],
         params: {
-            ...Parameters.pin,
+            ...Parameters.pin(),
         },
 
         async process(args: string[], params, app: App) {

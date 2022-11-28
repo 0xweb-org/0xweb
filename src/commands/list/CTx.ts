@@ -132,7 +132,7 @@ export function CTx() {
                     }
                 ],
                 params: {
-                    ...Parameters.chain
+                    ...Parameters.chain()
                 },
                 async process(args: string[], params: any, app: App) {
 
