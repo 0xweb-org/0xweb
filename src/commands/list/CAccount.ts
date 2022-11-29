@@ -36,7 +36,10 @@ export function CAccount ()  {
                     }
                 ],
                 params: {
-
+                    '-b, --block': {
+                        description: 'Balance at specific block. Default: latest',
+                        map: Number
+                    }
                 },
                 async process (args: string[], params: any, app: App) {
                     let [ accountName, tokenName ] = args;
@@ -59,7 +62,7 @@ export function CAccount ()  {
                     }
 
                     $console.toast(`Loading balance for ${address}`);
-                    let balance = await app.chain.token.balanceOf(address, token);
+                    let balance = await app.chain.token.balanceOf(address, token, { forBlock: params.block });
                     let eth = $bigint.toEther(balance, token.decimals);
 
                     $console.table([
