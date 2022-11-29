@@ -47,9 +47,12 @@ export function CTransfer() {
             },
             '--sig-transport': {
                 description: `Optionally the file where we save the tx and wait until the signature for the TX is provided.`,
+            },
+            '--tx-output': {
+                description: `Save the TX to the file, and do not send it to the blockchain`,
             }
         },
-        async process(args: string[], params: { from, to, chain, safeTransport?, sigTransport?}, app: App) {
+        async process(args: string[], params: { from, to, chain, safeTransport?, sigTransport?, txOutput? }, app: App) {
             let [amountStr, tokenMix] = args;
 
 
@@ -118,12 +121,22 @@ export function CTransfer() {
             if (sigTransportFile) {
                 service.$configWriter({
                     sigTransport: sigTransportFile
-                })
+                });
+            }
+            let txOutput = params.txOutput;
+            if (txOutput) {
+                service.$configWriter({
+                    txOutput: txOutput
+                });
             }
 
             let tx = await service.transfer(accountFrom, accountTo.address, token, amount);
+            if (txOutput) {
+                let path = await tx.onSaved;
+                l`Transfer transaction green<saved>. To submit to the blockchain call "0xweb tx send ${path}"`;
+                return;
+            }
             let receipt = await tx.wait();
-
             l`Transfered. Receipt: bold<${receipt.transactionHash}>`;
         }
     };

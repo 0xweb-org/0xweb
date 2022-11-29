@@ -1,11 +1,11 @@
+import alot from 'alot';
+import { File } from 'atma-io';
+import { Shell } from 'shellbee';
 import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { l } from '@dequanto/utils/$logger';
-import { File } from 'atma-io';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
-import { run, Shell } from 'shellbee';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
-import alot from 'alot';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $fn } from '@dequanto/utils/$fn';
@@ -100,7 +100,7 @@ UTest({
         hasNot_(listStdout, $address.ZERO);
     },
 
-    async 'create safe and execute TXs'() {
+    async '!create safe and execute TXs'() {
 
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
