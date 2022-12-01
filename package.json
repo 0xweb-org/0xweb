@@ -114,7 +114,8 @@
                 "^readline$",
                 "^hardhat$",
                 "^@gnosis.pm",
-                "ethereumjs-util"
+                "ethereumjs-util",
+                "^papaparse$"
             ],
             "middlewares": {
                 "ts": [
