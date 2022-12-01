@@ -42,7 +42,7 @@ UTest({
         },
     },
     async 'install contract' () {
-        let { stdout } = await run(`node index.js i eth:0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}0xweb/`);
+        let { stdout } = await run(`node index.js i 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}0xweb/ --chain eth`);
 
         let content = await File.readAsync<string>(`${path_ROOT}/0xweb/eth/chainlink/oracle-eth/oracle-eth.ts`, { skipHooks: true });
         has_(content, 'class ChainlinkOracleEth extends ContractBase');
