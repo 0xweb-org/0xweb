@@ -3,6 +3,7 @@ import { $command } from './utils/$command';
 import { App } from '@core/app/App';
 import { $validate } from '@core/utils/$validate';
 import { CHelp } from './list/CHelp';
+import { $console } from '@core/utils/$console';
 
 
 export class CommandsHandler  {
@@ -42,6 +43,7 @@ export class CommandsHandler  {
             command = this.commands['help'];
         }
         if (command == null) {
+            $console.log(`Running "${ process.argv.join(' ')}"`);
             throw new Error(`Unknown command: ${name}`);
         }
 
@@ -94,7 +96,7 @@ export class CommandsHandler  {
         }
 
         if (cliParams.help) {
-            let result = await CHelp.printCommand(command);
+            let result = await CHelp().printCommand(command);
             return result;
         }
 

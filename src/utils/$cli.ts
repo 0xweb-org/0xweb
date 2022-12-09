@@ -63,6 +63,9 @@ export namespace $cli {
             args.push(argv[i]);
         }
 
+        // clean empty literals
+        args = args.map(x => x.trim()).filter(Boolean);
+
         let i = args.findIndex(x => /\bindex(\.(ts|js))?\b/i.test(x));
         if (i > -1) {
             args = args.slice(i + 1);
