@@ -77,8 +77,9 @@ export class App {
 
         let { command, params, args, paramsDefinition } = await this.commands.findCommand(cliArgs, cliParams);
 
+
         if ('help' in cliParams) {
-            await CHelp().printCommand(command, paramsDefinition);
+            await CHelp().process(args, params, this);
             return null;
         }
 
