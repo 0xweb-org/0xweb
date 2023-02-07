@@ -33,7 +33,7 @@
         "@solidity-parser/parser": "^0.13.2",
         "@typechain/ethers-v5": "^7.0.1",
         "a-di": "^1.0.25",
-        "alot": "^0.3.3",
+        "alot": "^0.3.4",
         "appcfg": "^0.4.68",
         "atma-io": "^1.2.60",
         "atma-io-middleware-yml": "^1.1.25",
