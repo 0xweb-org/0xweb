@@ -78,7 +78,7 @@ export namespace $tx {
 
         let parser = di.resolve(TxLogParser);
         if (abi != null) {
-            //parser.topics.register(abi);
+            parser.topics.register(abi);
         }
         let logs = await parser.parse(receipt);
         let knownLogs = logs.filter(x => x != null);
@@ -88,59 +88,21 @@ export namespace $tx {
             let tokenService = new InternalTokenService();
             let tokenPriceService = new TokenPriceService(client, explorer);
 
-            console.log('Transfer ev');
-            console.dir(transfers);
-            console.dir(transfers[0].arguments);
-
-            let IERC721 = new ERC721().abi;
-            let IERC1155 = new ERC1155().abi;
-            let IERC20 = new ERC20().abi;
-
-            console.log($abiUtils.checkInterfaceOf(abi, IERC721), '???? IERC721');
-            console.log($abiUtils.checkInterfaceOf(abi, IERC1155), '???? IERC1155');
-            console.log($abiUtils.checkInterfaceOf(abi, IERC20), '???? IERC20');
 
             let events = await alot(transfers)
                 //.filter(x => $is.Address(x.token?.symbol))
                 .mapAsync(async (transfer) => {
-                    if (transfer.token == null) {
+                    if (transfer.token.symbol == null) {
 
-                        let IERC20 = new ERC20(transfer.address, client);
-                        if ($abiUtils.checkInterfaceOf(abi, IERC20.abi).ok) {
-                            let symbol = await IERC20.symbol();
-                            transfer.token = {
-                                symbol: symbol,
-                                address: transfer.address,
-                                type: 'ERC20'
-                            };
-                        } else {
-                            let IERC721 = new ERC721(transfer.address, client);
-                            if ($abiUtils.checkInterfaceOf(abi, IERC721.abi).ok) {
-                                let [ name, symbol ] = await Promise.all([
-                                    IERC721.name(),
-                                    IERC721.symbol(),
-                                ]);
-                                console.log('>>>', name, symbol);
-
-                                transfer.token = {
-                                    name: name,
-                                    symbol: symbol,
-                                    address: transfer.address,
-                                    type: 'ERC721'
-                                };
-                            }
-                        }
-
-
-                        // let IERC721 = new ERC721().abi;
-                        // let IERC1155 = new ERC1155().abi;
-
-
-                        // console.log($abiUtils.isInterfaceOf(abi, IERC721), '???? IERC721');
-                        // console.log($abiUtils.isInterfaceOf(abi, IERC1155), '???? IERC1155');
-                        // console.log($abiUtils.isInterfaceOf(abi, IERC20), '???? IERC20');
+                        let IERC20 = new ERC20(transfer.token.address, client);
+                        let [ name, symbol ] = await Promise.all([
+                            IERC20.name(),
+                            IERC20.symbol(),
+                        ]);
+                        transfer.token.name = name;
+                        transfer.token.symbol = symbol;
                     }
-                    console.log('transfer received', transfer);
+
                     try {
                         let token = await tokenService.getTokenData(transfer.token.symbol, client, explorer);
                         let price = await tokenPriceService.getPrice(token, {
