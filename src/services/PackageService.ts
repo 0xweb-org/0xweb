@@ -1,7 +1,8 @@
 import { IPackageItem, IPackageJson } from '@core/models/IPackageJson';
-import { IPlatformTools } from '@dequanto/chains/PlatformFactory';
+import { IPlatformTools, PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { TAddress } from '@dequanto/models/TAddress';
 import { TPlatform } from '@dequanto/models/TPlatform';
+import di from 'a-di';
 import { File, Directory, env } from 'atma-io';
 import type { AbiItem } from 'web3-utils'
 
@@ -12,6 +13,20 @@ export class PackageService {
 
     async getPackage (name: string): Promise<IPackageItem> {
         let list = await this.list();
+
+        if (this.chain?.client == null) {
+            let viaInstalled = list.filter(x => x.name === name);
+            if (viaInstalled.length === 0) {
+                throw new Error(`--chain is not set, and no installed artifacts are found`);
+            }
+            if (viaInstalled.length > 1) {
+                throw new Error(`--chain is not set, and multiple installed artifacts are found`);
+            }
+            this.chain =  await di
+                .resolve(PlatformFactory)
+                .get(viaInstalled[0].platform);
+        }
+
         let platform = this.chain.client.platform;
         return list.find(x => x.platform === platform && x.name === name);
     }

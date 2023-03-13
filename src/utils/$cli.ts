@@ -14,18 +14,24 @@ export namespace $cli {
         $argv = argv;
     }
 
+    /**
+     *
+     * @param flag '-c', '--chain', CSV is also supported: '-c, --chain'
+     */
     export function getParamValue(flag: string, params?: { [key: string]: any }): string | null {
         let args = $argv;
         let aliases = $command.getAliases(flag);
 
         return alot(aliases)
-            .map(x => {
-                let command = toCommand(x.name);
-                let valFromParams = params?.[command];
+            .map(command => {
+                let valFromParams = params?.[command.name];
                 if (valFromParams != null) {
                     return valFromParams;
                 }
-                let i = args.findIndex(x => toCommand(x) === command);
+                let i = args.findIndex(arg => {
+                    let inputArg = toCommand(arg);
+                    return inputArg.isFlag === command.isFlag && inputArg.name === command.name;
+                });
                 if (i > -1) {
                     return args[i + 1];
                 }
@@ -100,7 +106,11 @@ export namespace $cli {
 
     // remove "-"(s) from start
     function toCommand(flag: string) {
-        return flag.replace(/^\-+/, '');
+        let name = flag.replace(/^\-+/, '')
+        return {
+            name,
+            isFlag: name !== flag
+        };
     }
 
     const rl = readline.createInterface({

@@ -28,11 +28,12 @@ export namespace $console {
             let size = alot(arr).max(x => {
                 let str = String(x[i]);
                 let lines = str.split('\n');
-                return alot(lines).max(x => x.length);
+                let max = alot(lines).max(x => x.length);
+                const LIMIT_COLUMNG_LENGTH = 100;
+                return Math.min(max, LIMIT_COLUMNG_LENGTH);
             });
             return size;
         });
-
 
         let lines = arr.map(row => {
 

@@ -26,6 +26,7 @@ import { IAccount } from '@dequanto/models/TAccount';
 import { CTx } from '@core/commands/list/CTx';
 import { IWeb3EndpointOptions } from '@dequanto/clients/interfaces/IWeb3EndpointOptions';
 import { CInfo } from '@core/commands/list/CInfo';
+import memd from 'memd';
 
 declare const global;
 
@@ -98,7 +99,11 @@ export class App {
 
         $console.toast(`Process command gray<${ command.command }>`);
 
-        return await command.process(args, params, this);
+        let result = await command.process(args, params, this);
+
+        // flush all caches on exit
+        await memd.Cache.flushAllAsync();
+        return result;
     }
 
     async runFromCli () {

@@ -95,21 +95,6 @@ export class ContractService {
             await this.$write(pckg, abiItem, params);
         }
     }
-
-    @memd.deco.memoize({
-        keyResolver (address: TAddress, client: Web3Client, explorer: IBlockChainExplorer) {
-            return `${client.platform}:${address}`
-        },
-        persistance: new memd.FsTransport({
-            path: env.appdataDir.combine('./0xweb/cache/contracts.json')
-        })
-    })
-    async getAbiByAddress (address: TAddress, client: Web3Client, explorer: IBlockChainExplorer): Promise<AbiItem[]> {
-        let resolver = new ContractAbiProvider(client, explorer);
-        let result = await resolver.getAbi(address);
-        return result.abiJson;
-    }
-
     private async $read (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
         let address = params.address ?? pckg.address;
         $require.Address(address, 'Contracts address invalid');
@@ -118,12 +103,24 @@ export class ContractService {
         let reader = await this.getContractReader(params);
         let result = await reader.readAsync(address, abi, ...args);
 
-        $console.log(result);
+        let output = result != null && typeof result === 'object'
+            ? JSON.stringify(result, null, '  ')
+            : result;
+        $console.log(output);
     }
     private async getContractReader (params) {
         let reader = di.resolve(ContractReader, this.app.chain.client);
         if (params.block) {
-            reader.forBlock(Number(params.block));
+            let block: number | Date;
+            if (/^\d+$/.test(params.block)) {
+                block = Number(params.block)
+            } else {
+                block = new Date(params.block);
+                if (isNaN(block.valueOf())) {
+                    throw new Error(`Date format is invalid ${params.block}`);
+                }
+            }
+            reader.forBlock(block);
         }
         return reader;
     }
