@@ -12,7 +12,6 @@ export class PackageService {
     }
 
     async getPackage (name: string): Promise<IPackageItem> {
-
         let localList = await this.getLocalList();
         let pckg = await this.findFromList(name, localList);
         if (pckg == null) {
@@ -22,7 +21,6 @@ export class PackageService {
         if (pckg == null) {
             pckg = await this.getBuiltIn(name);
         }
-
         return pckg;
     }
     private async getBuiltIn (name: string): Promise<IPackageItem> {
@@ -56,19 +54,19 @@ export class PackageService {
         if (this.chain?.client == null) {
             let viaInstalled = list.filter(x => x.name === packageName);
             if (viaInstalled.length === 0) {
-                throw new Error(`--chain is not set, and no installed artifacts are found`);
-            }
-            if (viaInstalled.length > 1) {
-                throw new Error(`--chain is not set, and multiple installed artifacts are found`);
+                return false;
             }
             this.chain =  await di
                 .resolve(PlatformFactory)
                 .get(viaInstalled[0].platform);
         }
+        return true;
     }
 
     private async findFromList (name: string, list: IPackageItem[]) {
-        await this.ensureChain(name, list);
+        if (await this.ensureChain(name, list) === false) {
+            return;
+        }
         let platform = this.chain.client.platform;
         let item = list.find(x => x.platform === platform && x.name === name);
         return item;

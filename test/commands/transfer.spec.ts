@@ -6,6 +6,7 @@ import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { SafeUtils } from './SafeUtils';
 import { TestUtils } from '../TestUtils';
 import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
+import { File } from 'atma-io';
 
 
 UTest({
@@ -176,17 +177,20 @@ UTest({
         eq_(balanceOneAfter, 1.1);
     },
     async 'transfer ERC20 with file signature'() {
+        try {
+            await File.removeAsync('./test/bin/tx.json')
+        } catch (error) { }
+
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
-        let owner1 = provider.deployer(0);
-        let owner2 = provider.deployer(1);
+        let owner1 = provider.deployer(10);
+        let owner2 = provider.deployer(11);
 
         l`>Deploy ERC20 token`;
-        let contract = await TestUtils.deployFreeToken(client)
+        let contract = await TestUtils.deployFreeToken(client, {
+            deployer: owner1
+        })
         await contract.airdrop();
-
-        let erc20 = new ERC20(contract.address, client);
-
 
         l`> Add to known tokens`
         await TestUtils.cli(`tokens add`, {
@@ -202,6 +206,7 @@ UTest({
             '--address': owner1.address
         });
 
+        l`> Start transfer listener`
         let transferShell = await TestUtils.cliParallel(`transfer 6 FRT --from nokeyAcc --to ${owner2.address}`, {
             '--sig-transport': './test/bin/tx.json'
         }, {
@@ -210,12 +215,15 @@ UTest({
 
         await transferShell.onReadyAsync();
 
+        l`> Signing the transfer signature`
         let signStdout = await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
             '--account': owner1.key,
         });
 
+        l`> Waiting transfer to be completed after sign`
         await transferShell.onCompleteAsync();
 
+        l`> Transfer successful. Check the balances`
         let stdBalance = await TestUtils.cli(`account balance ${owner2.address} FRT`, {});
         let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalance)[1];
         let balanceOneAfter = Number(balanceOneStr);
