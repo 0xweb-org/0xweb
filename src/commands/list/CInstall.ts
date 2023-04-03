@@ -4,7 +4,7 @@ import { TPlatform } from '@dequanto/models/TPlatform';
 import { $require } from '@dequanto/utils/$require';
 import { $validate } from '@core/utils/$validate';
 import { class_Uri } from 'atma-utils';
-import { File } from 'atma-io';
+import { env, File } from 'atma-io';
 import { Parameters } from '@core/utils/Paramsters';
 
 export function CInstall() {
@@ -27,7 +27,11 @@ export function CInstall() {
                 required: true
             },
             '-p, --proxy-target': {
-                description: 'We can detect proxies by standart proxy implementations, in some edge cases you can set the implementation address manually.'
+                description: 'We can detect proxies by standard proxy implementations, in some edge cases you can set the implementation address manually.'
+            },
+            '-g, --global': {
+                description: 'Installs the contract globally, to be available via "0xweb" cli command from any CWD.',
+                type: 'boolean',
             },
             ...Parameters.chain(),
             '-o, --output': {
@@ -48,6 +52,10 @@ export function CInstall() {
             $validate.platform(platform, `Chain not set. Use as prefix "eth:0x.." or flag "--chain eth"`);
             $validate.config.blockchainExplorer(platform);
 
+            if (params.global) {
+                params.output = env.appdataDir.combine('.dequanto/0xweb/').toDir();
+            }
+
             let output = class_Uri.combine(params.output ?? `./0xweb/`, platform);
 
             let generator = new Generator({
@@ -62,7 +70,10 @@ export function CInstall() {
             });
             let { main } = await generator.generate();
 
-            let packagePath = `0xweb.json`
+            let packagePath = params.global
+                ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
+                : `0xweb.json`
+
             let json = {} as any;
             if (await File.existsAsync(packagePath)) {
                 json = await File.readAsync(packagePath);
@@ -89,4 +100,5 @@ interface IInstallParams {
     proxyTarget: string
     chain: string
     output: string
+    global: boolean
 }

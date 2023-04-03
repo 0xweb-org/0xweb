@@ -27,6 +27,7 @@ import { CTx } from '@core/commands/list/CTx';
 import { IWeb3EndpointOptions } from '@dequanto/clients/interfaces/IWeb3EndpointOptions';
 import { CInfo } from '@core/commands/list/CInfo';
 import memd from 'memd';
+import { TPlatform } from '@dequanto/models/TPlatform';
 
 declare const global;
 
@@ -49,7 +50,7 @@ export class App {
             $color_options({ type: 'none' });
         }
 
-        let { params: cliParams, args: cliArgs } = $cli.parse(argv);
+        let { params: cliParams, args: cliArgs } = $cli.parse();
 
         $console.toast('Loading config');
         this.config = await Config.fetch(cliParams);
@@ -77,12 +78,6 @@ export class App {
             ;
 
         let { command, params, args, paramsDefinition } = await this.commands.findCommand(cliArgs, cliParams);
-
-
-        if ('help' in cliParams) {
-            await CHelp().process(args, params, this);
-            return null;
-        }
 
         let platform = $cli.getParamValue('-c, --chain', params);
         if (platform) {
@@ -123,6 +118,14 @@ export class App {
         //let accounts = di.resolve(AccountsService, app.config);
         let account = await this.chain.accounts.get(mix);
         return account as T;
+    }
+
+    async ensureChain (platform: TPlatform) {
+        if (this.chain == null) {
+            this.chain =  await di
+                    .resolve(PlatformFactory)
+                    .get(platform);
+        }
     }
 }
 

@@ -8,11 +8,16 @@ import { obj_setProperty } from 'atma-utils';
 
 export namespace $cli {
 
-    let $argv = process.argv;
+    let $argv: string[];
+
 
     export function setParams (argv: string[]) {
-        $argv = argv;
+        $argv = argv.map(arg => {
+            return arg === '?' ? '--help' : arg;
+        });
     }
+
+    setParams(process.argv);
 
     /**
      *
@@ -41,10 +46,10 @@ export namespace $cli {
             .first();
     }
 
-    export function parse (argv: string[]) {
+    export function parse (argv: string[] = null) {
 
         if (argv == null) {
-            argv = process.argv;
+            argv = $argv;
         }
 
         let params = {} as any;

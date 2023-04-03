@@ -61,7 +61,7 @@ export function CContract() {
                 async process(args, params, app) {
                     let [name, method] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.call(name, method, params);
+                    await service.call(name, method, params, 'read');
                 }
             },
             {
@@ -73,7 +73,7 @@ export function CContract() {
                         required: true
                     },
                     {
-                        description: 'Method name',
+                        description: 'Method name or ABI, e.g.: 0xweb c read foo "decimals():uint16"',
                         required: true
                     }
                 ],
@@ -94,7 +94,83 @@ export function CContract() {
                 async process(args, params, app) {
                     let [name, method] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.call(name, method, params);
+                    await service.call(name, method, params, 'write');
+                }
+            },
+            {
+                command: 'logs',
+                description: [ 'Load the logs for the contract' ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract',
+                        required: true
+                    },
+                    {
+                        description: 'Log name',
+                        required: true
+                    }
+                ],
+                params: {
+                    '-c, --chain': {
+                        description: `Default: The chain will be taken from the installed contract. `
+                    },
+                    '-o, --output': {
+                        description: `Output file to save the logs data. Default: terminal output`
+                    },
+                    '--format': {
+                        description: `Data format to output`,
+                        default: 'csv',
+                        oneOf: [ 'csv', 'json' ]
+                    },
+
+                },
+                async process(args, params, app) {
+                    let [ name, eventName ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.logs(name, eventName, params);
+                }
+            },
+            {
+                command: 'dump',
+                description: [ `Save contract's complete data-set as raw slot-value file and as JSON model file` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    }
+                ],
+                params: {
+                    '--output': {
+                        description: 'Output file without extension, as 2 files will be generated the .csv and .json'
+                    },
+                    ...Parameters.chain()
+                },
+                async process(args, params, app) {
+                    let [ name ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.dump(name, params);
+                }
+            },
+            {
+                command: 'slot',
+                description: [ `Read contracts slot` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    },
+                    {
+                        description: 'Locations hash',
+                        required: true
+                    }
+                ],
+                params: {
+                    ...Parameters.chain()
+                },
+                async process(args, params, app) {
+                    let [ nameOrAddress, location ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.slot(nameOrAddress, location);
                 }
             },
         ],

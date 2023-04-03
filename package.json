@@ -30,7 +30,7 @@
         "@gnosis.pm/safe-core-sdk": "^2.1.0",
         "@gnosis.pm/safe-service-client": "^1.1.2",
         "@gnosis.pm/safe-web3-lib": "^1.1.0",
-        "@solidity-parser/parser": "^0.13.2",
+        "@solidity-parser/parser": "^0.16.0",
         "@typechain/ethers-v5": "^7.0.1",
         "a-di": "^1.0.25",
         "alot": "^0.3.4",

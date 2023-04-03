@@ -68,7 +68,12 @@ export class CommandsHandler  {
         }
 
         if (isHelp) {
-            return { command, paramsDefinition };
+            let params;
+            if (/help/.test(command.command) === false) {
+                params = { command };
+                command = this.commands['help'];
+            }
+            return { command, paramsDefinition, params };
         }
 
         let params = await $command.getParams(cliParams, paramsDefinition);
