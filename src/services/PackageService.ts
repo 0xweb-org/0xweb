@@ -35,9 +35,6 @@ export class PackageService {
             if (await Directory.existsAsync(fromApp) === true) {
                 let ozFiles = await Directory.readFilesAsync(fromApp, '**.json');
                 file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
-            } else {
-                console.log(`APPDATA: `, env.appdataDir.toString());
-                console.log(`MAIN: `, require.main?.filename);
             }
         }
         if (file == null || await file.existsAsync() === false) {
