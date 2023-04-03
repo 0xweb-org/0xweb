@@ -32,14 +32,17 @@ export class PackageService {
         }
         if (file == null) {
             let fromApp = env.appdataDir.combine(fromCWD).toString();
-            let ozFiles = await Directory.readFilesAsync(fromApp, '**.json');
-            file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
+            if (await Directory.existsAsync(fromApp) === true) {
+                let ozFiles = await Directory.readFilesAsync(fromApp, '**.json');
+                file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
+            } else {
+                console.log(`APPDATA: `, env.appdataDir.toString());
+                console.log(`MAIN: `, require.main?.filename);
+            }
         }
-
         if (file == null || await file.existsAsync() === false) {
             return null;
         }
-
         let abi = await File.readAsync<AbiItem[]>(file.uri.toString());
         return {
             address: null,
