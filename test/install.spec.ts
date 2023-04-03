@@ -3,14 +3,17 @@ import { Directory, env, File } from 'atma-io'
 
 UTest({
     async 'install contract (local)' () {
-
+        let _basePath = './0xweb/eth/DisperseContract/';
         return UTest({
             async $before () {
-                await Directory.removeAsync('./0xweb/eth/DisperseContract/');
+
+                if (await Directory.existsAsync(_basePath)) {
+                    await Directory.removeAsync(_basePath);
+                }
                 let { stdout } = await run(`node index.js i 0xd152f549545093347a162dce210e7293f1452150 --name DisperseContract --chain eth`);
             },
             async 'check paths' () {
-                let content = await File.readAsync<string>(`./0xweb/eth/DisperseContract/DisperseContract.ts`, { skipHooks: true });
+                let content = await File.readAsync<string>(`${_basePath}/DisperseContract.ts`, { skipHooks: true });
                 has_(content, 'class DisperseContract extends ContractBase');
 
                 let packagePath = '0xweb.json';
