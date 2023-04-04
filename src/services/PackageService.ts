@@ -23,7 +23,7 @@ export class PackageService {
         }
         return pckg;
     }
-    async savePackage (pckg: IPackageItem, opts?: { global: boolean }) {
+    async savePackage (pckg: IPackageItem, opts: { global: boolean }) {
         let packagePath = opts?.global
             ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
             : `0xweb.json`

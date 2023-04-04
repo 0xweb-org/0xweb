@@ -38,7 +38,7 @@ UTest({
                 }
                 let { stdout } = await run(`node index.js i 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name ChainLinkEth --chain eth --global`);
             },
-            async 'check paths' () {
+            async 'check global paths' () {
                 let content = await File.readAsync(`${_basePath}/ChainLinkEth.ts`);
                 has_(content, 'class ChainLinkEth extends ContractBase');
 
@@ -46,7 +46,7 @@ UTest({
 
                 has_(json.contracts.eth['0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'].main, 'ChainLinkEth.ts');
             },
-            async 'check abi' () {
+            async 'check global abi' () {
                 let { stdout } = await run(`node index.js c abi ChainLinkEth --color none`);
                 has_(stdout.join(''), `getRoundData`);
             }

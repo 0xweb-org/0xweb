@@ -82,7 +82,7 @@ export function CInstall() {
                 implementation: $is.Address(implementation) && $address.eq(address, implementation) === false ? implementation : void 0,
                 name: params.name,
                 main,
-            });
+            }, { global: params.global != null });
             return { main };
         }
     };
