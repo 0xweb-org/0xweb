@@ -8,6 +8,7 @@ export interface IPackageJson {
             [address: string]: {
                 name: string
                 main: string
+                implementation: string
             }
         }
     }
@@ -19,4 +20,5 @@ export interface IPackageItem {
     name: string
     main: string
     abi?: AbiItem[]
+    implementation?: string
 }

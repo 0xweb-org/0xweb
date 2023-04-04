@@ -6,6 +6,10 @@ import { $validate } from '@core/utils/$validate';
 import { class_Uri } from 'atma-utils';
 import { env, File } from 'atma-io';
 import { Parameters } from '@core/utils/Paramsters';
+import { PackageService } from '@core/services/PackageService';
+import di from 'a-di';
+import { $address } from '@dequanto/utils/$address';
+import { $is } from '@dequanto/utils/$is';
 
 export function CInstall() {
     return <ICommand>{
@@ -26,7 +30,7 @@ export function CInstall() {
                 description: 'The class name.',
                 required: true
             },
-            '-p, --proxy-target': {
+            '--imp, --implementation': {
                 description: 'We can detect proxies by standard proxy implementations, in some edge cases you can set the implementation address manually.'
             },
             '-g, --global': {
@@ -43,6 +47,7 @@ export function CInstall() {
             let platform: TPlatform = params.chain as TPlatform;
             let [address] = args;
             if (/^\w+:0x/.test(address)) {
+                // eth:0x...
                 let i = address.indexOf(':');
                 platform = address.substring(0, i) as any;
                 address = address.substring(i + 1);
@@ -64,32 +69,20 @@ export function CInstall() {
                 source: {
                     abi: address
                 },
-                implementation: params.proxyTarget,
+                implementation: params.implementation,
                 output,
                 saveAbi: true
             });
-            let { main } = await generator.generate();
+            let { main, implementation } = await generator.generate();
 
-            let packagePath = params.global
-                ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
-                : `0xweb.json`
-
-            let json = {} as any;
-            if (await File.existsAsync(packagePath)) {
-                json = await File.readAsync(packagePath);
-            }
-            if (json.contracts == null) {
-                json.contracts = {};
-            }
-            if (json.contracts[platform] == null) {
-                json.contracts[platform] = {};
-            }
-
-            json.contracts[platform][address] = {
+            let packageService = di.resolve(PackageService);
+            await packageService.savePackage({
+                platform,
+                address,
+                implementation: $is.Address(implementation) && $address.eq(address, implementation) === false ? implementation : void 0,
                 name: params.name,
-                main
-            };
-            await File.writeAsync(packagePath, json);
+                main,
+            });
             return { main };
         }
     };
@@ -97,7 +90,7 @@ export function CInstall() {
 
 interface IInstallParams {
     name: string
-    proxyTarget: string
+    implementation: string
     chain: string
     output: string
     global: boolean

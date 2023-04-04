@@ -17,11 +17,11 @@ export const Parameters = {
             },
         }
     },
-    chain () {
+    chain (opts?: { required?: boolean }) {
         return {
             '-c, --chain': {
                 description: `Available chains: ${$validate.platforms().join(', ')}`,
-                required: true,
+                required: opts?.required ?? true,
                 oneOf: $validate.platforms()
             }
         }

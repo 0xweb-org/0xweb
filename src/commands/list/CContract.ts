@@ -30,7 +30,7 @@ export function CContract() {
                     let [name] = args;
 
                     let service = di.resolve(ContractService, app);
-                    let str = await service.help(name);
+                    let str = await service.abi(name);
                     $console.log(str);
                 }
             },
@@ -143,7 +143,10 @@ export function CContract() {
                     '--output': {
                         description: 'Output file without extension, as 2 files will be generated the .csv and .json'
                     },
-                    ...Parameters.chain()
+                    '--imp, --implementation': {
+                        description: 'Implemenation address'
+                    },
+                    ...Parameters.chain({ required: false })
                 },
                 async process(args, params, app) {
                     let [ name ] = args;
@@ -183,7 +186,7 @@ export function CContract() {
 
 interface IInstallParams {
     name: string
-    proxyTarget: string
+    implementation: string
     chain: string
     output: string
 }

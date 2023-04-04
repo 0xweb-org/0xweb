@@ -23,9 +23,6 @@ import { $account } from '@dequanto/utils/$account';
 import { ChainAccount } from '@dequanto/models/TAccount';
 import { SlotsDump } from '@dequanto/solidity/SlotsDump';
 import { $is } from '@dequanto/utils/$is';
-import { $csv } from '@dequanto/utils/$csv';
-import { $block } from '@dequanto/utils/$block';
-import { $logger } from '@dequanto/utils/$logger';
 import { ITxLogItem } from '@dequanto/txs/receipt/ITxLogItem';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { $abiParser } from '@dequanto/utils/$abiParser';
@@ -45,7 +42,7 @@ export class ContractService {
 
     }
 
-    async help (name: string): Promise<string> {
+    async abi (name: string): Promise<string> {
         let pckg = await this.getPackage(name);
         let abi = await this.getAbi(pckg);
 
@@ -54,7 +51,7 @@ export class ContractService {
         let writes = methods.filter(x => GeneratorFromAbi.Gen.isReader(x) === false);
 
         let lines = [
-            `bold<cyan<${env.currentDir.combine(pckg.main).toLocalFile()}>>`
+            `bold<cyan<${pckg.main}>>`
         ];
 
         lines.push(`bold<Read>`);
@@ -177,8 +174,9 @@ export class ContractService {
         await file.writeAsync(str, { skipHooks: true });
         $console.log(`File cyan<${ file.uri.toString() }>`);
     }
-    async dump (nameOrAddress: string | TAddress, params: { output?: string }) {
+    async dump (nameOrAddress: string | TAddress, params: { output?: string, implementation?: TAddress }) {
         let _address: TAddress;
+        let _implementation: TAddress;
         // file-output without extensions ()
         let _output: string
         if ($is.Address(nameOrAddress)) {
@@ -187,13 +185,18 @@ export class ContractService {
         } else {
             let pckg = await this.getPackage(nameOrAddress);
             _address = pckg.address;
-            _output = params.output ?? `./dump/${pckg.name}/storage`
+            _output = params.output ?? `./dump/${pckg.name}/storage`;
+            _implementation = pckg.implementation ?? params.implementation;
+
+            await this.app.ensureChain(pckg.platform);
         }
 
         $require.String(_output, 'Output file not defined');
+        $require.notNull(this.app.chain, `--chain not specified`);
 
         let dump = new SlotsDump({
             address: _address,
+            implementation: _implementation,
             client: this.app.chain.client,
             explorer: this.app.chain.explorer,
         });

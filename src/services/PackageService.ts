@@ -23,6 +23,29 @@ export class PackageService {
         }
         return pckg;
     }
+    async savePackage (pckg: IPackageItem, opts?: { global: boolean }) {
+        let packagePath = opts?.global
+            ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
+            : `0xweb.json`
+
+        let json = {} as any;
+        if (await File.existsAsync(packagePath)) {
+            json = await File.readAsync(packagePath);
+        }
+        if (json.contracts == null) {
+            json.contracts = {};
+        }
+        if (json.contracts[pckg.platform] == null) {
+            json.contracts[pckg.platform] = {};
+        }
+
+        json.contracts[pckg.platform][pckg.address] = {
+            name: pckg.name,
+            main: pckg.main,
+            implementation: pckg.implementation
+        };
+        await File.writeAsync(packagePath, json);
+    }
     private async getBuiltIn (name: string): Promise<IPackageItem> {
         let file: InstanceType<typeof File>;
         let fromCWD = './dequanto/contracts/openzeppelin/';
@@ -31,7 +54,7 @@ export class PackageService {
             file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
         }
         if (file == null) {
-            let fromApp = env.appdataDir.combine(fromCWD).toString();
+            let fromApp = env.applicationDir.combine(fromCWD).toString();
             if (await Directory.existsAsync(fromApp) === true) {
                 let ozFiles = await Directory.readFilesAsync(fromApp, '**.json');
                 file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
@@ -44,7 +67,7 @@ export class PackageService {
         return {
             address: null,
             name,
-            platform: this.chain.client.platform,
+            platform: this.chain?.client.platform,
             main: file.uri.toString(),
             abi
         };
@@ -98,6 +121,7 @@ export class PackageService {
                     address: address as TAddress,
                     name: pckg.name,
                     main: pckg.main,
+                    implementation: pckg.implementation,
                 });
             }
         }
