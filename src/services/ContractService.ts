@@ -26,6 +26,8 @@ import { $is } from '@dequanto/utils/$is';
 import { ITxLogItem } from '@dequanto/txs/receipt/ITxLogItem';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { $abiParser } from '@dequanto/utils/$abiParser';
+import { SlotsStorage } from '@dequanto/solidity/SlotsStorage';
+import { ISlotVarDefinition } from '@dequanto/solidity/SlotsParser/models';
 
 interface ICallParams {
     block?: string | number
@@ -224,12 +226,26 @@ export class ContractService {
         console.log(slotValue);
     }
 
-    private async getAddress(nameOrAddress): Promise<TAddress> {
-        if ($is.Address(nameOrAddress)) {
-            return nameOrAddress;
-        }
+    async varList (nameOrAddress: string | TAddress) {
         let pckg = await this.getPackage(nameOrAddress);
-        return pckg.address;
+        let slots = await this.getSlots(pckg);
+
+        let rows = slots.map(slot => {
+            return [ slot.slot, slot.name, slot.type ]
+        });
+        $console.table(rows);
+    }
+    async varLoad (nameOrAddress: string | TAddress, path: string) {
+        let pckg = await this.getPackage(nameOrAddress);
+        let slots = await this.getSlots(pckg);
+        let storage = SlotsStorage.createWithClient(this.app.chain.client, pckg.address, slots);
+        $console.toast(`Loading storage of "${path}"`);
+        let result = await storage.get(path);
+        if (result != null && typeof result === 'object') {
+            $console.log(JSON.stringify(result, null, '  '));
+            return;
+        }
+        $console.log(result);
     }
 
     private async $read (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
@@ -334,17 +350,50 @@ export class ContractService {
         }
         return $cli.ask(`Value for bold<${abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
     }
+
+    private async getAddress(nameOrAddress): Promise<TAddress> {
+        if ($is.Address(nameOrAddress)) {
+            return nameOrAddress;
+        }
+        let pckg = await this.getPackage(nameOrAddress);
+        return pckg.address;
+    }
     private async getPackage (name: string) {
         let packageService = di.resolve(PackageService, this.app.chain);
         let pckg = await packageService.getPackage(name);
         if (pckg == null) {
             throw new Error(`Package ${name} not found. gray<0xweb c list> to view all installed contracts`);
         }
+        if (this.app.chain == null) {
+            this.app.chain = packageService.chain;
+        }
         return pckg;
     }
     private async getAbi(pckg: IPackageItem) {
         let abi = await File.readAsync<AbiItem[]>(pckg.main.replace('.ts', '.json'));
         return abi;
+    }
+    private async getSlots(pckg: IPackageItem): Promise<ISlotVarDefinition[]> {
+        let code = await File.readAsync<string>(pckg.main, { skipHooks: true });
+        // parse from ts-generated code (consider to ouput slots in extra file like abi json)
+        let rgxStart = /^\s*\$slots\s*=\s*\[/mg;
+        let rgxStartMatch = rgxStart.exec(code);
+        if (rgxStartMatch == null) {
+            throw new Error(`${pckg.main} has no generated $slots field`);
+        }
+        let rgxEnd = /^\s*\]/mg;
+        rgxEnd.lastIndex = rgxStartMatch.index;
+        let rgxEndMatch = rgxEnd.exec(code);
+        if (rgxEndMatch == null) {
+            throw new Error(`${pckg.main}: End not found of the $slots value`);
+        }
+        let json = code.substring(rgxStartMatch.index + rgxStartMatch[0].length  - 1, rgxEndMatch.index + 1);
+        try {
+            return JSON.parse(json);
+        } catch (error) {
+            $console.log(json);
+            throw error;
+        }
     }
     private stringifyAbi (abi: AbiItem) {
         let str = GeneratorFromAbi.Gen.serializeMethodAbi(abi, true);

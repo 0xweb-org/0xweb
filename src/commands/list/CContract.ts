@@ -176,6 +176,47 @@ export function CContract() {
                     await service.slot(nameOrAddress, location);
                 }
             },
+            {
+                command: 'var',
+                description: [ `Read contracts state variable` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    },
+                    {
+                        description: 'Accessor selector. Supports JSON-a-like paths, e.g: users[5].balance',
+                        required: true
+                    },
+
+                ],
+                params: {
+                    ...Parameters.chain({ required: false })
+                },
+                async process(args, params, app) {
+                    let [ nameOrAddress, selector ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.varLoad(nameOrAddress, selector);
+                }
+            },
+            {
+                command: 'vars',
+                description: [ `Get list of state variables` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    },
+                ],
+                params: {
+                    ...Parameters.chain()
+                },
+                async process(args, params, app) {
+                    let [ nameOrAddress ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.varList(nameOrAddress);
+                }
+            },
         ],
 
         async process(args: string[], params: IInstallParams) {

@@ -33,6 +33,9 @@ export function CInstall() {
             '--imp, --implementation': {
                 description: 'We can detect proxies by standard proxy implementations, in some edge cases you can set the implementation address manually.'
             },
+            '--source': {
+                description: 'Optional, the solidity source code'
+            },
             '-g, --global': {
                 description: 'Installs the contract globally, to be available via "0xweb" cli command from any CWD.',
                 type: 'boolean',
@@ -67,8 +70,10 @@ export function CInstall() {
                 name: params.name,
                 platform,
                 source: {
-                    abi: address
+                    abi: address,
+                    path: params.source,
                 },
+                defaultAddress: address,
                 implementation: params.implementation,
                 output,
                 saveAbi: true
@@ -93,5 +98,6 @@ interface IInstallParams {
     implementation: string
     chain: string
     output: string
+    source: string
     global: boolean
 }
