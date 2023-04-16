@@ -230,7 +230,10 @@ export class ContractService {
         let pckg = await this.getPackage(nameOrAddress);
         let slots = await this.getSlots(pckg);
 
-        let rows = slots.map(slot => {
+        let rows = slots
+        // SlotsParser adds `$` at the end of the name when a property was overriden in inheriting
+        .filter(slot => /\$$/.test(slot.name) === false)
+        .map(slot => {
             return [ slot.slot, slot.name, slot.type ]
         });
         $console.table(rows);
