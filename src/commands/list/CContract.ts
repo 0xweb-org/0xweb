@@ -2,7 +2,7 @@ import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 
 
 export function CContract() {

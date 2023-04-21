@@ -10,7 +10,7 @@ import { GnosisSafeFactory } from '@dequanto/safe/GnosisSafeFactory';
 import { $require } from '@dequanto/utils/$require';
 import { CAccounts } from './CAccounts';
 import { File } from 'atma-io';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { Web3Client } from '@dequanto/clients/Web3Client';

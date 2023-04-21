@@ -28,6 +28,7 @@ import { IWeb3EndpointOptions } from '@dequanto/clients/interfaces/IWeb3Endpoint
 import { CInfo } from '@core/commands/list/CInfo';
 import memd from 'memd';
 import { TPlatform } from '@dequanto/models/TPlatform';
+import { CRestore } from '@core/commands/list/CRestore';
 
 declare const global;
 
@@ -58,6 +59,7 @@ export class App {
         this
             .commands
             .register(CInstall())
+            .register(CRestore())
             .register(CInit())
             .register(CContract())
             .register(CAccounts())
@@ -128,4 +130,3 @@ export class App {
         }
     }
 }
-

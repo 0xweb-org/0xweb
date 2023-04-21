@@ -1,15 +1,15 @@
+import di from 'a-di';
+import { env } from 'atma-io';
 import { Generator } from '@dequanto/gen/Generator';
 import { ICommand } from '../ICommand';
 import { TPlatform } from '@dequanto/models/TPlatform';
-import { $require } from '@dequanto/utils/$require';
-import { $validate } from '@core/utils/$validate';
 import { class_Uri } from 'atma-utils';
-import { env, File } from 'atma-io';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 import { PackageService } from '@core/services/PackageService';
-import di from 'a-di';
 import { $address } from '@dequanto/utils/$address';
 import { $is } from '@dequanto/utils/$is';
+import { $require } from '@dequanto/utils/$require';
+import { $validate } from '@core/utils/$validate';
 
 export function CInstall() {
     return <ICommand>{

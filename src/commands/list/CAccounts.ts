@@ -5,7 +5,7 @@ import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 
 export function CAccounts() {
     return <ICommand>{

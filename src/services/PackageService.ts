@@ -13,15 +13,18 @@ export class PackageService {
 
     async getPackage (name: string): Promise<IPackageItem> {
         let localList = await this.getLocalList();
-        let pckg = await this.findFromList(name, localList);
-        if (pckg == null) {
+        let pkg = await this.findFromList(name, localList);
+        if (pkg == null) {
             let globalList = await this.getGlobalList();
-            pckg = await this.findFromList(name, globalList);
+            pkg = await this.findFromList(name, globalList);
         }
-        if (pckg == null) {
-            pckg = await this.getBuiltIn(name);
+        if (pkg == null) {
+            pkg = await this.getBuiltIn(name);
         }
-        return pckg;
+        return pkg;
+    }
+    async getLocalPackages () {
+        return await this.getLocalList();
     }
     async savePackage (pckg: IPackageItem, opts: { global: boolean }) {
         let packagePath = opts?.global

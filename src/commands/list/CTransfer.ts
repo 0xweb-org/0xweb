@@ -8,7 +8,7 @@ import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 import { l } from '@dequanto/utils/$logger';
 
 

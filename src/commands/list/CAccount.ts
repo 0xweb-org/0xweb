@@ -7,7 +7,7 @@ import { $console } from '@core/utils/$console';
 import { TAddress } from '@dequanto/models/TAddress';
 import { $address } from '@dequanto/utils/$address';
 import { $require } from '@dequanto/utils/$require';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 
 export function CAccount ()  {
     return <ICommand>{

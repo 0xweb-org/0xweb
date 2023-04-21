@@ -1,7 +1,7 @@
 import type { App } from '@core/app/App';
 import { $cli } from '@core/utils/$cli';
 import { $console } from '@core/utils/$console';
-import { Parameters } from '@core/utils/Paramsters';
+import { Parameters } from '@core/utils/Parameters';
 import { IWeb3ClientStatus } from '@dequanto/clients/interfaces/IWeb3ClientStatus';
 import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
