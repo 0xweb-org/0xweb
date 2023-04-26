@@ -45,15 +45,15 @@ export class ContractService {
     }
 
     async abi (name: string): Promise<string> {
-        let pckg = await this.getPackage(name);
-        let abi = await this.getAbi(pckg);
+        let pkg = await this.getPackage(name);
+        let abi = await this.getAbi(pkg);
 
         let methods = await abi.filter(x => x.type === 'function');
         let reads = methods.filter(x => GeneratorFromAbi.Gen.isReader(x));
         let writes = methods.filter(x => GeneratorFromAbi.Gen.isReader(x) === false);
 
         let lines = [
-            `bold<cyan<${pckg.main}>>`
+            `bold<cyan<${pkg.main}>>`
         ];
 
         lines.push(`bold<Read>`);
@@ -67,8 +67,8 @@ export class ContractService {
     }
 
     async call (name: string, method: string, params: ICallParams, action: 'read' | 'write') {
-        let pckg = await this.getPackage(name);
-        let abi = await this.getAbi(pckg);
+        let pkg = await this.getPackage(name);
+        let abi = await this.getAbi(pkg);
 
         let abiItem = method?.includes(`(`)
             ? $abiParser.parseMethod(method)
@@ -87,7 +87,7 @@ export class ContractService {
             ? action === 'read'
             : await GeneratorFromAbi.Gen.isReader(abiItem);
 
-        let platform = params.chain ?? pckg.platform;
+        let platform = params.chain ?? pkg.platform;
         if (platform !== this.app?.chain?.client.platform) {
             this.app.chain = await di
                 .resolve(PlatformFactory)
@@ -96,7 +96,7 @@ export class ContractService {
 
         $console.log('')
         $console.table([
-            ['Contract', params.address ?? pckg.address],
+            ['Contract', params.address ?? pkg.address],
             ['Platform', platform],
             ['Action', isRead ? 'READ' : 'WRITE'],
             ['Method',  methodSignature.trim()],
@@ -104,18 +104,18 @@ export class ContractService {
         $console.log('')
 
         if (isRead) {
-            await this.$read(pckg, abiItem, params);
+            await this.$read(pkg, abiItem, params);
         } else {
-            await this.$write(pckg, abiItem, params);
+            await this.$write(pkg, abiItem, params);
         }
     }
     async logs (name: string, eventName: string, params: { output, format?: 'csv' | 'json' }) {
-        let pckg = await this.getPackage(name);
-        let abi = await this.getAbi(pckg);
+        let pkg = await this.getPackage(name);
+        let abi = await this.getAbi(pkg);
         let event = abi.find(x => x.name === eventName && x.type === 'event');
         $require.notNull(event, `"${eventName}" is not a valid Event in Contract "${name}". Use "0xweb c ${name} abi" to view the contracts ABI`);
 
-        await this.app.ensureChain(pckg.platform);
+        await this.app.ensureChain(pkg.platform);
 
         let args = alot(event.inputs)
             .map(input => [ input.name, params?.[input.name] ])
@@ -124,7 +124,7 @@ export class ContractService {
 
         let reader = await this.getContractReader(params);
         let logs = await reader.getLogsParsed(event, {
-            address: pckg.address,
+            address: pkg.address,
             fromBlock: 'deployment',
             params: args
         });
@@ -169,14 +169,14 @@ export class ContractService {
             });
             str = `${ headers }\n${ rows.join('\n') }`;
         }
-        let output = params.output ?? `./cache/${eventName}_${pckg.address}.${ format }`;
+        let output = params.output ?? `./cache/${eventName}_${pkg.address}.${ format }`;
         let file = new File(output);
 
         $console.log(`Loaded bold<green<${logs.length}>> Logs`);
         await file.writeAsync(str, { skipHooks: true });
         $console.log(`File cyan<${ file.uri.toString() }>`);
     }
-    async dump (nameOrAddress: string | TAddress, params: { output?: string, implementation?: TAddress }) {
+    async dump (nameOrAddress: string | TAddress, params: { output?: string, implementation?: TAddress, fields?: string }) {
         let _address: TAddress;
         let _implementation: TAddress;
         // file-output without extensions ()
@@ -185,12 +185,12 @@ export class ContractService {
             _address = nameOrAddress;
             _output = params.output;
         } else {
-            let pckg = await this.getPackage(nameOrAddress);
-            _address = pckg.address;
-            _output = params.output ?? `./dump/${pckg.name}/storage`;
-            _implementation = pckg.implementation ?? params.implementation;
+            let pkg = await this.getPackage(nameOrAddress);
+            _address = pkg.address;
+            _output = params.output ?? `./dump/${pkg.name}/storage`;
+            _implementation = pkg.implementation ?? params.implementation;
 
-            await this.app.ensureChain(pckg.platform);
+            await this.app.ensureChain(pkg.platform);
         }
 
         $require.String(_output, 'Output file not defined');
@@ -201,6 +201,7 @@ export class ContractService {
             implementation: _implementation,
             client: this.app.chain.client,
             explorer: this.app.chain.explorer,
+            fields: params.fields?.split(',').map(x => x.trim())
         });
 
         let data = await dump.getStorage();
@@ -227,8 +228,8 @@ export class ContractService {
     }
 
     async varList (nameOrAddress: string | TAddress) {
-        let pckg = await this.getPackage(nameOrAddress);
-        let slots = await this.getSlots(pckg);
+        let pkg = await this.getPackage(nameOrAddress);
+        let slots = await this.getSlots(pkg);
 
         let rows = slots
         // SlotsParser adds `$` at the end of the name when a property was overriden in inheriting
@@ -251,8 +252,8 @@ export class ContractService {
         $console.log(result);
     }
 
-    private async $read (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
-        let address = params.address ?? pckg.address;
+    private async $read (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
+        let address = params.address ?? pkg.address;
         $require.Address(address, 'Contracts address invalid');
 
         let args = await this.getArguments(abi, params);
@@ -280,9 +281,9 @@ export class ContractService {
         }
         return reader;
     }
-    private async $write (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
+    private async $write (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
         let args = await this.getArguments(abi, params);
-        let writer = await this.getContractWriter(pckg, abi, params);
+        let writer = await this.getContractWriter(pkg, abi, params);
 
         let accounts = di.resolve(AccountsService, this.app.config);
         let account = await accounts.get(params.account);
@@ -307,12 +308,12 @@ export class ContractService {
         let receipt = await tx.onCompleted;
         $console.log(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
     }
-    private async getContractWriter (pckg: IPackageItem, abi: AbiItem, params: ICallParams) {
+    private async getContractWriter (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
 
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
 
-        let writer = di.resolve(ContractWriter, params.address ?? pckg.address, this.app.chain.client);
+        let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.app.chain.client);
         return writer;
     }
     private async getArguments (abi: AbiItem, params) {
@@ -330,9 +331,9 @@ export class ContractService {
 
             let obj = {};
             for (let key in params) {
-                let keyPrfx = `${abi.name}.`;
-                if (key.startsWith(keyPrfx)) {
-                    let subKey = key.replace(keyPrfx, '');
+                let keyPfx = `${abi.name}.`;
+                if (key.startsWith(keyPfx)) {
+                    let subKey = key.replace(keyPfx, '');
                     obj[subKey] = params[key];
                 }
             }
@@ -358,37 +359,37 @@ export class ContractService {
         if ($is.Address(nameOrAddress)) {
             return nameOrAddress;
         }
-        let pckg = await this.getPackage(nameOrAddress);
-        return pckg.address;
+        let pkg = await this.getPackage(nameOrAddress);
+        return pkg.address;
     }
     private async getPackage (name: string) {
         let packageService = di.resolve(PackageService, this.app.chain);
-        let pckg = await packageService.getPackage(name);
-        if (pckg == null) {
+        let pkg = await packageService.getPackage(name);
+        if (pkg == null) {
             throw new Error(`Package ${name} not found. gray<0xweb c list> to view all installed contracts`);
         }
         if (this.app.chain == null) {
             this.app.chain = packageService.chain;
         }
-        return pckg;
+        return pkg;
     }
-    private async getAbi(pckg: IPackageItem) {
-        let abi = await File.readAsync<AbiItem[]>(pckg.main.replace('.ts', '.json'));
+    private async getAbi(pkg: IPackageItem) {
+        let abi = await File.readAsync<AbiItem[]>(pkg.main.replace('.ts', '.json'));
         return abi;
     }
-    private async getSlots(pckg: IPackageItem): Promise<ISlotVarDefinition[]> {
-        let code = await File.readAsync<string>(pckg.main, { skipHooks: true });
-        // parse from ts-generated code (consider to ouput slots in extra file like abi json)
+    private async getSlots(pkg: IPackageItem): Promise<ISlotVarDefinition[]> {
+        let code = await File.readAsync<string>(pkg.main, { skipHooks: true });
+        // parse from ts-generated code (consider to output slots in extra file like abi json)
         let rgxStart = /^\s*\$slots\s*=\s*\[/mg;
         let rgxStartMatch = rgxStart.exec(code);
         if (rgxStartMatch == null) {
-            throw new Error(`${pckg.main} has no generated $slots field`);
+            throw new Error(`${pkg.main} has no generated $slots field`);
         }
         let rgxEnd = /^\s*\]/mg;
         rgxEnd.lastIndex = rgxStartMatch.index;
         let rgxEndMatch = rgxEnd.exec(code);
         if (rgxEndMatch == null) {
-            throw new Error(`${pckg.main}: End not found of the $slots value`);
+            throw new Error(`${pkg.main}: End not found of the $slots value`);
         }
         let json = code.substring(rgxStartMatch.index + rgxStartMatch[0].length  - 1, rgxEndMatch.index + 1);
         try {

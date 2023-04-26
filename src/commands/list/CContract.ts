@@ -144,7 +144,10 @@ export function CContract() {
                         description: 'Output file without extension, as 2 files will be generated the .csv and .json'
                     },
                     '--imp, --implementation': {
-                        description: 'Implemenation address'
+                        description: 'Implementation address'
+                    },
+                    '--fields': {
+                        description: 'Comma separated variable names to restrict dump to specific variables.'
                     },
                     ...Parameters.chain({ required: false })
                 },
