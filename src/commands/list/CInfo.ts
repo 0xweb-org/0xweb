@@ -1,10 +1,9 @@
 import type { App } from '@core/app/App';
-import { $cli } from '@core/utils/$cli';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { IWeb3ClientStatus } from '@dequanto/clients/interfaces/IWeb3ClientStatus';
-import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
+import alot from 'alot';
 
 export function CInfo() {
     return <ICommand>{
@@ -27,23 +26,65 @@ export function CInfo() {
 
                     $console.table([
                         [
+                            'Nr.',
                             'URL',
-                            'Current Block',
+                            'Current_Block',
+                            'Highest_Block',
                             'Status',
                             'Syncing',
                             'Ping',
-                            'Peers'
+                            'Peers',
+                            'Node'
                         ],
-                        ...info.map(info => {
-                            return [
+                        ...alot(info).mapMany(info => {
+
+                            let currentBlock = info.blockNumber;
+                            let highestBlock = currentBlock + (info.blockNumberBehind ?? 0);
+                            let diffBlock = highestBlock - currentBlock;
+                            let status = info.status;
+                            let syncingStr = '—';
+                            let currentBlockStr = '—';
+                            let highestBlockStr = '—';
+
+                            if (info.syncing) {
+                                currentBlock = info.syncing.currentBlock;
+                                highestBlock = Math.max(info.syncing.highestBlock);
+                                diffBlock = highestBlock - currentBlock;
+                                status = 'sync';
+
+                                let stages = info.syncing.stages as {stage_name, block_number}[];
+
+                                let chars = alot(stages).max(x => x.stage_name.length);
+
+                                syncingStr = stages
+                                    .map(stage => `${ stage.stage_name.padEnd(chars, ' ') } ${ Number(stage.block_number) }`)
+                                    .join('\n');
+                            }
+
+                            if (currentBlock != null) {
+                                currentBlockStr = currentBlock + (diffBlock !== 0 ? ` (${-diffBlock})` : '');
+                                highestBlockStr = highestBlock + '';
+                            }
+
+                            let infoRow = [
+                                info.i,
                                 info.url,
-                                info.blockNumber,
-                                info.status,
-                                JSON.stringify(info.syncing),
-                                info.pingMs,
+                                currentBlockStr,
+                                highestBlockStr,
+                                status,
+                                syncingStr,
+                                info.pingMs ? info.pingMs + 'ms' : '',
                                 info.peers,
-                            ]
-                        })
+                                (info.node ?? '—')
+                            ];
+                            let rows = [ infoRow ]
+                            if (info.error?.message) {
+                                rows.push([ info.error.message ]);
+                                rows.push(['']);
+                            }
+
+                            return rows;
+                        }).toArray()
                     ]);
                 }
             }

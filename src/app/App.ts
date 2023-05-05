@@ -29,6 +29,7 @@ import { CInfo } from '@core/commands/list/CInfo';
 import memd from 'memd';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { CRestore } from '@core/commands/list/CRestore';
+import { CHardhat } from '@core/commands/list/CHardhat';
 
 declare const global;
 
@@ -69,7 +70,7 @@ export class App {
             .register(CTokens())
             .register(CTransfer())
             .register(CTx())
-
+            .register(CHardhat())
             .register(CBlock())
             .register(CGas())
             .register(CConfig())

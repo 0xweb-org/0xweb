@@ -32,7 +32,7 @@ export const TestUtils = {
         let cmdStr = `node ./index.js ${command} ${paramsStr}`;
         let { stdout, stderr, lastCode } = await run({
             command: cmdStr,
-            silent: opts?.silent ?? false,
+            silent: opts?.silent ?? true,
         });
         if (lastCode !== 0) {
             console.error(stdout.join('\n'), stderr.join('\n'));

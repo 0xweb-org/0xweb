@@ -24,8 +24,13 @@ export namespace $console {
 
         arr = arr.filter(x => x != null && x.length > 0);
 
-        let lengths = arr[0].map((row, i) => {
+        let lengths = arr[0].map((_, i) => {
             let size = alot(arr).max(x => {
+                if (x.length === 1) {
+                    // If a row has only one column do not calculate column sizes and it will take the whole space
+                    return 0;
+                }
+
                 let str = String(x[i]);
                 let lines = str.split('\n');
                 let max = alot(lines).max(x => x.length);

@@ -78,7 +78,7 @@ export function CInstall() {
                 output,
                 saveAbi: true
             });
-            let { main, implementation } = await generator.generate();
+            let { main, implementation, contractName } = await generator.generate();
 
             let packageService = di.resolve(PackageService);
             await packageService.savePackage({
@@ -86,6 +86,7 @@ export function CInstall() {
                 address,
                 implementation: $is.Address(implementation) && $address.eq(address, implementation) === false ? implementation : void 0,
                 name: params.name,
+                contractName: contractName,
                 main,
             }, { global: params.global != null });
             return { main };

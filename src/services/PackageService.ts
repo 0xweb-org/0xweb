@@ -1,13 +1,13 @@
+import di from 'a-di';
 import { IPackageItem, IPackageJson } from '@core/models/IPackageJson';
 import { IPlatformTools, PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { TAddress } from '@dequanto/models/TAddress';
 import { TPlatform } from '@dequanto/models/TPlatform';
-import di from 'a-di';
 import { File, Directory, env } from 'atma-io';
 import type { AbiItem } from 'web3-utils'
 
 export class PackageService {
-    constructor(public chain: IPlatformTools) {
+    constructor(private chain?: IPlatformTools) {
 
     }
 
@@ -26,7 +26,7 @@ export class PackageService {
     async getLocalPackages () {
         return await this.getLocalList();
     }
-    async savePackage (pckg: IPackageItem, opts: { global: boolean }) {
+    async savePackage (pkg: IPackageItem, opts: { global: boolean }) {
         let packagePath = opts?.global
             ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
             : `0xweb.json`
@@ -38,14 +38,14 @@ export class PackageService {
         if (json.contracts == null) {
             json.contracts = {};
         }
-        if (json.contracts[pckg.platform] == null) {
-            json.contracts[pckg.platform] = {};
+        if (json.contracts[pkg.platform] == null) {
+            json.contracts[pkg.platform] = {};
         }
 
-        json.contracts[pckg.platform][pckg.address] = {
-            name: pckg.name,
-            main: pckg.main,
-            implementation: pckg.implementation
+        json.contracts[pkg.platform][pkg.address] = {
+            name: pkg.name,
+            main: pkg.main,
+            implementation: pkg.implementation
         };
         await File.writeAsync(packagePath, json);
     }
@@ -70,6 +70,7 @@ export class PackageService {
         return {
             address: null,
             name,
+            contractName: file.uri.file,
             platform: this.chain?.client.platform,
             main: file.uri.toString(),
             abi
@@ -118,13 +119,14 @@ export class PackageService {
 
         for (let platform in contracts) {
             for (let address in contracts[platform]) {
-                let pckg = contracts[platform][address];
+                let pkg = contracts[platform][address];
                 list.push({
                     platform: platform as TPlatform,
                     address: address as TAddress,
-                    name: pckg.name,
-                    main: pckg.main,
-                    implementation: pckg.implementation,
+                    name: pkg.name,
+                    main: pkg.main,
+                    contractName: pkg.contractName,
+                    implementation: pkg.implementation,
                 });
             }
         }

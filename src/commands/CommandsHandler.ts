@@ -12,7 +12,11 @@ export class CommandsHandler  {
     private flags: Record<string, ICommand> = Object.create(null);
     public list: ICommand[] = [];
 
-    register (command: ICommand): this {
+    register (command: ICommand | ICommand[]): this {
+        if (Array.isArray(command)) {
+            command.forEach(c => this.register(c));
+            return this;
+        }
         $command.getAliases(command.command).map(({ name, isFlag }) => {
             if (isFlag) {
                 this.flags[name] = command;

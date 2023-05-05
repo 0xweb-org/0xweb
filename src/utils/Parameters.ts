@@ -9,11 +9,11 @@ export const Parameters = {
             }
         }
     },
-    pin () {
+    pin (opts?: { required?: boolean }) {
         return {
             '-p, --pin': {
-                description: 'Account configuration is encrypted with a derived key from the pin and the local machine key. ',
-                required: true
+                description: 'Accounts storage is encrypted with a derived key from the pin and the local machine key. ',
+                required: opts?.required ?? true
             },
         }
     },
