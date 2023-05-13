@@ -7,7 +7,7 @@ import { File, Directory, env } from 'atma-io';
 import type { AbiItem } from 'web3-utils'
 
 export class PackageService {
-    constructor(private chain?: IPlatformTools) {
+    constructor(public chain?: IPlatformTools) {
 
     }
 

@@ -39,7 +39,7 @@ export function CContract() {
                 description: ['READ contract. Parameters are resolved by cli flags or will be prompted.'],
                 arguments: [
                     {
-                        description: 'Installed contract by name',
+                        description: 'Address or the name of the installed contract',
                         required: true
                     },
                     {
@@ -59,9 +59,9 @@ export function CContract() {
                     },
                 },
                 async process(args, params, app) {
-                    let [name, method] = args;
+                    let [ nameOrAddress , method] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.call(name, method, params, 'read');
+                    await service.call(nameOrAddress, method, params, 'read');
                 }
             },
             {

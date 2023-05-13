@@ -66,18 +66,24 @@ export class ContractService {
         return lines.join('\n');
     }
 
-    async call (name: string, method: string, params: ICallParams, action: 'read' | 'write') {
-        let pkg = await this.getPackage(name);
+    private async getAbiItem (method: string, pkg?: IPackageItem) {
+        if (method?.includes(`(`)) {
+            return $abiParser.parseMethod(method);
+        }
         let abi = await this.getAbi(pkg);
+        let abiItem = abi.find(x => x.name === method && x.type === 'function');
+        return abiItem;
+    }
 
-        let abiItem = method?.includes(`(`)
-            ? $abiParser.parseMethod(method)
-            : abi.find(x => x.name === method && x.type === 'function');
-
+    async call (nameOrAddress: string, method: string, params: ICallParams, action: 'read' | 'write') {
+        let pkg = $is.Address(nameOrAddress)
+            ? { address: nameOrAddress } as IPackageItem
+            : await this.getPackage(nameOrAddress);
+        let abiItem = await this.getAbiItem(method, pkg);
         if (abiItem == null) {
             let str = [
-                `Method ${method} not found. 0xweb c abi ${name} to view available methods.`,
-                `Or provide the ABI e.g.: 0xweb c read ${name} "decimals() returns (uint16)"`
+                `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
+                `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
             ].join(' ');
             throw new Error(str);
         }

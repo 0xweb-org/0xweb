@@ -40,6 +40,14 @@ UTest({
                     main: "./0xweb/hardhat/Counter/Counter.ts"
                 });
             },
+            async 'call method by contract name' () {
+                let str = await TestUtils.cli(`contract read Counter getCountMethod --chain hardhat`);
+                has_(str, /^1n$/m);
+            },
+            async 'call method by contract address' () {
+                let str = await TestUtils.cli(`contract read ${ contract.address } "getCountMethod():uint256" --chain hardhat`);
+                has_(str, /^1n$/m);
+            },
             async 'check var' () {
                 let str = await TestUtils.cli(`contract var Counter count --chain hardhat`);
                 has_(str, /^1n$/m);
