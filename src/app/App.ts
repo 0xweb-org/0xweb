@@ -30,6 +30,8 @@ import memd from 'memd';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { CRestore } from '@core/commands/list/CRestore';
 import { CHardhat } from '@core/commands/list/CHardhat';
+import { CRpc } from '@core/commands/list/CRpc';
+import { $logger, ELogLevel } from '@dequanto/utils/$logger';
 
 declare const global;
 
@@ -50,6 +52,9 @@ export class App {
 
         if ($cli.getParamValue('--color') === 'none') {
             $color_options({ type: 'none' });
+        }
+        if ($cli.getParamValue('--silent')) {
+            $logger.config({ level: ELogLevel.ERROR })
         }
 
         let { params: cliParams, args: cliArgs } = $cli.parse();
@@ -73,6 +78,7 @@ export class App {
             .register(CHardhat())
             .register(CBlock())
             .register(CGas())
+            .register(CRpc())
             .register(CConfig())
             .register(CVersion)
             .register(CReset())
@@ -109,10 +115,10 @@ export class App {
             await this.execute();
             process.exit(0);
         } catch (error) {
-            $console.log(`red<${error.message}>`);
+            $console.error(`red<${error.message}>`);
 
             let stack = error.stack.split('\n').slice(1).join('\n');
-            $console.log(`gray<${stack}>`);
+            $console.error(`gray<${stack}>`);
             process.exit(1);
         }
     }

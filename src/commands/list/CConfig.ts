@@ -49,7 +49,7 @@ export function CConfig() {
 
             if (true || params.view) {
                 $console.log('Current configuration:');
-                console.dir(JSON.parse(JSON.stringify(getJson())), { depth: null });
+                $console.result(getJson());
                 return;
             }
 

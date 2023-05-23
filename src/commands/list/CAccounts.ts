@@ -51,7 +51,7 @@ export function CAccounts() {
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
                     $console.log(`Accounts:`);
-                    $console.log(str);
+                    $console.result(str);
                 }
             },
             {
@@ -74,8 +74,7 @@ export function CAccounts() {
                         ? accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n')
                         : `   No account added`;
                     $console.log(`Accounts:`);
-                    $console.log(str);
-                    $console.log('');
+                    $console.result(str);
                 }
             },
             {
@@ -91,7 +90,7 @@ export function CAccounts() {
                         return;
                     }
                     let str = accounts.map(x => ` - ${x.name} [${x.address}]`).join('\n');
-                    $console.log(str);
+                    $console.result(str);
                 }
             },
             {

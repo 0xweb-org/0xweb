@@ -31,7 +31,7 @@ export function CContract() {
 
                     let service = di.resolve(ContractService, app);
                     let str = await service.abi(name);
-                    $console.log(str);
+                    $console.result(str);
                 }
             },
             {

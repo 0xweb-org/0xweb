@@ -51,7 +51,7 @@ export function CTokens() {
                         decimals,
                         platform: chain
                     });
-                    $console.log(`Added token ${symbol} [${address}] in ${chain}`);
+                    $console.result(`Added token ${symbol} [${address}] in ${chain}`);
                 }
             },
             {

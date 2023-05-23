@@ -29,7 +29,7 @@ export function CReset() {
                         throw new Error(`File does not exist: ${configPathAccounts}`);
                     }
                     await File.removeAsync(configPathAccounts);
-                    $console.log(`bold<green<Accounts file removed>>`);
+                    $console.result(`bold<green<Accounts file removed>>`);
                 }
             },
             {
@@ -48,7 +48,7 @@ export function CReset() {
                         throw new Error(`File does not exist: ${path}`);
                     }
                     await File.removeAsync(path);
-                    $console.log(`bold<green<Config file removed>>`);
+                    $console.result(`bold<green<Config file removed>>`);
                 }
             }
         ],

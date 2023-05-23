@@ -64,7 +64,7 @@ export function CSafe() {
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
                     $console.log(`Accounts:`);
-                    $console.log(str);
+                    $console.result(str);
                 }
             },
 
@@ -85,7 +85,7 @@ export function CSafe() {
                         return;
                     }
                     let str = accounts.map(x => ` - ${x.name} [${x.address}]`).join('\n');
-                    $console.log(str);
+                    $console.result(str);
                 }
             },
             {
@@ -138,8 +138,9 @@ export function CSafe() {
                             [app.chain.client.chainId]: contracts ?? void 0
                         },
                     });
-                    $console.log(`bold<Created green<${gnosisSafe.safeAddress}>>`);
-
+                    $console.table([
+                        ['Safe Address', gnosisSafe.safeAddress]
+                    ]);
 
                     let addCommand = CSafe().subcommands.find(x => x.command === 'add');
                     await addCommand.process(args, {

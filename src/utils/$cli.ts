@@ -26,7 +26,6 @@ export namespace $cli {
     export function getParamValue(flag: string, params?: { [key: string]: any }): string | null {
         let args = $argv;
         let aliases = $command.getAliases(flag);
-
         return alot(aliases)
             .map(command => {
                 let valFromParams = params?.[command.name];
@@ -38,7 +37,17 @@ export namespace $cli {
                     return inputArg.isFlag === command.isFlag && inputArg.name === command.name;
                 });
                 if (i > -1) {
-                    return args[i + 1];
+                    if (i + 1 === args.length) {
+                        // Last means a Flag
+                        return true;
+                    }
+                    let val = args[i + 1];
+                    let c = val?.[0];
+                    if (c === '-') {
+                        // Next is the option, so this one is a boolean flag
+                        return true;
+                    }
+                    return val;
                 }
                 return null;
             })

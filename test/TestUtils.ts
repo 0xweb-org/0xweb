@@ -38,7 +38,7 @@ export const TestUtils = {
             console.error(stdout.join('\n'), stderr.join('\n'));
             throw new Error(`Process exit code ${lastCode}`)
         }
-        return stdout.join('\n');
+        return stdout.join('\n').trim();
     },
     async cliParallel (command: string, params: Record<string, string | number> = {}, opts?: IShellParams ): Promise<Shell> {
         params = {
