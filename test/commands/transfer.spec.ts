@@ -95,7 +95,7 @@ UTest({
 
         l`>Deploy ERC20 token`;
         let contract = await TestUtils.deployFreeToken(client)
-        await contract.airdrop();
+        await contract.airdrop(owner1);
 
         let erc20 = new ERC20(contract.address, client);
 
@@ -190,7 +190,7 @@ UTest({
         let contract = await TestUtils.deployFreeToken(client, {
             deployer: owner1
         })
-        await contract.airdrop();
+        await contract.airdrop(owner1);
 
         l`> Add to known tokens`
         await TestUtils.cli(`tokens add`, {

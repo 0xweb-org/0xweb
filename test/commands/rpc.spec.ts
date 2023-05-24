@@ -3,6 +3,7 @@ import { l } from '@dequanto/utils/$logger';
 import { File } from 'atma-io';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
 import { TestUtils } from '../TestUtils';
+import { ethers } from 'ethers';
 
 
 
@@ -15,6 +16,7 @@ UTest({
     $config: {
         timeout: 2 * 60 * 1000
     },
+
     async '$before'() {
         await TestUtils.clean();
         await TestNode.start();
@@ -24,5 +26,6 @@ UTest({
         let result = await TestUtils.cli('rpc eth_chainId --chain hardhat --silent');
         let chainId = Number(result);
         eq_(chainId, 1337);
-    }
+    },
+
 })

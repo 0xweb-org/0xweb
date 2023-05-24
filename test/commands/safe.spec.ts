@@ -100,7 +100,7 @@ UTest({
         hasNot_(listStdout, $address.ZERO);
     },
 
-    async '!create safe and execute TXs'() {
+    async 'create safe and execute TXs'() {
 
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
@@ -131,7 +131,7 @@ UTest({
         let { contract: freeTokenContract } = await provider.deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
             client
         });
-        await freeTokenContract.airdrop();
+        await freeTokenContract.airdrop(owner1);
         let erc20 = new ERC20(freeTokenContract.address, client);
 
         l`> Add to known tokens`
