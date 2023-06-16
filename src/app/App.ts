@@ -95,15 +95,12 @@ export class App {
             if (endpoint) {
                 opts.endpoints = [ { url: endpoint } ]
             }
-            console.log(`OPTS`, opts.endpoints);
             this.chain = await di
                 .resolve(PlatformFactory)
                 .get(platform as any, opts);
         }
 
         $console.toast(`Process command gray<${ command.command }>`);
-
-        console.log('App process', this.chain.client.options.endpoints);
 
         let result = await command.process(args, params, this);
 

@@ -177,8 +177,6 @@ export function CContract() {
                     ...Parameters.chain()
                 },
                 async process(args, params, app) {
-                    console.log('ContractsService process', app.chain.client.options.endpoints);
-
                     let [ nameOrAddress, location ] = args;
                     let service = di.resolve(ContractService, app);
                     await service.slot(nameOrAddress, location);

@@ -228,8 +228,6 @@ export class ContractService {
         $require.String(_output, 'Output file not defined');
         $require.notNull(this.app.chain, `--chain not specified`);
 
-        console.log('ContractsService dump', this.app.chain.client.options.endpoints);
-
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
@@ -259,7 +257,7 @@ export class ContractService {
     async slot (nameOrAddress: string | TAddress, slot: string) {
         let address = await this.getAddress(nameOrAddress);
         let slotValue = await this.app.chain.client.getStorageAt(address, slot);
-        console.log(slotValue);
+        $console.log(slotValue);
     }
 
     async varList (nameOrAddress: string | TAddress) {
