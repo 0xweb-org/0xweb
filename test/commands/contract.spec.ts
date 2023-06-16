@@ -5,7 +5,7 @@ import { $bigint } from '@dequanto/utils/$bigint';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { SafeUtils } from './SafeUtils';
 import { TestUtils } from '../TestUtils';
-import { File } from 'atma-io';
+import { File, FileSafe } from 'atma-io';
 import { run } from 'shellbee';
 
 
@@ -60,6 +60,38 @@ UTest({
                 let str = await TestUtils.cli(`contract vars Counter`);
                 has_(str, /0\s+count/);
                 has_(str, /1\s+user/);
+            },
+            async 'dump' () {
+                let output = `cache/counter-dump/dump`;
+                let jsonPath = `${output}.json`;
+
+                async function cleanJson () {
+                    await File.removeAsync(jsonPath);
+                }
+
+                return UTest({
+                    async 'dump by name' () {
+                        await cleanJson();
+                        let str = await TestUtils.cli(`contract dump Counter --output cache/counter-dump/dump`);
+
+                        has_(str, jsonPath);
+                        let json = await File.readAsync<any>(jsonPath);
+
+                        eq_(json.user.amount, '5');
+                        eq_(json.count, '1');
+                    },
+                    async 'dump by address' () {
+                        await cleanJson();
+                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xweb/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
+                        console.log(`Str: ${str}`);
+
+                        has_(str, jsonPath);
+                        let json = await File.readAsync<any>(jsonPath);
+
+                        eq_(json.user.amount, '5');
+                        eq_(json.count, '1');
+                    }
+                })
             }
         });
     }

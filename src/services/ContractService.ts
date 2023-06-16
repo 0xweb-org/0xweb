@@ -1,6 +1,6 @@
 import di from 'a-di';
 import alot from 'alot';
-import { File, env } from 'atma-io';
+import { Directory, File, env } from 'atma-io';
 import { PackageService } from './PackageService';
 import { AbiItem, AbiInput } from 'web3-utils'
 import { GeneratorFromAbi } from '@dequanto/gen/GeneratorFromAbi';
@@ -182,9 +182,17 @@ export class ContractService {
         await file.writeAsync(str, { skipHooks: true });
         $console.log(`File cyan<${ file.uri.toString() }>`);
     }
-    async dump (nameOrAddress: string | TAddress, params: { output?: string, implementation?: TAddress, fields?: string }) {
+    async dump (nameOrAddress: string | TAddress, params: {
+        output?: string,
+        implementation?: TAddress,
+        fields?: string
+        sources?: string
+    }) {
         let _address: TAddress;
         let _implementation: TAddress;
+        let _sources;
+        let _sourcesPath = params.sources;
+
         // file-output without extensions ()
         let _output: string
         if ($is.Address(nameOrAddress)) {
@@ -195,19 +203,40 @@ export class ContractService {
             _address = pkg.address;
             _output = params.output ?? `./dump/${pkg.name}/storage`;
             _implementation = pkg.implementation ?? params.implementation;
+            _sourcesPath ??= pkg.main.replace(/[^\/]+$/, `${pkg.name}/`);
 
             await this.app.ensureChain(pkg.platform);
         }
 
+        if (_sourcesPath != null) {
+            let exists = await Directory.existsAsync(_sourcesPath);
+            $require.True(exists, `Sources directory ${_sourcesPath} does not exist`);
+
+            let files = await Directory.readFilesAsync(_sourcesPath, '**.sol');
+            let filesContent = await alot(files).mapAsync(async file => {
+                return {
+                    path: file.uri.toString(),
+                    content: await file.readAsync(),
+                }
+            }).toDictionaryAsync(x => x.path, x => ({ content: x.content }));
+            _sources = {
+                files: filesContent,
+            };
+        }
+
+
         $require.String(_output, 'Output file not defined');
         $require.notNull(this.app.chain, `--chain not specified`);
+
+        console.log('ContractsService dump', this.app.chain.client.options.endpoints);
 
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
             client: this.app.chain.client,
             explorer: this.app.chain.explorer,
-            fields: params.fields?.split(',').map(x => x.trim())
+            fields: params.fields?.split(',').map(x => x.trim()),
+            sources: _sources
         });
 
         let data = await dump.getStorage();

@@ -1,6 +1,6 @@
 import { $console } from '@core/utils/$console';
 import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
-import { ChainAccount, SafeAccount } from '@dequanto/models/TAccount';
+import { ChainAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
 import { $is } from '@dequanto/utils/$is';
 import appcfg from 'appcfg';
 
@@ -9,7 +9,7 @@ export class AccountsService {
 
     }
 
-    async add (params: ChainAccount | SafeAccount) {
+    async add (params: ChainAccount | SafeAccount | Erc4337Account) {
         let accounts = this.getAccounts();
         if (accounts.find(x => x.name === params.name)) {
             console.warn(`Account ${params.name} already exists`);
@@ -32,15 +32,15 @@ export class AccountsService {
         return accounts;
     }
 
-    async list (): Promise<(ChainAccount | SafeAccount)[]> {
+    async list (): Promise<(ChainAccount | SafeAccount | Erc4337Account)[]> {
         let source = this.getConfig();
         let accounts = source.config?.accounts ?? [];
         return accounts;
     }
 
-    async get(name: string): Promise<(ChainAccount | SafeAccount)>
-    async get(key: string): Promise<(ChainAccount | SafeAccount)>
-    async get(mix: string): Promise<(ChainAccount | SafeAccount)> {
+    async get(name: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
+    async get(key: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
+    async get(mix: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)> {
         if ($is.hexString(mix) && mix.length > 64) {
             return <ChainAccount> {
                 address: ChainAccountProvider.getAddressFromKey(mix),
@@ -84,7 +84,7 @@ export class AccountsService {
         }
         return source;
     }
-    private async getAccount (name: string): Promise<ChainAccount | SafeAccount | null> {
+    private async getAccount (name: string): Promise<ChainAccount | SafeAccount | Erc4337Account | null> {
         let accounts = await this.list();
         let account = accounts.find(x => x.name === name);
         return account;

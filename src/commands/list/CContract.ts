@@ -143,6 +143,9 @@ export function CContract() {
                     '--output': {
                         description: 'Output file without extension, as 2 files will be generated the .csv and .json'
                     },
+                    '--sources': {
+                        description: `Optionally the local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                    },
                     '--imp, --implementation': {
                         description: 'Implementation address'
                     },
@@ -174,6 +177,8 @@ export function CContract() {
                     ...Parameters.chain()
                 },
                 async process(args, params, app) {
+                    console.log('ContractsService process', app.chain.client.options.endpoints);
+
                     let [ nameOrAddress, location ] = args;
                     let service = di.resolve(ContractService, app);
                     await service.slot(nameOrAddress, location);
