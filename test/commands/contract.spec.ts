@@ -80,9 +80,20 @@ UTest({
                         eq_(json.user.amount, '5');
                         eq_(json.count, '1');
                     },
-                    async 'dump by address' () {
+                    async 'dump by address and sources dir' () {
                         await cleanJson();
                         let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xweb/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
+                        console.log(`Str: ${str}`);
+
+                        has_(str, jsonPath);
+                        let json = await File.readAsync<any>(jsonPath);
+
+                        eq_(json.user.amount, '5');
+                        eq_(json.count, '1');
+                    },
+                    async 'dump by address and source file' () {
+                        await cleanJson();
+                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xweb/hardhat/Counter/Counter/StorageCounter.sol --output cache/counter-dump/dump`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);

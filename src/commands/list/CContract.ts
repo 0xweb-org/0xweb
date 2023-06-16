@@ -144,7 +144,10 @@ export function CContract() {
                         description: 'Output file without extension, as 2 files will be generated the .csv and .json'
                     },
                     '--sources': {
-                        description: `Optionally the local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                        description: `Optionally the solidity file or local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                    },
+                    '--contract-name': {
+                        description: 'Optionally the contract name, if directory is specified as source'
                     },
                     '--imp, --implementation': {
                         description: 'Implementation address'
