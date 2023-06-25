@@ -164,6 +164,39 @@ export function CContract() {
                 }
             },
             {
+                command: 'dump-restore',
+                description: [ `In development (Hardhat) chains it is possible to write storage back from a JSON or CSV dump` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    }
+                ],
+                params: {
+                    '-f, --file': {
+                        description: 'Input .csv or .json file'
+                    },
+                    '--sources': {
+                        description: `Optionally the solidity file or local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                    },
+                    '--contract-name': {
+                        description: 'Optionally the contract name, if directory is specified as source'
+                    },
+                    '--imp, --implementation': {
+                        description: 'Implementation address'
+                    },
+                    '--fields': {
+                        description: 'Comma separated variable names to restrict dump to specific variables.'
+                    },
+                    ...Parameters.chain({ required: false })
+                },
+                async process(args, params, app) {
+                    let [ name ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.dumpRestore(name, params);
+                }
+            },
+            {
                 command: 'slot',
                 description: [ `Read contracts slot` ],
                 arguments: [

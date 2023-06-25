@@ -101,6 +101,27 @@ UTest({
 
                         eq_(json.user.amount, '5');
                         eq_(json.count, '1');
+                    },
+                    async 'restore dump by name from json' () {
+                        let path = `test/bin/dump/counter.json`;
+                        await File.writeAsync(path, {
+                            count: 31,
+                            user: {
+                                amount: 12
+                            }
+                        });
+                        let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
+                        let countOutput = await TestUtils.cli(`contract var Counter count --chain hardhat`);
+                        has_(countOutput, '31n');
+                    },
+                    async 'restore dump by name from CSV' () {
+                        let path = `test/bin/dump/counter.csv`;
+                        await File.writeAsync(path, `
+                        0x0000000000000000000000000000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000000000000000000000000008
+                        `);
+                        let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
+                        let countOutput = await TestUtils.cli(`contract var Counter count --chain hardhat`);
+                        has_(countOutput, '8n');
                     }
                 })
             }

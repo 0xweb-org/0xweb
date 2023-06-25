@@ -21,13 +21,13 @@ import { $require } from '@dequanto/utils/$require';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { $account } from '@dequanto/utils/$account';
 import { ChainAccount } from '@dequanto/models/TAccount';
-import { SlotsDump } from '@dequanto/solidity/SlotsDump';
 import { $is } from '@dequanto/utils/$is';
 import { ITxLogItem } from '@dequanto/txs/receipt/ITxLogItem';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { $abiParser } from '@dequanto/utils/$abiParser';
 import { SlotsStorage } from '@dequanto/solidity/SlotsStorage';
 import { ISlotVarDefinition } from '@dequanto/solidity/SlotsParser/models';
+import { ContractDumpService } from './ContractDumpService';
 
 interface ICallParams {
     block?: string | number
@@ -189,98 +189,21 @@ export class ContractService {
         sources?: string
         contractName?: string
     }) {
-        let _address: TAddress;
-        let _implementation: TAddress;
-        let _sources;
-        let _sourcesPath = params.sources;
-        let _contractName = params.contractName;
-
-        // file-output without extensions ()
-        let _output: string
-        if ($is.Address(nameOrAddress)) {
-            _address = nameOrAddress;
-            _output = params.output;
-        } else {
-            let pkg = await this.getPackage(nameOrAddress);
-            _address = pkg.address;
-            _output = params.output ?? `./dump/${pkg.name}/storage`;
-            _implementation = pkg.implementation ?? params.implementation;
-            _sourcesPath ??= pkg.main.replace(/[^\/]+$/, `${pkg.name}/`);
-            _contractName ??= pkg.contractName;
-
-            await this.app.ensureChain(pkg.platform);
-        }
-
-        if (_sourcesPath != null) {
-            let isFile = /\.sol$/.test(_sourcesPath);
-            if (isFile === false) {
-                let exists = await Directory.existsAsync(_sourcesPath);
-                $require.True(exists, `Sources directory ${_sourcesPath} does not exist`);
-
-                let files = await Directory.readFilesAsync(_sourcesPath, '**.sol');
-                let filesContent = await alot(files).mapAsync(async file => {
-                    return {
-                        path: file.uri.toString(),
-                        content: await file.readAsync(),
-                    }
-                }).toDictionaryAsync(x => x.path, x => ({ content: x.content }));
-                _sources = {
-                    files: filesContent,
-                };
-            } else {
-                let file = new File(_sourcesPath);
-                let exists = await file.existsAsync();
-                $require.True(exists, `Sources file ${_sourcesPath} does not exist`);
-
-                let path = file.uri.toString();
-                let content = await file.readAsync <string> ();
-                _sources = {
-                    files: {
-                        [ path ]: content,
-                    },
-                };
-                if (_contractName == null) {
-                    let rgx = /\bcontract \s*(?<contractName>\w+)/g;
-                    do {
-                        let match = rgx.exec(content);
-                        if (match == null) {
-                            break;
-                        }
-                        _contractName = match.groups.contractName;
-                    } while (true);
-                }
-            }
-
-        }
-
-
-        $require.String(_output, 'Output file not defined');
-        $require.notNull(this.app.chain, `--chain not specified`);
-
-        let dump = new SlotsDump({
-            address: _address,
-            implementation: _implementation,
-            client: this.app.chain.client,
-            explorer: this.app.chain.explorer,
-            fields: params.fields?.split(',').map(x => x.trim()),
-            sources: _sources
-        });
-
-        let data = await dump.getStorage();
-        let csv = data.memory.map(x => x.join(', ')).join('\n');
-        let json = data.json;
-
-        let csvFile = new File(`${_output}.csv`);
-        let jsonFile = new File(`${_output}.json`);
-
-        await Promise.all([
-            csvFile.writeAsync(csv),
-            jsonFile.writeAsync(json),
-        ]);
+        let dumpService = new ContractDumpService(this.app)
+        let { csv, json } = await dumpService.dump(nameOrAddress, params);
         $console.table([
-            [ 'Slots', csvFile.uri.toString() ],
-            [ 'JSON', jsonFile.uri.toString() ],
-        ])
+            [ 'Slots', csv ],
+            [ 'JSON', json ],
+        ]);
+    }
+
+    async dumpRestore (nameOrAddress: string | TAddress, params: {
+        file: string
+    }) {
+        $require.True(await File.existsAsync(params.file), `${params.file} does not exist`);
+
+        let dumpService = new ContractDumpService(this.app)
+        let result = await dumpService.dumpRestore(nameOrAddress, params);
     }
 
     async slot (nameOrAddress: string | TAddress, slot: string) {
