@@ -259,6 +259,33 @@ export function CContract() {
                     await service.varList(nameOrAddress);
                 }
             },
+            {
+                command: 'watch',
+                description: [ `Start LOG monitoring for the contract` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract',
+                        required: true
+                    },
+                ],
+                params: {
+                    '-e, --event': {
+                        description: 'Event name. Supports "*" selector',
+                        required: false
+                    },
+                    '-t, --tx': {
+                        description: 'Method name. Supports "*" selector',
+                    },
+                    ...Parameters.chain()
+                },
+                async process(args, params, app) {
+                    let [ nameOrAddress ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.watchLog(nameOrAddress, params);
+                    // never exit
+                    await new Promise(() => {});
+                }
+            },
         ],
 
         async process(args: string[], params: IInstallParams) {

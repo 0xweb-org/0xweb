@@ -28,6 +28,13 @@ import { $abiParser } from '@dequanto/utils/$abiParser';
 import { SlotsStorage } from '@dequanto/solidity/SlotsStorage';
 import { ISlotVarDefinition } from '@dequanto/solidity/SlotsParser/models';
 import { ContractDumpService } from './ContractDumpService';
+import { ContractFactory } from '@dequanto/contracts/ContractFactory';
+import { ContractStream } from '@dequanto/contracts/ContractStream';
+import { $promise } from '@dequanto/utils/$promise';
+import { $logger, l } from '@dequanto/utils/$logger';
+import { ClientEventsStream } from '@dequanto/clients/ClientEventsStream';
+import { $abiValues } from '@core/utils/$abiValues';
+
 
 interface ICallParams {
     block?: string | number
@@ -217,7 +224,7 @@ export class ContractService {
         let slots = await this.getSlots(pkg);
 
         let rows = slots
-        // SlotsParser adds `$` at the end of the name when a property was overriden in inheriting
+        // SlotsParser adds `$` at the end of the name when a property was overridden in inheriting
         .filter(slot => /\$$/.test(slot.name) === false)
         .map(slot => {
             return [ slot.slot, slot.name, slot.type ]
@@ -225,9 +232,9 @@ export class ContractService {
         $console.table(rows);
     }
     async varLoad (nameOrAddress: string | TAddress, path: string) {
-        let pckg = await this.getPackage(nameOrAddress);
-        let slots = await this.getSlots(pckg);
-        let storage = SlotsStorage.createWithClient(this.app.chain.client, pckg.address, slots);
+        let pkg = await this.getPackage(nameOrAddress);
+        let slots = await this.getSlots(pkg);
+        let storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
         $console.toast(`Loading storage of "${path}"`);
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
@@ -235,6 +242,29 @@ export class ContractService {
             return;
         }
         $console.log(result);
+    }
+
+    async watchLog (nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters }) {
+        let pkg = await this.getPackage(nameOrAddress);
+        let abi = await this.getAbi(pkg);
+
+        if (params.event) {
+            let streamHandler = new ContractStream(pkg.address, abi, this.app.chain.client);
+            let stream = streamHandler.on(params.event);
+
+            stream.onConnected(() => $logger.toast(`green<WebSocket Connected>`));
+            stream.onData(event => {
+                $logger.log($abiValues.serializeLog(event));
+            });
+        }
+        if (params.tx) {
+            let contract = ContractFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
+            let stream = contract.$onTransaction({ filter: { method: '*' } });
+
+            stream.subscribe(info => {
+                $logger.log($abiValues.serializeCalldata(info.calldata, abi));
+            });
+        }
     }
 
     private async $read (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {

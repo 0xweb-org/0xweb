@@ -77,7 +77,7 @@ export class CommandsHandler  {
                 params = { command };
                 command = this.commands['help'];
             }
-            return { command, paramsDefinition, params };
+            return { command, paramsDefinition, params: params ?? {} };
         }
 
         let params = await $command.getParams(cliParams, paramsDefinition);
