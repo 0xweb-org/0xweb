@@ -10,6 +10,7 @@ import { $address } from '@dequanto/utils/$address';
 import { $is } from '@dequanto/utils/$is';
 import { $require } from '@dequanto/utils/$require';
 import { $validate } from '@core/utils/$validate';
+import { $platform } from '@dequanto/utils/$platform';
 
 export function CInstall() {
     return <ICommand>{
@@ -48,13 +49,16 @@ export function CInstall() {
 
         async process(args: string[], params: IInstallParams) {
             let platform: TPlatform = params.chain as TPlatform;
-            let [address] = args;
-            if (/^\w+:0x/.test(address)) {
+            let [ addressOrPath ] = args;
+            if (/^\w+:0x/.test(addressOrPath)) {
                 // eth:0x...
-                let i = address.indexOf(':');
-                platform = address.substring(0, i) as any;
-                address = address.substring(i + 1);
+                let i = addressOrPath.indexOf(':');
+                platform = addressOrPath.substring(0, i) as any;
+                addressOrPath = addressOrPath.substring(i + 1);
             }
+            let isByAddress = /0x[\da-f]+/.test(addressOrPath);
+            let address = isByAddress ? addressOrPath : null;
+            let sourcePath = isByAddress ? params.source : addressOrPath;
 
             $require.notNull(params.name, `--name should be set`);
             $validate.platform(platform, `Chain not set. Use as prefix "eth:0x.." or flag "--chain eth"`);
@@ -64,14 +68,14 @@ export function CInstall() {
                 params.output = env.appdataDir.combine('.dequanto/0xweb/').toDir();
             }
 
-            let output = class_Uri.combine(params.output ?? `./0xweb/`, platform);
+            let output = class_Uri.combine(params.output ?? `./0xweb/`, $platform.toPath(platform));
 
             let generator = new Generator({
                 name: params.name,
                 platform,
                 source: {
                     abi: address,
-                    path: params.source,
+                    path: sourcePath,
                 },
                 defaultAddress: address,
                 implementation: params.implementation,
@@ -81,13 +85,20 @@ export function CInstall() {
             let { main, implementation, contractName } = await generator.generate();
 
             let packageService = di.resolve(PackageService);
+            let implementationAddress = $is.Address(implementation) && $address.eq(addressOrPath, implementation) === false ? implementation : void 0;
             await packageService.savePackage({
                 platform,
-                address,
-                implementation: $is.Address(implementation) && $address.eq(address, implementation) === false ? implementation : void 0,
+                address: address,
+                implementation: implementationAddress,
                 name: params.name,
                 contractName: contractName,
                 main,
+                source: isByAddress ? {
+                    platform: platform,
+                    address: implementationAddress ?? address,
+                } : {
+                    path: sourcePath
+                }
             }, { global: params.global != null });
             return { main };
         }

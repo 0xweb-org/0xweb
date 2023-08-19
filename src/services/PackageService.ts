@@ -5,6 +5,8 @@ import { TAddress } from '@dequanto/models/TAddress';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { File, Directory, env } from 'atma-io';
 import type { AbiItem } from 'web3-utils'
+import alot from 'alot';
+import { $address } from '@dequanto/utils/$address';
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -35,18 +37,42 @@ export class PackageService {
         if (await File.existsAsync(packagePath)) {
             json = await File.readAsync(packagePath);
         }
-        if (json.contracts == null) {
-            json.contracts = {};
-        }
-        if (json.contracts[pkg.platform] == null) {
-            json.contracts[pkg.platform] = {};
-        }
+        let asContract = pkg.address != null;
+        if (asContract) {
+            if (json.contracts == null) {
+                json.contracts = {};
+            }
+            if (json.contracts[pkg.platform] == null) {
+                json.contracts[pkg.platform] = {};
+            }
 
-        json.contracts[pkg.platform][pkg.address] = {
-            name: pkg.name,
-            main: pkg.main,
-            implementation: pkg.implementation
-        };
+            json.contracts[pkg.platform][pkg.address] = {
+                name: pkg.name,
+                main: pkg.main,
+                implementation: pkg.implementation
+            };
+        } else {
+            if (json.dependencies == null) {
+                json.dependencies = {};
+            }
+            if (json.dependencies[pkg.name] == null) {
+                json.dependencies[pkg.name] = {
+                    main: pkg.main,
+                    contractName: pkg.contractName,
+                    source: pkg.source,
+                    deployments: {}
+                }
+            }
+            if (pkg.platform != null) {
+                if (json.dependencies[pkg.name].deployments == null) {
+                    json.dependencies[pkg.name].deployments = {};
+                }
+                json.dependencies[pkg.name].deployments[pkg.platform] = {
+                    address: pkg.address,
+                    implementation: pkg.implementation
+                };
+            }
+        }
         await File.writeAsync(packagePath, json);
     }
     private async getBuiltIn (name: string): Promise<IPackageItem> {
@@ -114,9 +140,9 @@ export class PackageService {
             return []
         }
         let $0xweb = await file.readAsync<IPackageJson>();
-        let contracts = $0xweb.contracts;
         let list = [] as IPackageItem[];
 
+        let contracts = $0xweb.contracts ?? {};
         for (let platform in contracts) {
             for (let address in contracts[platform]) {
                 let pkg = contracts[platform][address];
@@ -129,6 +155,31 @@ export class PackageService {
                     implementation: pkg.implementation,
                 });
             }
+        }
+
+        let dependencies = $0xweb.dependencies ?? {};
+        for (let name in dependencies) {
+            let pkg = dependencies[name];
+            let deployments = alot.fromObject(pkg.deployments ?? {}).toArray();
+            if (deployments.length === 0) {
+                deployments.push({
+                    key: 'eth',
+                    value: {
+                        address: $address.ZERO
+                    }
+                });
+            }
+            deployments.forEach(d => {
+                list.push({
+                    platform: d.key as TPlatform,
+                    address: d.value.address as TAddress,
+                    name: name,
+                    contractName: pkg.contractName,
+                    main: pkg.main,
+                    implementation: d.value.implementation,
+                });
+            })
+
         }
         return list;
     }

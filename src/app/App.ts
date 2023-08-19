@@ -32,6 +32,7 @@ import { CRestore } from '@core/commands/list/CRestore';
 import { CHardhat } from '@core/commands/list/CHardhat';
 import { CRpc } from '@core/commands/list/CRpc';
 import { $logger, ELogLevel } from '@dequanto/utils/$logger';
+import { CSolidity } from '@core/commands/list/CSolidity';
 
 declare const global;
 
@@ -80,6 +81,7 @@ export class App {
             .register(CGas())
             .register(CRpc())
             .register(CConfig())
+            .register(CSolidity())
             .register(CVersion)
             .register(CReset())
             .register(CInfo())
