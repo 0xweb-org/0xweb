@@ -56,7 +56,7 @@ export function CInstall() {
                 platform = addressOrPath.substring(0, i) as any;
                 addressOrPath = addressOrPath.substring(i + 1);
             }
-            let isByAddress = /0x[\da-f]+/.test(addressOrPath);
+            let isByAddress = /0x[\da-f]+/i.test(addressOrPath);
             let address = isByAddress ? addressOrPath : null;
             let sourcePath = isByAddress ? params.source : addressOrPath;
 

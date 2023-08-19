@@ -77,8 +77,8 @@ UTest({
             }
         });
     },
-    async '!install contract by address with solidity source' () {
-        let _basePath = './0xweb/eth/ContractBySource/';
+    async 'install contract by address with solidity source' () {
+        let _basePath = './0xweb/eth_goerli/ContractBySource/';
         return UTest({
             async $before () {
 
@@ -86,7 +86,7 @@ UTest({
                     await Directory.removeAsync(_basePath);
                 }
                 let { stdout, stderr } = await run(`node index.js i 0x1234 --source ./test/fixtures/install/ContractBySource.sol --name ContractBySource --chain eth:goerli`);
-                console.log(`stdout: ${stderr.join('')}`);
+                console.log(`stdout: ${stderr.join('')} ${stdout.join('')}`);
             },
             async 'check paths' () {
                 let content = await File.readAsync<string>(`${_basePath}/ContractBySource.ts`, { skipHooks: true });
