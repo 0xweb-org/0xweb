@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.9.92",
+    "version": "0.9.93",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -72,7 +72,11 @@
         "apps": {
             "cli": {
                 "file": "src/cli.ts",
-                "outputMain": "lib/cli.js"
+                "outputMain": "lib/cli.js",
+                "package": {
+                    "moduleWrapper": "custom",
+                    "moduleWrapperCustomPath": "./src/module.js"
+                }
             },
             "lib": {
                 "file": "src/export.ts",
