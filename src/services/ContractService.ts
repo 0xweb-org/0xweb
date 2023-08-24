@@ -224,6 +224,7 @@ export class ContractService {
                     [ slots[index], value ],
                 ]);
             });
+            return;
         }
         let slot = slotOrRange;
         let slotValue = await this.app.chain.client.getStorageAt(address, slot);
