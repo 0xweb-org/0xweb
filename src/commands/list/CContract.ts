@@ -201,11 +201,13 @@ export function CContract() {
                 description: [ `Read contracts slot` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of the installed contract or the Address',
                         required: true
                     },
                     {
-                        description: 'Locations hash',
+                        name: 'SlotOrRange',
+                        description: 'Locations hash. Except ranges, e.g.: 0-50',
                         required: true
                     }
                 ],

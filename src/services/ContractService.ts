@@ -213,8 +213,19 @@ export class ContractService {
         let result = await dumpService.dumpRestore(nameOrAddress, params);
     }
 
-    async slot (nameOrAddress: string | TAddress, slot: string) {
+    async slot (nameOrAddress: string | TAddress, slotOrRange: string) {
         let address = await this.getAddress(nameOrAddress);
+        if (slotOrRange.includes('-')) {
+            let [ start, end ] = slotOrRange.split('-').map(Number);
+            let slots = alot.fromRange(start, end + 1).toArray();
+            let values = await this.app.chain.client.getStorageAtBatched(address, slots);
+            values.forEach((value, index) => {
+                $console.table([
+                    [ slots[index], value ],
+                ]);
+            });
+        }
+        let slot = slotOrRange;
         let slotValue = await this.app.chain.client.getStorageAt(address, slot);
         $console.log(slotValue);
     }
