@@ -289,7 +289,7 @@ export class ContractService {
         }
     }
 
-    private async $read (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
+    private async $read (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
         let address = params.address ?? pkg.address;
         $require.Address(address, 'Contracts address invalid');
 
@@ -318,7 +318,7 @@ export class ContractService {
         }
         return reader;
     }
-    private async $write (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
+    private async $write (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
         let args = await this.getArguments(abi, params);
         let writer = await this.getContractWriter(pkg, abi, params);
 
@@ -345,7 +345,7 @@ export class ContractService {
         let receipt = await tx.onCompleted;
         $console.log(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
     }
-    private async getContractWriter (pkg: IPackageItem, abi: AbiItem, params: ICallParams) {
+    private async getContractWriter (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
 
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
@@ -353,13 +353,13 @@ export class ContractService {
         let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.app.chain.client);
         return writer;
     }
-    private async getArguments (abi: AbiItem, params) {
+    private async getArguments (abi: TAbiItem, params) {
         let args = await alot(abi.inputs).mapAsync(async x => {
             return this.getArgument(x, params);
         }).toArrayAsync({ threads: 1 });
         return args;
     }
-    private async getArgument (abi: AbiInput, params) {
+    private async getArgument (abi: TAbiInput, params) {
         if (abi.components != null) {
             $console.log('gray<Object input>');
             $console.table(abi.components.map(x => {

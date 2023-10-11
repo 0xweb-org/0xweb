@@ -41,7 +41,7 @@ export class AccountsService {
     async get(name: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
     async get(key: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
     async get(mix: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)> {
-        if ($is.hexString(mix) && mix.length > 64) {
+        if ($is.Hex(mix) && mix.length > 64) {
             return <ChainAccount> {
                 address: ChainAccountProvider.getAddressFromKey(mix),
                 key: mix

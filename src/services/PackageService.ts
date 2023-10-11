@@ -33,7 +33,7 @@ export class PackageService {
             ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
             : `0xweb.json`
 
-        let json = {} as any;
+        let json = {} as IPackageJson;
         if (await File.existsAsync(packagePath)) {
             json = await File.readAsync(packagePath);
         }
@@ -45,8 +45,16 @@ export class PackageService {
             if (json.contracts[pkg.platform] == null) {
                 json.contracts[pkg.platform] = {};
             }
-
-            json.contracts[pkg.platform][pkg.address] = {
+            let platformPkgs = json.contracts[pkg.platform]
+            if (pkg.name) {
+                for (let key in platformPkgs) {
+                    if (pkg.name === platformPkgs[key].name) {
+                        delete platformPkgs[key];
+                        break;
+                    }
+                }
+            }
+            platformPkgs[pkg.address] = {
                 name: pkg.name,
                 main: pkg.main,
                 implementation: pkg.implementation

@@ -9,7 +9,7 @@ export interface IPackageJson {
             [address: string]: {
                 name: string
                 main: string
-                contractName: string
+                contractName?: string
                 implementation: string
                 source?: { path: string } | {
                     address: TAddress
