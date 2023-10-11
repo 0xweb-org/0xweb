@@ -1,7 +1,7 @@
+import alot from 'alot';
 import { run } from 'shellbee'
 import { Directory, File } from 'atma-io'
-import alot from 'alot';
-import { l } from '@dequanto/utils/$logger';
+
 
 
 const path_ROOT = './bin/bootstrap/';
@@ -38,8 +38,8 @@ UTest({
 
             let packageJson = await File.readAsync<any>(`${path_ROOT}/package.json`);
 
-            eq_('@noble' in packageJson.dependencies, true, `No noble packages in dependencies`);
-            eq_('@scure' in packageJson.dependencies, true, `No @scure in dependencies`);
+            eq_('@noble/curves' in packageJson.dependencies, true, `No noble packages in dependencies`);
+            eq_('@scure/bip32' in packageJson.dependencies, true, `No @scure in dependencies`);
             eq_('hardhat' in packageJson.dependencies, false, 'Command without --hardhat flag still has the hardhat library');
         },
     },
