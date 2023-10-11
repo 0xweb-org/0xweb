@@ -1,6 +1,7 @@
 import { run } from 'shellbee'
 import { Directory, File } from 'atma-io'
 import alot from 'alot';
+import { l } from '@dequanto/utils/$logger';
 
 
 const path_ROOT = './bin/bootstrap/';
@@ -27,17 +28,18 @@ UTest({
             ];
 
             await alot (paths).forEachAsync(async name => {
-                let path = `${path_ROOT}/${name}`;
+                let path = `${path_ROOT}${name}`;
                 let exists = name.endsWith('/')
                     ? await Directory.existsAsync(path)
-                    : await File.existsAsync(path)
+                    : await File.existsAsync(path);
 
-                eq_(exists, true, path);
-            }).toArrayAsync();
+                eq_(exists, true, `Path does not exist: ${path}`);
+            }).toArrayAsync({ threads: 1 });
 
             let packageJson = await File.readAsync<any>(`${path_ROOT}/package.json`);
-            eq_('web3' in packageJson.dependencies, true);
-            eq_('ethers' in packageJson.dependencies, true);
+
+            eq_('@noble' in packageJson.dependencies, true, `No noble packages in dependencies`);
+            eq_('@scure' in packageJson.dependencies, true, `No @scure in dependencies`);
             eq_('hardhat' in packageJson.dependencies, false, 'Command without --hardhat flag still has the hardhat library');
         },
     },

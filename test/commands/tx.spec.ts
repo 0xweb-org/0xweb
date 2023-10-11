@@ -19,7 +19,7 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
     },
-    async 'should sign, send signed tx json' () {
+    async '!should sign, send signed tx json' () {
 
         let STDOUT_SILENT = true;
 
@@ -31,18 +31,19 @@ UTest({
         });
 
         l`Signing with ${owner1.address}`;
-        await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
+        let result = await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
             '--account': owner1.key,
             '--chain': 'hardhat'
         }, { silent: STDOUT_SILENT });
 
-        let json = await File.readAsync<any>('./test/bin/tx.json', { cached: false });
 
+        let json = await File.readAsync<any>('./test/bin/tx.json', { cached: false });
         eq_(typeof json.tx.nonce, 'number', json.tx.nonce);
-        has_(json.signature?.r, /^0x/);
+        has_(json.signature.r, /^0x/);
 
         let balanceBefore = await client.getBalance(owner2.address);
         l`Balance for ${owner2.address}: ${balanceBefore}ETH`
+
 
         let txSendStdout = await TestUtils.cli(`tx send ./test/bin/tx.json`, {
 

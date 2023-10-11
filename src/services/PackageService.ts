@@ -1,12 +1,12 @@
 import di from 'a-di';
+import alot from 'alot';
 import { IPackageItem, IPackageJson } from '@core/models/IPackageJson';
 import { IPlatformTools, PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { TAddress } from '@dequanto/models/TAddress';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { File, Directory, env } from 'atma-io';
-import type { AbiItem } from 'web3-utils'
-import alot from 'alot';
 import { $address } from '@dequanto/utils/$address';
+import { TAbiItem } from '@dequanto/types/TAbi';
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -92,7 +92,7 @@ export class PackageService {
         if (file == null || await file.existsAsync() === false) {
             return null;
         }
-        let abi = await File.readAsync<AbiItem[]>(file.uri.toString());
+        let abi = await File.readAsync<TAbiItem[]>(file.uri.toString());
         return {
             address: null,
             name,

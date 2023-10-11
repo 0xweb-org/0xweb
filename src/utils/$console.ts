@@ -19,7 +19,7 @@ export namespace $console {
         $logger.toast(str);
     }
 
-    export function table(arr: (string | number)[][]) {
+    export function table(arr: (string | number | bigint)[][]) {
         $logger.table(arr)
     }
 }

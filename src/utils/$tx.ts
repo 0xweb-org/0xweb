@@ -10,24 +10,22 @@ import { InputDataUtils } from '@dequanto/contracts/utils/InputDataUtils';
 import { TxContract } from '@dequanto/contracts/TxContract';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $number } from '@dequanto/utils/$number';
-import { $is } from '@dequanto/utils/$is';
 import { ITxLogsTransferData } from '@dequanto/txs/receipt/TxLogsTransfer';
 import { InternalTokenService } from '@core/services/InternalTokenService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { TxLogParser } from '@dequanto/txs/receipt/TxLogParser';
-import type { AbiItem, AbiInput } from 'web3-utils'
-import type { Transaction, TransactionReceipt } from 'web3-core';
 import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
 import { IBlockChainExplorer } from '@dequanto/BlockchainExplorer/IBlockChainExplorer';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
-import { ERC721 } from '@dequanto-contracts/openzeppelin/ERC721';
+import { TEth } from '@dequanto/models/TEth';
+import { TAbiItem } from '@dequanto/types/TAbi';
 import { $abiUtils } from '@dequanto/utils/$abiUtils';
-import { ERC1155 } from '@dequanto-contracts/openzeppelin/ERC1155';
+
 
 
 export namespace $tx {
 
-    export async function log(client: Web3Client, explorer: IBlockChainExplorer, hash: string, tx?: Transaction, receipt?: TransactionReceipt) {
+    export async function log(client: Web3Client, explorer: IBlockChainExplorer, hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
         $require.TxHash(hash, `Not valid hash bold<${hash}>`);
         if (tx == null) {
             $console.toast(`Fetch Tx ${hash}`);
@@ -69,7 +67,7 @@ export namespace $tx {
             ['Gas', $gas.formatUsed(tx, receipt)]
         ]);
 
-        let abi: AbiItem[];
+        let abi: TAbiItem[];
         if (data.method) {
             let resolver = new ContractAbiProvider(client, explorer);
             let result = await resolver.getAbi(tx.to);
@@ -160,7 +158,7 @@ export namespace $tx {
 
         if (abi) {
             let txContract = new TxContract(explorer);
-            let decodedInput = await txContract.parseTrasactionWithAbi(tx, abi);
+            let decodedInput = await $abiUtils.parseMethodCallData(abi, tx);
             $console.log(`\ncyan<bold<Parameters parsed>>\n`);
             let cells = [
                 ['Method', decodedInput.name]

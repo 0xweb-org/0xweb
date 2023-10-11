@@ -4,7 +4,7 @@ import { Parameters } from '@core/utils/Parameters';
 import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { $require } from '@dequanto/utils/$require';
-import { $sign } from '@dequanto/utils/$sign';
+import { $sig } from '@dequanto/utils/$sig';
 import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
 import { TxWriter } from '@dequanto/txs/TxWriter';
@@ -54,10 +54,16 @@ export function CTx() {
                     await builder.setGas();
 
                     let tx = builder.getTxData();
-                    let sig = await $sign.signTx(app.chain.client, tx, account);
+                    let rpc = await app.chain.client.getRpc();
+                    let txSignedRaw = await $sig.signTx(tx, account, rpc);
+                    console.log(txSignedRaw, '<');
+                    let { v, r, s } = $sig.TxDeserializer.deserialize(txSignedRaw);
+                    let txJson = builder.toJSON();
 
-                    json.signature = sig;
-                    json.tx = builder.toJSON().tx;
+
+                    json.signature = { v, r, s };
+                    json.account = txJson.account;
+                    json.tx = txJson.tx;
 
                     let output = params.output ?? path;
                     await File.writeAsync(output, json);
@@ -89,7 +95,8 @@ export function CTx() {
                         : null;
 
                     if (account == null && json.signature) {
-                        let address = await $sign.recoverTx(client, json.tx, json.signature);
+                        let txSerialized = $sig.TxSerializer.serialize(json.tx, json.signature);
+                        let address = await $sig.recoverTx(txSerialized);
                         account = { address };
                     }
                     $require.notNull(account, `Account not resolved from CLI, neither valid signature  in tx json exists`);

@@ -4,11 +4,8 @@ import { Parameters } from '@core/utils/Parameters';
 import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { $require } from '@dequanto/utils/$require';
-import { $sign } from '@dequanto/utils/$sign';
 import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
-import { TxWriter } from '@dequanto/txs/TxWriter';
-import { $tx } from '@core/utils/$tx';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { class_Uri } from 'atma-utils';
 

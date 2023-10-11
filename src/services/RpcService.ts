@@ -5,7 +5,7 @@ export class RpcService {
     async process(args: any[], params?, app?: App) {
 
         let client = app.chain.client;
-        let [ method, ...methodArgs ] = args;
+        let [ method, ...methodArgs ] = args as [ string, ...any[]];
 
         methodArgs = methodArgs.map(arg => {
             let typeMatch = /(?<type>\w+):/.exec(arg);
@@ -18,23 +18,19 @@ export class RpcService {
             let type = typeMatch.groups.type;
             let value = arg.replace(typeMatch[0], '');
             return this.toValue(type, value);
-        })
+        });
 
-        return await client.with(async web3 => {
-            let eth = web3.eth;
 
-            if (method in eth === false) {
-                web3.eth.extend({
-                    methods: [
-                        {
-                            name: method,
-                            call: method,
-                            params: methodArgs.length,
-                        }
-                    ]
-                })
+
+        return await client.with(async wClient => {
+            let rpc = wClient.rpc;
+            if (method in rpc.fns === false) {
+                rpc.extend([{
+                    name: method,
+                    call: method,
+                }]);
             }
-            let result = await eth[method](...methodArgs);
+            let result = await rpc.fns[method](...methodArgs);
             return result;
         })
     }

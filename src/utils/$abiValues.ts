@@ -1,4 +1,4 @@
-import type { AbiItem } from 'web3-utils'
+import { TAbiItem } from '@dequanto/types/TAbi'
 
 export namespace $abiValues {
 
@@ -33,7 +33,7 @@ export namespace $abiValues {
         ];
         return lines.join('\n')
     }
-    export function serializeCalldata (calldata: { method: string, arguments: any[] }, abis: AbiItem[]) {
+    export function serializeCalldata (calldata: { method: string, arguments: any[] }, abis: TAbiItem[]) {
         let methods = abis.filter(a => a.name === calldata.method);
         let method = methods.find(x =>x.inputs?.length === calldata.arguments.length);
         if (method == null) {

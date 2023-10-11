@@ -235,12 +235,23 @@ export function CContract() {
 
                 ],
                 params: {
-                    ...Parameters.chain({ required: false })
+                    ...Parameters.chain({ required: false }),
+                    slot: {
+                        description: 'Overrides the slot number for this variable',
+                        type: 'number'
+                    },
+                    type: {
+                        description: 'Overrides the type for this variable',
+                        type: 'string'
+                    }
                 },
                 async process(args, params, app) {
                     let [ nameOrAddress, selector ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.varLoad(nameOrAddress, selector);
+                    await service.varLoad(nameOrAddress, selector, {
+                        slot: params.slot,
+                        type: params.type,
+                    });
                 }
             },
             {

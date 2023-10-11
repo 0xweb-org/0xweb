@@ -1,4 +1,5 @@
 import di from 'a-di';
+import memd from 'memd';
 import AppConfig from 'appcfg'
 import { Config } from '@dequanto/Config';
 import { CommandsHandler } from '../commands/CommandsHandler';
@@ -26,7 +27,6 @@ import { IAccount } from '@dequanto/models/TAccount';
 import { CTx } from '@core/commands/list/CTx';
 import { IWeb3EndpointOptions } from '@dequanto/clients/interfaces/IWeb3EndpointOptions';
 import { CInfo } from '@core/commands/list/CInfo';
-import memd from 'memd';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { CRestore } from '@core/commands/list/CRestore';
 import { CHardhat } from '@core/commands/list/CHardhat';

@@ -8,7 +8,7 @@ import { TestUtils } from '../TestUtils';
 export class SafeUtils {
 
     static async create(owner: TAddress, name: string) {
-        let path = await SafeUtils.prepair();
+        let path = await SafeUtils.prepare();
         let stdCreateSafe = await TestUtils.cli(`safe new`, {
             '--owner': owner,
             '--name': name,
@@ -22,7 +22,7 @@ export class SafeUtils {
     }
 
     @memd.deco.memoize()
-    static async prepair () {
+    static async prepare () {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
 

@@ -9,9 +9,9 @@ import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $fn } from '@dequanto/utils/$fn';
-import { $signRaw } from '@dequanto/utils/$signRaw';
 import { SafeUtils } from './SafeUtils';
 import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
+import { $sig } from '@dequanto/utils/$sig';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -25,7 +25,10 @@ const PARAMS_DEF = {
 
 const cli = async (command: string, params: any) => {
     let shell = await cliStart(command, params).onCompleteAsync()
-    let { stdout } = shell;
+    let { stdout, stderr } = shell;
+    if (stderr?.length > 0) {
+        console.error(stderr);
+    }
     return stdout.join('\n');
 };
 const cliStart = (command: string, params: any) => {
@@ -107,8 +110,7 @@ UTest({
         let owner1 = provider.deployer();
         let owner2 = provider.deployer(1);
 
-        let path = await SafeUtils.prepair();
-
+        let path = await SafeUtils.prepare();
 
         l`> Adding account to storage. (Later the owner of the safe)`;
         await cli(`accounts add`, {
@@ -121,6 +123,9 @@ UTest({
             '--name': 'safe/test',
             '--contracts': path
         });
+
+        console.log(`stdCreateSafe`, stdCreateSafe);
+        console.log('-------------');
 
         let match = /safe\/test\s+\[(?<address>[^\]]+)\]/.exec(stdCreateSafe);
         let safeAddress = match?.groups?.address;
@@ -168,8 +173,8 @@ UTest({
 
             let safeTx = txs[0];
 
-            let sig1 = $signRaw.signEC(safeTx.safeTxHash, owner1.key);
-            let sig2 = $signRaw.signEC(safeTx.safeTxHash, owner2.key);
+            let sig1 = await $sig.sign(safeTx.safeTxHash, owner1);
+            let sig2 = await $sig.sign(safeTx.safeTxHash, owner2);
             safeTx.confirmations = [
                 { owner: owner1.address, signature: sig1.signature },
                 { owner: owner2.address, signature: sig2.signature },

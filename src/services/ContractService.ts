@@ -2,7 +2,6 @@ import di from 'a-di';
 import alot from 'alot';
 import { Directory, File, env } from 'atma-io';
 import { PackageService } from './PackageService';
-import { AbiItem, AbiInput } from 'web3-utils'
 import { GeneratorFromAbi } from '@dequanto/gen/GeneratorFromAbi';
 import { IPackageItem } from '@core/models/IPackageJson';
 import { $cli } from '@core/utils/$cli';
@@ -28,12 +27,11 @@ import { $abiParser } from '@dequanto/utils/$abiParser';
 import { SlotsStorage } from '@dequanto/solidity/SlotsStorage';
 import { ISlotVarDefinition } from '@dequanto/solidity/SlotsParser/models';
 import { ContractDumpService } from './ContractDumpService';
-import { ContractFactory } from '@dequanto/contracts/ContractFactory';
 import { ContractStream } from '@dequanto/contracts/ContractStream';
-import { $promise } from '@dequanto/utils/$promise';
 import { $logger, l } from '@dequanto/utils/$logger';
-import { ClientEventsStream } from '@dequanto/clients/ClientEventsStream';
 import { $abiValues } from '@core/utils/$abiValues';
+import { ContractClassFactory } from '@dequanto/contracts/ContractClassFactory';
+import { TAbiItem } from '@dequanto/types/TAbi';
 
 
 interface ICallParams {
@@ -243,10 +241,22 @@ export class ContractService {
         });
         $console.table(rows);
     }
-    async varLoad (nameOrAddress: string | TAddress, path: string) {
-        let pkg = await this.getPackage(nameOrAddress);
-        let slots = await this.getSlots(pkg);
-        let storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
+    async varLoad (nameOrAddress: string | TAddress, path: string, info?: {
+        slot?: number
+        type?: string
+    }) {
+        let storage: SlotsStorage;
+        if ($is.Address(nameOrAddress) && info?.slot != null && info?.type != null) {
+            let name = /^[\w_]+/.exec(path)[0];
+            let slots = [
+                { name, type: info.type, slot: Number(info.slot), position: 0, size: null },
+            ];
+            storage = SlotsStorage.createWithClient(this.app.chain.client, nameOrAddress, slots);
+        } else {
+            let pkg = await this.getPackage(nameOrAddress);
+            let slots = await this.getSlots(pkg);
+            storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
+        }
         $console.toast(`Loading storage of "${path}"`);
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
@@ -270,7 +280,7 @@ export class ContractService {
             });
         }
         if (params.tx) {
-            let contract = ContractFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
+            let contract = ContractClassFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
             let stream = contract.$onTransaction({ filter: { method: '*' } });
 
             stream.subscribe(info => {
@@ -401,7 +411,7 @@ export class ContractService {
         return pkg;
     }
     private async getAbi(pkg: IPackageItem) {
-        let abi = await File.readAsync<AbiItem[]>(pkg.main.replace('.ts', '.json'));
+        let abi = await File.readAsync<TAbiItem[]>(pkg.main.replace('.ts', '.json'));
         return abi;
     }
     private async getSlots(pkg: IPackageItem): Promise<ISlotVarDefinition[]> {
@@ -426,7 +436,7 @@ export class ContractService {
             throw error;
         }
     }
-    private stringifyAbi (abi: AbiItem) {
+    private stringifyAbi (abi: TAbiItem) {
         let str = GeneratorFromAbi.Gen.serializeMethodAbi(abi, true);
         let line = '  ' + str.replace('function', '').trim();
 

@@ -10,6 +10,7 @@ import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { TokensService } from '@dequanto/tokens/TokensService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { $bigint } from '@dequanto/utils/$bigint';
+import { TEth } from '@dequanto/models/TEth';
 
 
 export function CTokens() {
@@ -98,20 +99,20 @@ export function CTokens() {
                 params: {
 
                 },
-                async process(args: string[], params: any, app: App) {
+                async process(args: TEth.Address[], params: any, app: App) {
 
                     let [eoa] = args;
                     $require.Address(eoa, 'Provide the valid address to get the tokens for');
 
                     $console.toast('Loading Transfer events...');
-                    let erc20 = new ERC20('', app.chain.client);
-                    let trasfers = await erc20.getPastLogsTransfer({
+                    let erc20 = new ERC20(null, app.chain.client);
+                    let transfers = await erc20.getPastLogsTransfer({
                         params: {
                             to: eoa
                         }
                     });
 
-                    let tokenAddresses = alot(trasfers)
+                    let tokenAddresses = alot(transfers)
                         .map(x => x.address)
                         .distinct()
                         .toArray();

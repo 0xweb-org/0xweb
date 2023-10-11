@@ -1,6 +1,7 @@
 import { TAddress } from '@dequanto/models/TAddress';
 import { TPlatform } from '@dequanto/models/TPlatform';
-import type { AbiItem } from 'web3-utils'
+import { TAbiItem } from '@dequanto/types/TAbi';
+
 
 export interface IPackageJson {
     contracts?: {
@@ -41,7 +42,7 @@ export interface IPackageItem {
     name: string
     contractName: string
     main: string
-    abi?: AbiItem[]
+    abi?: TAbiItem[]
     implementation?: string
     source?: { path: string } | {
         address: TAddress

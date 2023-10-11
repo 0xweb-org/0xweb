@@ -3,6 +3,13 @@
 
 
 
+
+
+
+
+
+
+
 require("@nomiclabs/hardhat-waffle")
 require("@nomiclabs/hardhat-etherscan")
 
@@ -15,13 +22,35 @@ require("@0xweb/hardhat")
  */
 module.exports = {
     solidity: {
-        version: "0.8.2",
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 200
+        compilers: [
+            {
+                version: "0.8.2",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    },
+                },
+            },
+            {
+                version: "0.8.12",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    },
+                },
+            },
+            {
+                version: "0.8.20",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    },
+                },
             }
-        }
+        ],
     },
     networks: {
         hardhat: {
