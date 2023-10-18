@@ -8,6 +8,10 @@ import { TAddress } from '@dequanto/models/TAddress';
 import { $address } from '@dequanto/utils/$address';
 import { $require } from '@dequanto/utils/$require';
 import { Parameters } from '@core/utils/Parameters';
+import { ChainAccount, IAccount } from '@dequanto/models/TAccount';
+import { $buffer } from '@dequanto/utils/$buffer';
+import { $crypto } from '@dequanto/utils/$crypto';
+import { $sig } from '@dequanto/utils/$sig';
 
 export function CAccount ()  {
     return <ICommand>{
@@ -73,11 +77,52 @@ export function CAccount ()  {
                     ]);
                 }
             },
+            {
+                command: 'view',
+                description: [
+                    'View accounts details. '
+                ],
+                arguments: [
+                    {
+                        name: '<accountName>',
+                        description: 'Account name added with "accounts" command',
+                        required: true,
+                    },
+                ],
+                params: {
+                    '--encrypted-key': {
+                        description: 'Prints also the KEY encoded with PIN',
+                        type: 'boolean',
+                    }
+                },
+                async process (args: string[], params: { encryptedKey?: boolean, pin: string }, app: App) {
+                    let [ accountName ] = args;
 
+                    let accounts = di.resolve(AccountsService, app.config);
+                    let account = await accounts.get(accountName);
+
+                    let tableData = [
+                        ['Account', accountName],
+                        ['Address', account.address],
+                    ];
+                    if (params.encryptedKey) {
+                        let key = (account as any).key;
+                        if (key) {
+                            if (/p1:/.test(key) === false) {
+                                const encoded = await $sig.$key.encrypt(key, params.pin);
+                                key = encoded;
+                            }
+                            tableData.push(['Key', key]);
+                        }
+                    }
+
+                    $console.table(tableData);
+                }
+            },
         ],
         params: {
             ...Parameters.pin(),
-            ...Parameters.chain(),
+            ...Parameters.chain({ required: false }),
         },
 
         async process(args: string[], params, app: App) {

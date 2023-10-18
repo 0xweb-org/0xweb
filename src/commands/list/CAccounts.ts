@@ -6,6 +6,8 @@ import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
+import { $sig } from '@dequanto/utils/$sig';
+import { $require } from '@dequanto/utils/$require';
 
 export function CAccounts() {
     return <ICommand>{
@@ -22,7 +24,7 @@ export function CAccounts() {
                 ],
                 params: {
                     '-k, --key': {
-                        description: 'Private key. Optional for READs, required if WRITE actions.',
+                        description: 'Private key(plain or encrypted). Optional for READs, required for WRITE actions',
                     },
                     '-a, --address': {
                         description: 'Address. Optional, if key is also set',
@@ -45,8 +47,18 @@ export function CAccounts() {
                         address = addr;
                     }
 
+                    const secret = params.pin ?? app.config.$get('pin') as string;
+                    $require.notEmpty(secret, `Secret not resolve`);
+                    const encryptedKey = /^p\d:/.test(key)
+                        ? key
+                        : $sig.$key.encrypt(key, secret);
+
                     let service = di.resolve(AccountsService, app.config);
-                    let accounts = await service.add({ key, address, name });
+                    let accounts = await service.add({
+                        key: encryptedKey as any,
+                        address,
+                        name
+                    });
 
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 

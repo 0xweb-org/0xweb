@@ -33,6 +33,7 @@ import { CHardhat } from '@core/commands/list/CHardhat';
 import { CRpc } from '@core/commands/list/CRpc';
 import { $logger, ELogLevel } from '@dequanto/utils/$logger';
 import { CSolidity } from '@core/commands/list/CSolidity';
+import { CTools } from '@core/commands/list/CTools';
 
 declare const global;
 
@@ -82,6 +83,7 @@ export class App {
             .register(CRpc())
             .register(CConfig())
             .register(CSolidity())
+            .register(CTools())
             .register(CVersion)
             .register(CReset())
             .register(CInfo())
