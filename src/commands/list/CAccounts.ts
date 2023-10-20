@@ -40,7 +40,7 @@ export function CAccounts() {
                         throw new Error(`Provide key("-k 0xabcd") or address ("-a 0x1234")`)
                     }
                     if (key) {
-                        let addr = ChainAccountProvider.getAddressFromKey(key);
+                        let addr = await $sig.$account.getAddressFromKey(key);
                         if (address != null && $address.eq(addr, address) === false) {
                             throw new Error(`Provided key resolves to ${addr} address, but ${address} was provided.`);
                         }
@@ -51,7 +51,7 @@ export function CAccounts() {
                     $require.notEmpty(secret, `Secret not resolve`);
                     const encryptedKey = /^p\d:/.test(key)
                         ? key
-                        : $sig.$key.encrypt(key, secret);
+                        : await $sig.$key.encrypt(key, secret);
 
                     let service = di.resolve(AccountsService, app.config);
                     let accounts = await service.add({

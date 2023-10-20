@@ -100,17 +100,18 @@ export function CAccount ()  {
 
                     let accounts = di.resolve(AccountsService, app.config);
                     let account = await accounts.get(accountName);
-
+                    $require.notNull(account, `Account ${accountName} not found`);
                     let tableData = [
                         ['Account', accountName],
                         ['Address', account.address],
                     ];
+
                     if (params.encryptedKey) {
                         let key = (account as any).key;
                         if (key) {
                             if (/p1:/.test(key) === false) {
-                                const encoded = await $sig.$key.encrypt(key, params.pin);
-                                key = encoded;
+                                const encrypted = await $sig.$key.encrypt(key, params.pin);
+                                key = encrypted;
                             }
                             tableData.push(['Key', key]);
                         }

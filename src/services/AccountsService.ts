@@ -2,6 +2,7 @@ import { $console } from '@core/utils/$console';
 import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { ChainAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
 import { $is } from '@dequanto/utils/$is';
+import { $sig } from '@dequanto/utils/$sig';
 import appcfg from 'appcfg';
 
 export class AccountsService {
@@ -43,7 +44,7 @@ export class AccountsService {
     async get(mix: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)> {
         if ($is.Hex(mix) && mix.length > 64) {
             return <ChainAccount> {
-                address: ChainAccountProvider.getAddressFromKey(mix),
+                address: await $sig.$account.getAddressFromKey(mix),
                 key: mix
             };
         }
