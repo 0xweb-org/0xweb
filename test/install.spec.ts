@@ -3,7 +3,7 @@ import { Directory, env, File } from 'atma-io'
 
 UTest({
     async 'install contract (local)' () {
-        let _basePath = './0xweb/eth/DisperseContract/';
+        let _basePath = './0xc/eth/DisperseContract/';
         return UTest({
             async $before () {
 
@@ -30,7 +30,7 @@ UTest({
     async 'install contract (global)' () {
 
         let _global = env.appdataDir.combine('.dequanto/').toDir();
-        let _basePath = `${_global}/0xweb/eth/ChainLinkEth/`;
+        let _basePath = `${_global}/0xc/eth/ChainLinkEth/`;
         return UTest({
             async $before () {
                 if (await Directory.existsAsync(_basePath)) {
@@ -53,7 +53,7 @@ UTest({
         })
     },
     async 'install contract by solidity source' () {
-        let _basePath = './0xweb/eth/ContractBySource/';
+        let _basePath = './0xc/eth/ContractBySource/';
         return UTest({
             async $before () {
 
@@ -78,7 +78,7 @@ UTest({
         });
     },
     async 'install contract by address with solidity source' () {
-        let _basePath = './0xweb/eth_goerli/ContractBySource/';
+        let _basePath = './0xc/eth_goerli/ContractBySource/';
         return UTest({
             async $before () {
 

@@ -37,7 +37,7 @@ UTest({
                 let jsonHardhat = json.contracts.hardhat;
                 deepEq_(jsonHardhat[contract.address], {
                     name: "Counter",
-                    main: "./0xweb/hardhat/Counter/Counter.ts"
+                    main: "./0xc/hardhat/Counter/Counter.ts"
                 });
             },
             async 'call method by contract name' () {
@@ -82,7 +82,7 @@ UTest({
                     },
                     async 'dump by address and sources dir' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xweb/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
+                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);
@@ -93,7 +93,7 @@ UTest({
                     },
                     async 'dump by address and source file' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xweb/hardhat/Counter/Counter/StorageCounter.sol --output cache/counter-dump/dump`);
+                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter/StorageCounter.sol --output cache/counter-dump/dump`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);
