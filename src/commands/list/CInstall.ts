@@ -11,6 +11,7 @@ import { $is } from '@dequanto/utils/$is';
 import { $require } from '@dequanto/utils/$require';
 import { $validate } from '@core/utils/$validate';
 import { $platform } from '@dequanto/utils/$platform';
+import { TEth } from '@dequanto/models/TEth';
 
 export function CInstall() {
     return <ICommand>{
@@ -43,7 +44,7 @@ export function CInstall() {
             },
             ...Parameters.chain(),
             '-o, --output': {
-                description: 'Output directory. Default: ./0xweb/'
+                description: 'Output directory. Default: ./0xc/'
             }
         },
 
@@ -57,7 +58,7 @@ export function CInstall() {
                 addressOrPath = addressOrPath.substring(i + 1);
             }
             let isByAddress = /0x[\da-f]+/i.test(addressOrPath);
-            let address = isByAddress ? addressOrPath : null;
+            let address = isByAddress ? addressOrPath as TEth.Address : null;
             let sourcePath = isByAddress ? params.source : addressOrPath;
 
             $require.notNull(params.name, `--name should be set`);
@@ -65,10 +66,10 @@ export function CInstall() {
             $validate.config.blockchainExplorer(platform);
 
             if (params.global) {
-                params.output = env.appdataDir.combine('.dequanto/0xweb/').toDir();
+                params.output = env.appdataDir.combine('.dequanto/0xc/').toDir();
             }
 
-            let output = class_Uri.combine(params.output ?? `./0xweb/`, $platform.toPath(platform));
+            let output = class_Uri.combine(params.output ?? `./0xc/`, $platform.toPath(platform));
 
             let generator = new Generator({
                 name: params.name,

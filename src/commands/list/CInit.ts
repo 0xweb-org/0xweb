@@ -231,9 +231,6 @@ class InitWorker {
             requiredDeps = {
                 ...requiredDeps,
                 'hardhat': 'latest',
-                '@nomiclabs/hardhat-web3': 'latest',
-                '@nomiclabs/hardhat-waffle': 'latest',
-                '@nomiclabs/hardhat-etherscan': 'latest',
                 '@0xweb/hardhat': 'latest'
             };
         }
@@ -307,7 +304,7 @@ class InitWorker {
             ? ["node_modules/dequanto/contracts/*"]
             : ["dequanto/contracts/*"];
 
-        pckg.compilerOptions.paths['@0xweb/*'] = ["0xweb/*"]
+        pckg.compilerOptions.paths['0xc/*'] = ["0xc/*"]
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pckg);

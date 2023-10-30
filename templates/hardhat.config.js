@@ -1,6 +1,3 @@
-require("@nomiclabs/hardhat-web3");
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-etherscan");
 require("@0xweb/hardhat");
 
 

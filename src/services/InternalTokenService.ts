@@ -13,7 +13,7 @@ export class InternalTokenService {
             return `${client.platform}:${address}`
         },
         persistance: new memd.FsTransport({
-            path: env.appdataDir.combine('./0xweb/cache/tokens.json').toString()
+            path: env.appdataDir.combine('./0xc/cache/tokens.json').toString()
         })
     })
     async getTokenData (address: TAddress, client: Web3Client, explorer: IBlockChainExplorer) {
