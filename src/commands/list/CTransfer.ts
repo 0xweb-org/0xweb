@@ -10,6 +10,7 @@ import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransp
 import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
 import { Parameters } from '@core/utils/Parameters';
 import { l } from '@dequanto/utils/$logger';
+import { $address } from '@dequanto/utils/$address';
 
 
 export function CTransfer() {
@@ -61,6 +62,14 @@ export function CTransfer() {
             if (token == null && $is.Address(tokenMix)) {
                 token = <IToken>{
                     address: tokenMix,
+                    decimals: 18,
+                    platform: app.chain.client.platform,
+                };
+            }
+            if (token == null && tokenMix === app.chain.client.chainToken) {
+                token = <IToken>{
+                    symbol: tokenMix,
+                    address: $address.ZERO,
                     decimals: 18,
                     platform: app.chain.client.platform,
                 };
