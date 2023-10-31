@@ -8,6 +8,7 @@ import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { $sig } from '@dequanto/utils/$sig';
 import { $require } from '@dequanto/utils/$require';
+import { ChainAccount } from '@dequanto/models/TAccount';
 
 export function CAccounts() {
     return <ICommand>{
@@ -47,18 +48,25 @@ export function CAccounts() {
                         address = addr;
                     }
 
-                    const secret = params.pin ?? app.config.$get('pin') as string;
-                    $require.notEmpty(secret, `Secret not resolve`);
-                    const encryptedKey = /^p\d:/.test(key)
-                        ? key
-                        : await $sig.$key.encrypt(key, secret);
+                    const account = {
+                        name,
+                        address,
+                        type: 'eoa'
+                    } as ChainAccount;
+
+                    if (key) {
+                        const secret = params.pin ?? app.config.$get('pin') as string;
+                        $require.notEmpty(secret, `Secret not resolve`);
+                        const encryptedKey = /^p\d:/.test(key)
+                            ? key
+                            : await $sig.$key.encrypt(key, secret);
+                        // will store only encrypted key
+                        account.key = encryptedKey;
+                    }
+
 
                     let service = di.resolve(AccountsService, app.config);
-                    let accounts = await service.add({
-                        key: encryptedKey as any,
-                        address,
-                        name
-                    });
+                    let accounts = await service.add(account);
 
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
