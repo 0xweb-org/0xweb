@@ -4,6 +4,7 @@ ts-temp/
 logs/
 artifacts/
 0xweb/
+0xc/
 0xweb.json
 cache/
 bin/

@@ -124,9 +124,6 @@ UTest({
             '--contracts': path
         });
 
-        console.log(`stdCreateSafe`, stdCreateSafe);
-        console.log('-------------');
-
         let match = /safe\/test\s+\[(?<address>[^\]]+)\]/.exec(stdCreateSafe);
         let safeAddress = match?.groups?.address;
         eq_($address.isValid(safeAddress), true, 'Safe address not found');

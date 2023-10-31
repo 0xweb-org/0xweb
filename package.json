@@ -51,7 +51,7 @@
         "@openzeppelin/contracts": "^4.9.3",
         "@types/node": "^12.6.2",
         "app-bundler": "^0.1.10",
-        "atma": "^0.15.17",
+        "atma": "^0.15.20",
         "atma-loader-ts": "^1.1.18",
         "atma-utest": "^0.21.31",
         "dts-bundle": "^0.7.3",
