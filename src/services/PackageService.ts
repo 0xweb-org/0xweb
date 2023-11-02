@@ -7,6 +7,7 @@ import { TPlatform } from '@dequanto/models/TPlatform';
 import { File, Directory, env } from 'atma-io';
 import { $address } from '@dequanto/utils/$address';
 import { TAbiItem } from '@dequanto/types/TAbi';
+import memd from 'memd';
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -28,6 +29,11 @@ export class PackageService {
     async getLocalPackages () {
         return await this.getLocalList();
     }
+
+    /**
+     * Make sure the method is called in a queue, to prevent race conditions for save
+     */
+    @memd.deco.queued()
     async savePackage (pkg: IPackageItem, opts: { global: boolean }) {
         let packagePath = opts?.global
             ? env.appdataDir.combine('.dequanto/0xweb.json').toString()
