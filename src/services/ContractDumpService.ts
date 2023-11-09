@@ -39,7 +39,11 @@ export class ContractDumpService {
             client: this.app.chain.client,
             explorer: this.app.chain.explorer,
             fields: params.fields?.split(',').map(x => x.trim()),
-            sources: _sources
+            sources: _sources,
+            parser: {
+                withConstants: true,
+                withImmutables: true,
+            }
         });
 
         let data = await dump.getStorage();
