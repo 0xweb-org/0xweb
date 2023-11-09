@@ -7,10 +7,6 @@ orbs:
 
 jobs:
   build-and-test:
-    branches:
-      ignore:
-        # runs the github action
-        - release
     # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
     # https://circleci.com/developer/images/image/cimg/node
     docker:
@@ -37,3 +33,8 @@ workflows:
   TestRunner:
     jobs:
       - build-and-test
+          filters:
+            branches:
+              ignore:
+                # runs the github action
+                - release
