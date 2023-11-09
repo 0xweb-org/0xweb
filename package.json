@@ -21,6 +21,7 @@
         "contracts",
         "evm",
         "auto-generation",
+        "cli",
         "cli wallet"
     ],
     "license": "MIT",
