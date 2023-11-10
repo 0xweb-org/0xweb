@@ -9,8 +9,11 @@ on:
       - 'release'
 
 jobs:
-  build:
+  build-test-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -18,26 +21,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
           registry-url: 'https://registry.npmjs.org'
           cache: npm
 
       - run: npm ci
+      - run: npm run build
+      - run: npm test
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

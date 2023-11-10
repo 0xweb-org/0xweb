@@ -12,8 +12,10 @@ tsconfig-build.json
 tsconfig.json
 typings.json
 .travis.yml
+.gitmodules
 .circleci/
 .vscode/
+.github/
 
 dequanto/.vscode/
 dequanto/actions/
@@ -23,6 +25,7 @@ dequanto/typings/
 dequanto/*.json
 dequanto/*.js
 
+readme.md
 0xweb.json
 0xweb/
 de_**.bat
