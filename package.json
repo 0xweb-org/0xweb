@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.10.24",
+    "version": "0.10.26",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -65,7 +65,7 @@
         "build-bundle": "app-bundler",
         "build-dts": "tsc -p tsconfig-build.json && atma run tools/build-dts",
         "watch": "app-bundler -watch",
-        "release": "echo \"Run atma pub -m \"message\"\"",
+        "release": "atma bump && npm run build && git add -A && git commit -am 'bump' && git push && git push origin master:release",
         "test": "atma --openssl-legacy-provider test"
     },
     "app-bundler": {
