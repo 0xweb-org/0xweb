@@ -153,13 +153,13 @@ export class PackageService {
         if (await file.existsAsync() === false) {
             return []
         }
-        let platform = this.chain.client.platform;
+        let platform = this.chain?.client?.platform ?? 'hardhat';
         let $0xweb = await file.readAsync<IPackageJson>();
         let deployments = $0xweb.deployments;
         if (deployments == null || deployments[platform] == null) {
             return [];
         }
-        let deploymentsArr = deployments[this.chain.client.platform];
+        let deploymentsArr = deployments[platform];
         let contracts = await alot(deploymentsArr).mapManyAsync(async x => {
             if (await File.existsAsync(x.path) === false) {
                 $logger.warn(`File not found ${x.path}. Skipping...`);

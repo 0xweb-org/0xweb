@@ -48,7 +48,7 @@ export function CInstall() {
             }
         },
 
-        async process(args: string[], params: IInstallParams) {
+        async process(args: string[], params: IInstallParams, app) {
             let platform: TPlatform = params.chain as TPlatform;
             let [ addressOrPath ] = args;
             if (/^\w+:0x/.test(addressOrPath)) {
@@ -85,7 +85,7 @@ export function CInstall() {
             });
             let { main, implementation, contractName } = await generator.generate();
 
-            let packageService = di.resolve(PackageService);
+            let packageService = di.resolve(PackageService, app?.chain);
             let implementationAddress = $is.Address(implementation) && $address.eq(addressOrPath, implementation) === false ? implementation : void 0;
             await packageService.savePackage({
                 platform,
