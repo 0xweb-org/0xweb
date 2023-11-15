@@ -141,7 +141,7 @@ export function CContract() {
                 ],
                 params: {
                     '--output': {
-                        description: 'Output file without extension, as 2 files will be generated the .csv and .json'
+                        description: 'Output file without extension, as 2 files will be generated the .csv and .json, use "std" value to output to console only'
                     },
                     '--sources': {
                         description: `Optionally the solidity file or local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`

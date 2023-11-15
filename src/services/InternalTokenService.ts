@@ -1,7 +1,7 @@
 import memd from 'memd';
 import { env } from 'atma-io';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
-import { IBlockChainExplorer } from '@dequanto/BlockchainExplorer/IBlockChainExplorer';
+import { IBlockChainExplorer } from '@dequanto/explorer/IBlockChainExplorer';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { TAddress } from '@dequanto/models/TAddress';
 

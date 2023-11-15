@@ -4,13 +4,20 @@ import { TAbiItem } from '@dequanto/types/TAbi';
 
 
 export interface IPackageJson {
+    deployments?: {
+        [platform: string]: {
+            name?: string
+            // Deployments Path
+            path: string
+        }[]
+    }
     contracts?: {
         [platform in TPlatform]: {
             [address: string]: {
                 name: string
                 main: string
                 contractName?: string
-                implementation: string
+                implementation: TAddress
                 source?: { path: string } | {
                     address: TAddress
                     platform: TPlatform
@@ -43,7 +50,7 @@ export interface IPackageItem {
     contractName: string
     main: string
     abi?: TAbiItem[]
-    implementation?: string
+    implementation?: TAddress
     source?: { path: string } | {
         address: TAddress
         platform: TPlatform

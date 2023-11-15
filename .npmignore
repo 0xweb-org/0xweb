@@ -18,12 +18,17 @@ typings.json
 .github/
 
 dequanto/.vscode/
+dequanto/.circle/
+dequanto/.github/
 dequanto/actions/
+dequanto/0xc/
 dequanto/cache/
 dequanto/test/
+dequanto/dist/
 dequanto/typings/
 dequanto/*.json
 dequanto/*.js
+dequanto/readme.md
 
 readme.md
 0xweb.json

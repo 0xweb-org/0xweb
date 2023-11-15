@@ -35,7 +35,7 @@
         "@scure/bip39": "^1.2.1",
         "@solidity-parser/parser": "^0.16.0",
         "a-di": "^1.0.25",
-        "alot": "^0.3.4",
+        "alot": "^0.3.7",
         "appcfg": "^0.4.68",
         "atma-io": "^1.2.60",
         "atma-io-middleware-yml": "^1.1.25",
@@ -125,7 +125,6 @@
                 "^ethers",
                 "^web3$",
                 "^web3-utils$",
-                "^axios$",
                 "^path$",
                 "^child_process$",
                 "^readline$",
@@ -183,14 +182,14 @@
             "atma-utest": {
                 "include": {
                     "amd": true,
-                    "extentionDefault": {
+                    "extensionDefault": {
                         "js": "ts"
                     }
                 }
             },
             "include": {
                 "amd": true,
-                "extentionDefault": {
+                "extensionDefault": {
                     "js": "ts"
                 },
                 "routes": {

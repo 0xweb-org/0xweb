@@ -31,7 +31,8 @@ import { ContractStream } from '@dequanto/contracts/ContractStream';
 import { $logger, l } from '@dequanto/utils/$logger';
 import { $abiValues } from '@core/utils/$abiValues';
 import { ContractClassFactory } from '@dequanto/contracts/ContractClassFactory';
-import { TAbiItem } from '@dequanto/types/TAbi';
+import { TAbiInput, TAbiItem } from '@dequanto/types/TAbi';
+import { TEth } from '@dequanto/models/TEth';
 
 
 interface ICallParams {
@@ -195,11 +196,16 @@ export class ContractService {
         contractName?: string
     }) {
         let dumpService = new ContractDumpService(this.app)
-        let { csv, json } = await dumpService.dump(nameOrAddress, params);
-        $console.table([
-            [ 'Slots', csv ],
-            [ 'JSON', json ],
-        ]);
+        let { files, json } = await dumpService.dump(nameOrAddress, params);
+        if (files != null) {
+            $console.table([
+                [ 'Slots', files.csv ],
+                [ 'JSON', files.json ],
+            ]);
+            return;
+        }
+
+        console.dir(json, { depth: null, colors: true });
     }
 
     async dumpRestore (nameOrAddress: string | TAddress, params: {
@@ -224,7 +230,7 @@ export class ContractService {
             });
             return;
         }
-        let slot = slotOrRange;
+        let slot = slotOrRange as TEth.Hex;
         let slotValue = await this.app.chain.client.getStorageAt(address, slot);
         $console.log(slotValue);
     }
@@ -280,7 +286,7 @@ export class ContractService {
             });
         }
         if (params.tx) {
-            let contract = ContractClassFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
+            let { contract } = ContractClassFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
             let stream = contract.$onTransaction({ filter: { method: '*' } });
 
             stream.subscribe(info => {

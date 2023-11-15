@@ -8,6 +8,8 @@ import { File, Directory, env } from 'atma-io';
 import { $address } from '@dequanto/utils/$address';
 import { TAbiItem } from '@dequanto/types/TAbi';
 import memd from 'memd';
+import { DeploymentsStorage, IDeployment } from '@dequanto/contracts/deploy/storage/DeploymentsStorage';
+import { $logger } from '@dequanto/utils/$logger';
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -17,6 +19,10 @@ export class PackageService {
     async getPackage (name: string): Promise<IPackageItem> {
         let localList = await this.getLocalList();
         let pkg = await this.findFromList(name, localList);
+        if (pkg == null) {
+            let deploymentsList = await this.getDeploymentsList();
+            pkg = await this.findFromList(name, deploymentsList);
+        }
         if (pkg == null) {
             let globalList = await this.getGlobalList();
             pkg = await this.findFromList(name, globalList);
@@ -141,6 +147,37 @@ export class PackageService {
     private async getLocalList (): Promise<IPackageItem[]> {
         let list = await this.readFromFile('0xweb.json');
         return list;
+    }
+    private async getDeploymentsList (): Promise<IPackageItem[]> {
+        let file = new File('0xweb.json');
+        if (await file.existsAsync() === false) {
+            return []
+        }
+        let platform = this.chain.client.platform;
+        let $0xweb = await file.readAsync<IPackageJson>();
+        let deployments = $0xweb.deployments;
+        if (deployments == null || deployments[platform] == null) {
+            return [];
+        }
+        let deploymentsArr = deployments[this.chain.client.platform];
+        let contracts = await alot(deploymentsArr).mapManyAsync(async x => {
+            if (await File.existsAsync(x.path) === false) {
+                $logger.warn(`File not found ${x.path}. Skipping...`);
+                return [];
+            }
+            let deployments = await File.readAsync<IDeployment[]>(x.path);
+            return deployments.map(d => {
+                return <IPackageItem> {
+                    platform,
+                    address: d.address,
+                    name: d.name,
+                    main: d.main,
+                    implementation: d.implementation,
+                };
+            })
+        }).toArrayAsync();
+
+        return contracts;
     }
 
     private async getGlobalList (): Promise<IPackageItem[]> {

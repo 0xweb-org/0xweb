@@ -15,7 +15,7 @@ import { InternalTokenService } from '@core/services/InternalTokenService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { TxLogParser } from '@dequanto/txs/receipt/TxLogParser';
 import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
-import { IBlockChainExplorer } from '@dequanto/BlockchainExplorer/IBlockChainExplorer';
+import { IBlockChainExplorer } from '@dequanto/explorer/IBlockChainExplorer';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { TEth } from '@dequanto/models/TEth';
 import { TAbiItem } from '@dequanto/types/TAbi';

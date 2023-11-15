@@ -50,17 +50,24 @@ export class ContractDumpService {
         let csv = data.memory.map(x => x.join(', ')).join('\n');
         let json = data.json;
 
-        let csvFile = new File(`${_output}.csv`);
-        let jsonFile = new File(`${_output}.json`);
+        if (params.output !== 'std') {
+            let csvFile = new File(`${_output}.csv`);
+            let jsonFile = new File(`${_output}.json`);
 
-        await Promise.all([
-            csvFile.writeAsync(csv),
-            jsonFile.writeAsync(json),
-        ]);
+            await Promise.all([
+                csvFile.writeAsync(csv),
+                jsonFile.writeAsync(json),
+            ]);
 
+            return {
+                files: {
+                    csv: csvFile.uri.toString(),
+                    json: jsonFile.uri.toString()
+                }
+            };
+        }
         return {
-            csv: csvFile.uri.toString(),
-            json: jsonFile.uri.toString()
+            json
         };
     }
 
