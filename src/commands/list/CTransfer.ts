@@ -11,6 +11,7 @@ import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
 import { Parameters } from '@core/utils/Parameters';
 import { l } from '@dequanto/utils/$logger';
 import { $address } from '@dequanto/utils/$address';
+import { TxWriter } from '@dequanto/txs/TxWriter';
 
 
 export function CTransfer() {
@@ -90,7 +91,7 @@ export function CTransfer() {
                 throw new Error(`Account ${params.to} not found in storage`);
             }
             if (accountTo.platform && accountTo.platform !== app.chain.client.platform) {
-                throw new Error(`Chain missmatch. Account ${accountTo.address} required ${accountTo.platform}, but got ${app.chain.client.platform}`);
+                //-throw new Error(`Chain mismatch. Account ${accountTo.address} required ${accountTo.platform}, but got ${app.chain.client.platform}`);
             }
 
             let service = di.resolve(TokenTransferService, app.chain.client);
@@ -117,8 +118,7 @@ export function CTransfer() {
                 throw new Error(`Invalid amount: ${amountStr}`);
             }
 
-            $console.toast(`Transfering ${amount}${token.symbol} from ${accountFrom.address} to ${accountTo.address}`);
-
+            $console.toast(`Transferring ${amount}${token.symbol} from ${accountFrom.address} to ${accountTo.address}`);
 
             let safeTransportFile = params.safeTransport;
             if (safeTransportFile) {
@@ -139,7 +139,15 @@ export function CTransfer() {
                 });
             }
 
-            let tx = await service.transfer(accountFrom, accountTo.address, token, amount);
+            let tx: TxWriter;
+            if (amount === balance) {
+                tx = await service.transferAll(accountFrom, accountTo.address, token);
+            } else if (amount < 0) {
+                tx = await service.transferAllWithRemainder(accountFrom, accountTo.address, token, amount);
+            } else {
+                tx = await service.transfer(accountFrom, accountTo.address, token, amount);
+            }
+
             if (txOutput) {
                 let path = await tx.onSaved;
                 l`Transfer transaction green<saved>. To submit to the blockchain call "0xweb tx send ${path}"`;
