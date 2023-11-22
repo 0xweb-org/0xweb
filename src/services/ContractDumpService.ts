@@ -28,7 +28,7 @@ export class ContractDumpService {
 
     async dump (nameOrAddress: string | TAddress, params: IContractDumpServiceParams) {
 
-        let { _address, _output, _implementation, _sources } = await this.getContractData(nameOrAddress, params);
+        let { _address, _output, _implementation, _sources, _contractName } = await this.getContractData(nameOrAddress, params);
 
         $require.String(_output, 'Output file not defined');
         $require.notNull(this.app.chain, `--chain not specified`);
@@ -36,6 +36,7 @@ export class ContractDumpService {
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
+            contractName: _contractName,
             client: this.app.chain.client,
             explorer: this.app.chain.explorer,
             fields: params.fields?.split(',').map(x => x.trim()),

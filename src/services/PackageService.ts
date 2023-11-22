@@ -69,6 +69,7 @@ export class PackageService {
             platformPkgs[pkg.address] = {
                 name: pkg.name,
                 main: pkg.main,
+                contractName: pkg.contractName,
                 implementation: pkg.implementation
             };
         } else {
