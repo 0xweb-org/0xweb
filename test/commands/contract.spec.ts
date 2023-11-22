@@ -36,8 +36,9 @@ UTest({
                 let json = await File.readAsync<any>('./0xweb.json');
                 let jsonHardhat = json.contracts.hardhat;
                 deepEq_(jsonHardhat[contract.address], {
-                    name: "Counter",
-                    main: "./0xc/hardhat/Counter/Counter.ts"
+                    name: 'Counter',
+                    main: './0xc/hardhat/Counter/Counter.ts',
+                    contractName: 'StorageCounter'
                 });
             },
             async 'call method by contract name' () {
