@@ -119,7 +119,6 @@ export function CContract() {
                     },
                     '--format': {
                         description: `Data format to output`,
-                        default: 'csv',
                         oneOf: [ 'csv', 'json' ]
                     },
 
