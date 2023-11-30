@@ -7,7 +7,7 @@ import { IToken } from '@dequanto/models/IToken';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
-import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
+import { EoAccount, TAccount } from '@dequanto/models/TAccount';
 import { Parameters } from '@core/utils/Parameters';
 import { l } from '@dequanto/utils/$logger';
 import { $address } from '@dequanto/utils/$address';
@@ -79,12 +79,12 @@ export function CTransfer() {
                 throw new Error(`Token ${tokenMix} not found`);
             }
 
-            let accountFrom = await app.getAccount(params.from) as ChainAccount;
+            let accountFrom = await app.getAccount(params.from) as EoAccount;
             if (accountFrom == null) {
                 throw new Error(`Account ${params.from} not found in storage`);
             }
             let accountTo = $is.Address(params.to)
-                ? <ChainAccount>{ address: params.to }
+                ? <EoAccount>{ address: params.to }
                 : await app.getAccount(params.to);
 
             if (accountTo == null) {

@@ -17,7 +17,7 @@ export interface ICommand {
             key?: string
             description: string
             required?: boolean
-            type?: 'number' | 'string' | 'boolean',
+            type?: 'number' | 'string' | 'boolean' | 'address',
             map?: <T>(input: string) => T
 
             oneOf?: (string | number)[]

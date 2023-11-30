@@ -19,7 +19,7 @@ import { PlatformFactory } from '@dequanto/chains/PlatformFactory';
 import { $require } from '@dequanto/utils/$require';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { $account } from '@dequanto/utils/$account';
-import { ChainAccount } from '@dequanto/models/TAccount';
+import { EoAccount } from '@dequanto/models/TAccount';
 import { $is } from '@dequanto/utils/$is';
 import { ITxLogItem } from '@dequanto/txs/receipt/ITxLogItem';
 import { Web3Client } from '@dequanto/clients/Web3Client';
@@ -37,7 +37,7 @@ import { TEth } from '@dequanto/models/TEth';
 
 interface ICallParams {
     block?: string | number
-    account?: string
+    account?: TAddress
     chain?: TPlatform
     nonce?: number
     address?: TAddress
@@ -272,6 +272,25 @@ export class ContractService {
         $console.log(result);
     }
 
+    async varSet (name: string, path: string, value: string, info?: {
+        type?: string
+    }) {
+        let pkg = await this.getPackage(name);
+        let slots = await this.getSlots(pkg);
+        let storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
+
+        $console.toast(`Writing storage of "${path}"`);
+        await storage.set(path, value);
+
+        $console.toast(`Loading storage of "${path}"`);
+        let result = await storage.get(path);
+        if (result != null && typeof result === 'object') {
+            $console.log(JSON.stringify(result, null, '  '));
+            return;
+        }
+        $console.log(result);
+    }
+
     async watchLog (nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters }) {
         let pkg = await this.getPackage(nameOrAddress);
         let abi = await this.getAbi(pkg);
@@ -308,11 +327,11 @@ export class ContractService {
             : result;
         $console.log(output);
     }
-    private async getContractReader (params) {
+    private async getContractReader (params: { block?, account? }) {
         let reader = di.resolve(ContractReader, this.app.chain.client);
         if (params.block) {
             let block: number | Date;
-            if (/^\d+$/.test(params.block)) {
+            if (/^\d+$/.test(params.block as string)) {
                 block = Number(params.block)
             } else {
                 block = new Date(params.block);
@@ -321,6 +340,9 @@ export class ContractService {
                 }
             }
             reader.forBlock(block);
+        }
+        if (params.account) {
+            reader.withAddress(params.account);
         }
         return reader;
     }
@@ -335,9 +357,9 @@ export class ContractService {
 
         };
         if ($account.isSafe(account) && params.safeTransport) {
-            let sender: ChainAccount = $account.getSender(account);
+            let sender: EoAccount = $account.getSender(account);
             if (sender.key == null) {
-                sender = await accounts.get(sender.address ?? sender.name) as ChainAccount;
+                sender = await accounts.get(sender.address ?? sender.name) as EoAccount;
             }
             writerConfig.safeTransport = new FileServiceTransport(this.app.chain.client, sender, params.safeTransport);
         }

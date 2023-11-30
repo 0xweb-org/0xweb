@@ -1,14 +1,13 @@
 import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
-import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { $sig } from '@dequanto/utils/$sig';
 import { $require } from '@dequanto/utils/$require';
-import { ChainAccount } from '@dequanto/models/TAccount';
+import { EoAccount } from '@dequanto/models/TAccount';
 
 export function CAccounts() {
     return <ICommand>{
@@ -52,7 +51,7 @@ export function CAccounts() {
                         name,
                         address,
                         type: 'eoa'
-                    } as ChainAccount;
+                    } as EoAccount;
 
                     if (key) {
                         const secret = params.pin ?? app.config.$get('pin') as string;

@@ -171,7 +171,8 @@ export class PackageService {
                 return <IPackageItem> {
                     platform,
                     address: d.address,
-                    name: d.name,
+                    name: d.id ?? d.name,
+                    contractName: d.name,
                     main: d.main,
                     implementation: d.implementation,
                 };

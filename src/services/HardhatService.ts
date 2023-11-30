@@ -4,7 +4,7 @@ import { IPlatformTools } from '@dequanto/chains/PlatformFactory';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { $require } from '@dequanto/utils/$require';
 import { ChainAccountsService } from '@dequanto/ChainAccountsService';
-import { ChainAccount } from '@dequanto/models/TAccount';
+import { EoAccount } from '@dequanto/models/TAccount';
 
 export class HardhatService {
     constructor (public chain: IPlatformTools) {
@@ -29,7 +29,7 @@ export class HardhatService {
         let provider = new HardhatProvider();
         let result = await provider.deploySol(source.path, {
             client: this.chain.client,
-            deployer: account as ChainAccount,
+            deployer: account as EoAccount,
         });
         return result;
     }

@@ -5,8 +5,8 @@ import { $bigint } from '@dequanto/utils/$bigint';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { SafeUtils } from './SafeUtils';
 import { TestUtils } from '../TestUtils';
-import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { File } from 'atma-io';
+import { $sig } from '@dequanto/utils/$sig';
 
 
 UTest({
@@ -166,7 +166,7 @@ UTest({
         let provider = new HardhatProvider();
         let acc1 = provider.deployer(0);
 
-        let acc = await ChainAccountProvider.generate();
+        let acc = await $sig.$account.generate();
 
         l`> Transfer`;
         await TestUtils.cli(`transfer 1.1 ETH --from ${acc1.key} --to ${acc.address}`, {});

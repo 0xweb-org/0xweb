@@ -18,7 +18,7 @@ export class SafeUtils {
         let match = /safe\/test\s+\[(?<address>[^\]]+)\]/.exec(stdCreateSafe);
         let safeAddress = match?.groups?.address;
         eq_($address.isValid(safeAddress), true, 'Safe address not found');
-        return safeAddress;
+        return safeAddress as TAddress;
     }
 
     @memd.deco.memoize()

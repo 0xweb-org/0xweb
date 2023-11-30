@@ -1,4 +1,3 @@
-import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { config } from '@dequanto/Config';
 import { l } from '@dequanto/utils/$logger';
 import { $sig } from '@dequanto/utils/$sig';
@@ -18,7 +17,7 @@ UTest({
         await File.removeAsync(ACCOUNTS_PATH);
     },
     async 'should add, list, remove account' () {
-        let account = ChainAccountProvider.generate();
+        let account = $sig.$account.generate();
 
         l`> add`
         let addedStdout = await cli(`accounts add -n foo -k ${account.key}`);
@@ -43,7 +42,7 @@ UTest({
 
         config.pin = '12345';
 
-        let address = await $sig.$account.getAddressFromKey(key);
+        let address = await $sig.$account.getAddressFromKey(key as any);
         eq_(address, account.address);
 
 

@@ -4,7 +4,7 @@ import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
-import { ChainAccount, Erc4337Account, SafeAccount, TAccount } from '@dequanto/models/TAccount';
+import { EoAccount, Erc4337Account, SafeAccount, TAccount } from '@dequanto/models/TAccount';
 import { $address } from '@dequanto/utils/$address';
 import { GnosisSafeFactory } from '@dequanto/safe/GnosisSafeFactory';
 import { $require } from '@dequanto/utils/$require';
@@ -113,7 +113,7 @@ export function CErc4337 () {
                         contracts = await File.readAsync<any>(params.contracts);
                     }
 
-                    let account = await app.chain.accounts.get(params.owner, params.chain) as ChainAccount;
+                    let account = await app.chain.accounts.get(params.owner, params.chain) as EoAccount;
                     $require.notNull(account, `Account ${params.owner} not found`);
 
                     let aa = await GnosisSafeFactory.create(account, app.chain.client, {
@@ -152,7 +152,7 @@ export function CErc4337 () {
                 async process(args: string[], params: { account }, app: App) {
                     let [path] = args;
                     let client = app.chain.client;
-                    let account = await app.chain.accounts.get(params.account) as ChainAccount;
+                    let account = await app.chain.accounts.get(params.account) as EoAccount;
 
                     $require.notNull(account, `Account ${params.account} not found`);
                     $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
@@ -179,7 +179,7 @@ export function CErc4337 () {
                 async process(args: string[], params: { account }, app: App) {
                     let [path] = args;
                     let client = app.chain.client;
-                    let account = await app.chain.accounts.get(params.account) as ChainAccount;
+                    let account = await app.chain.accounts.get(params.account) as EoAccount;
 
                     $require.notNull(account, `Account ${params.account} not found`);
                     $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
@@ -209,7 +209,7 @@ export function CErc4337 () {
 }
 
 class SafeWorker {
-    constructor(private path: string, private client: Web3Client, private account: ChainAccount) {
+    constructor(private path: string, private client: Web3Client, private account: EoAccount) {
 
     }
 

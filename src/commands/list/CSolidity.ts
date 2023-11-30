@@ -1,7 +1,7 @@
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
-import { ChainAccount, TAccount } from '@dequanto/models/TAccount';
+import { EoAccount, TAccount } from '@dequanto/models/TAccount';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { $require } from '@dequanto/utils/$require';
 import { File, env } from 'atma-io';

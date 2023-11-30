@@ -1,7 +1,6 @@
 import alot from 'alot';
 import { File } from 'atma-io';
 import { Shell } from 'shellbee';
-import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
 import { $address } from '@dequanto/utils/$address';
 import { l } from '@dequanto/utils/$logger';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
@@ -12,6 +11,7 @@ import { $fn } from '@dequanto/utils/$fn';
 import { SafeUtils } from './SafeUtils';
 import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
 import { $sig } from '@dequanto/utils/$sig';
+import { TAddress } from '@dequanto/models/TAddress';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -60,7 +60,7 @@ UTest({
         eq_(aParsed.args[1], $bigint.toWei(.11));
     },
     async 'should add, list, remove safe'() {
-        let account = ChainAccountProvider.generate();
+        let account = $sig.$account.generate();
 
         l`\n> add account`
         let addedStdout = await cli(`accounts add`, {
@@ -125,7 +125,7 @@ UTest({
         });
 
         let match = /safe\/test\s+\[(?<address>[^\]]+)\]/.exec(stdCreateSafe);
-        let safeAddress = match?.groups?.address;
+        let safeAddress = match?.groups?.address as TAddress;
         eq_($address.isValid(safeAddress), true, 'Safe address not found');
 
 

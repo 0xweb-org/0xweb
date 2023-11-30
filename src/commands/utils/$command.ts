@@ -1,5 +1,7 @@
 import { $cli } from '@core/utils/$cli';
 import { ICommand } from '../ICommand';
+import { $require } from '@dequanto/utils/$require';
+import { TEth } from '@dequanto/models/TEth';
 
 export namespace $command {
 
@@ -97,6 +99,11 @@ export namespace $command {
                 return true;
             }
             return false;
+        }
+        if (def.type === 'address') {
+            if (value != null) {
+                $require.Address(value as TEth.Address);
+            }
         }
 
         return value;

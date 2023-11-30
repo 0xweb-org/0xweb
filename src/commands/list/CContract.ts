@@ -55,7 +55,12 @@ export function CContract() {
                         description: `Default: The chain will be taken from the installed contract. `
                     },
                     '--address': {
+                        type: 'address',
                         description: `Overwrite contracts address.`
+                    },
+                    '--account': {
+                        type: 'address',
+                        description: `Make call request from the account.`
                     },
                 },
                 async process(args, params, app) {
@@ -106,7 +111,7 @@ export function CContract() {
                         required: true
                     },
                     {
-                        description: 'Log name',
+                        description: 'Log name, could be * for all events',
                         required: true
                     }
                 ],
@@ -248,6 +253,39 @@ export function CContract() {
                     let [ nameOrAddress, selector ] = args;
                     let service = di.resolve(ContractService, app);
                     await service.varLoad(nameOrAddress, selector, {
+                        slot: params.slot,
+                        type: params.type,
+                    });
+                }
+            },
+            {
+                command: 'var-set',
+                description: [ `Sets contracts state variable. Hardhat network only` ],
+                arguments: [
+                    {
+                        description: 'Name of the installed contract or the Address',
+                        required: true
+                    },
+                    {
+                        description: 'Accessor selector. Supports JSON-a-like paths, e.g: users[5].balance',
+                        required: true
+                    },
+                    {
+                        description: 'Value',
+                        required: true
+                    },
+                ],
+                params: {
+                    ...Parameters.chain({ required: false }),
+                    type: {
+                        description: 'Overrides the type for this variable',
+                        type: 'string'
+                    }
+                },
+                async process(args, params, app) {
+                    let [ nameOrAddress, selector, value ] = args;
+                    let service = di.resolve(ContractService, app);
+                    await service.varSet(nameOrAddress, selector, value, {
                         slot: params.slot,
                         type: params.type,
                     });

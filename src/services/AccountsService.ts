@@ -1,6 +1,5 @@
 import { $console } from '@core/utils/$console';
-import { ChainAccountProvider } from '@dequanto/ChainAccountProvider';
-import { ChainAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
+import { EoAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
 import { $is } from '@dequanto/utils/$is';
 import { $sig } from '@dequanto/utils/$sig';
 import appcfg from 'appcfg';
@@ -10,7 +9,7 @@ export class AccountsService {
 
     }
 
-    async add (params: ChainAccount | SafeAccount | Erc4337Account) {
+    async add (params: EoAccount | SafeAccount | Erc4337Account) {
         let accounts = this.getAccounts();
         if (accounts.find(x => x.name === params.name)) {
             console.warn(`Account ${params.name} already exists`);
@@ -33,17 +32,17 @@ export class AccountsService {
         return accounts;
     }
 
-    async list (): Promise<(ChainAccount | SafeAccount | Erc4337Account)[]> {
+    async list (): Promise<(EoAccount | SafeAccount | Erc4337Account)[]> {
         let source = this.getConfig();
         let accounts = source.config?.accounts ?? [];
         return accounts;
     }
 
-    async get(name: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
-    async get(key: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)>
-    async get(mix: string): Promise<(ChainAccount | SafeAccount | Erc4337Account)> {
+    async get(name: string): Promise<(EoAccount | SafeAccount | Erc4337Account)>
+    async get(key: string): Promise<(EoAccount | SafeAccount | Erc4337Account)>
+    async get(mix: string): Promise<(EoAccount | SafeAccount | Erc4337Account)> {
         if ($is.Hex(mix) && mix.length > 64) {
-            return <ChainAccount> {
+            return <EoAccount> {
                 address: await $sig.$account.getAddressFromKey(mix),
                 key: mix
             };
@@ -58,13 +57,13 @@ export class AccountsService {
         }
         return account;
     }
-    async create (name: string): Promise<ChainAccount> {
+    async create (name: string): Promise<EoAccount> {
         let current = await this.getAccount(name);
         if (current != null) {
             $console.log(`Account green<bold<${name}>> already exists`);
             return null;
         }
-        let account = await ChainAccountProvider.generate({ name, platform: 'eth' });
+        let account = $sig.$account.generate({ name, platform: 'eth' });
         await this.add(account);
         return account;
     }
@@ -85,7 +84,7 @@ export class AccountsService {
         }
         return source;
     }
-    private async getAccount (name: string): Promise<ChainAccount | SafeAccount | Erc4337Account | null> {
+    private async getAccount (name: string): Promise<EoAccount | SafeAccount | Erc4337Account | null> {
         let accounts = await this.list();
         let account = accounts.find(x => x.name === name);
         return account;
