@@ -20,6 +20,10 @@ import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { TEth } from '@dequanto/models/TEth';
 import { TAbiItem } from '@dequanto/types/TAbi';
 import { $abiUtils } from '@dequanto/utils/$abiUtils';
+import { $is } from '@dequanto/utils/$is';
+import { $contract } from '@dequanto/utils/$contract';
+import { $hex } from '@dequanto/utils/$hex';
+import { $abiValues } from './$abiValues';
 
 
 
@@ -43,10 +47,13 @@ export namespace $tx {
             }
         }
 
-        let data = InputDataUtils.split(tx.input ?? '');
+        let data = splitInput(tx);
+
         let block = receipt == null
             ? null
             : await client.getBlock(receipt.blockNumber);
+
+
 
         $console.log(`\ncyan<bold<Transaction>>\n`);
         $console.table([
@@ -62,17 +69,27 @@ export namespace $tx {
             ['Data', ''],
             ...(data.method ? [
                 ['   Method', `gray<${data.method}>`],
+            ] : []),
+            ...(data.bytecode ? [
+                ['   Bytecode', `gray<${data.bytecode}>`],
+            ] : []),
+            ...(data.args ? [
                 ['   Arguments', data.args.map(x => `gray<${x}>`).join('\n')],
             ] : []),
             ['Gas', $gas.formatUsed(tx, receipt)]
         ]);
 
         let abi: TAbiItem[];
-        if (data.method) {
+        if (data.method || data.bytecode) {
             let resolver = new ContractAbiProvider(client, explorer);
-            let result = await resolver.getAbi(tx.to);
+            let address = $hex.isEmpty(receipt.contractAddress) === false
+                ? receipt.contractAddress
+                : tx.to;
+            let result = await resolver.getAbi(address);
             abi = result.abiJson;
         }
+
+        console.log(abi);
 
         let parser = di.resolve(TxLogParser);
         if (abi != null) {
@@ -122,7 +139,6 @@ export namespace $tx {
 
             $console.log(`\ncyan<bold<Transfers>>\n`);
             let cells = events.map(event => {
-                console.log(event);
                 return [
                     event.token?.symbol,
                     event.from,
@@ -146,11 +162,15 @@ export namespace $tx {
             $console.log(`\ncyan<bold<Known Events>>\n`);
             let cells = otherEvents.map(event => {
                 return [
-                    JSON.stringify(event)
+                    event.address,
+                    [
+                        event.event,
+                        ...event.arguments?.map(arg => `  gray<${arg.name}=>${ serializeValue(arg.value) }`)
+                    ].join('\n')
                 ];
             });
             $console.table([
-                ['Serialized Data'],
+                ['Contract', 'Event/Parameters'],
                 ['----------------'],
                 ...cells
             ]);
@@ -158,25 +178,80 @@ export namespace $tx {
 
         if (abi) {
             let txContract = new TxContract(explorer);
-            let decodedInput = await $abiUtils.parseMethodCallData(abi, tx);
-            $console.log(`\ncyan<bold<Parameters parsed>>\n`);
-            let cells = [
-                ['Method', decodedInput.name]
-            ];
-            for (let key in decodedInput.args) {
-                if (/^\d$/.test(key)) {
-                    continue;
+            let decodedInput = decodeInput(tx, abi);
+            if (decodedInput != null) {
+                $console.log(`\ncyan<bold<Parameters parsed>>\n`);
+                let cells = [
+                    ['Method', decodedInput.name]
+                ];
+                if (decodedInput.params) {
+                    for (let key in decodedInput.params) {
+                        let val = decodedInput.params[key];
+                        if (Array.isArray(val)) {
+                            val = val.map(x => x?.toString() ?? '<null>').join('\n');
+                        }
+                        cells.push([key, val ?? '<null>']);
+                    }
+                } else if (decodedInput.args) {
+                    decodedInput.args.forEach((x, i) => {
+                        cells.push([i, x ?? '<null>']);
+                    })
                 }
-                let val = decodedInput.args[key];
-                if (Array.isArray(val)) {
-                    val = val.map(x => x?.toString() ?? '<null>').join('\n');
-                }
-                cells.push([key, val ?? '<null>']);
-            }
 
-            $console.table([
-                ...cells
-            ]);
+                $console.table([
+                    ...cells
+                ]);
+            }
         }
     }
+}
+
+function splitInput (tx: TEth.Tx): {
+    method?: string
+    bytecode?: TEth.Hex
+    args?: TEth.Hex[]
+} {
+    let inputHex = tx.input ?? tx.data;
+    if ($hex.isEmpty(inputHex)) {
+        return { };
+    }
+    if ($hex.isEmpty(tx.to)) {
+        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(inputHex);
+        let argsArr = [];
+        if ($hex.isEmpty(argsHex) === false) {
+            let hex = `0x00000000` + $hex.raw(argsHex);
+            let split = InputDataUtils.split(hex);
+            argsArr = split.args;
+        }
+        return {
+            bytecode: bytecode,
+            args: argsArr
+        };
+    }
+    return InputDataUtils.split(inputHex);
+}
+
+function decodeInput(tx: TEth.Tx, abi: TAbiItem[]) {
+    if ($hex.isEmpty(tx.to)) {
+        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(tx.input);
+        let ctorAbi = abi.find(x => x.type === 'constructor');
+        if (ctorAbi) {
+            return {
+                ...$abiUtils.decode(ctorAbi.inputs, argsHex),
+                name: 'constructor',
+            };
+        }
+        return null;
+    }
+    return $abiUtils.parseMethodCallData(abi, tx);
+}
+
+function serializeValue (value: any) {
+    if (value == null) {
+        return 'NULL';
+    }
+    if (typeof value !== 'object') {
+        return value;
+    }
+    return JSON.stringify(value);
 }

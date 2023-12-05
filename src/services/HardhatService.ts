@@ -3,8 +3,8 @@ import { PackageService } from './PackageService';
 import { IPlatformTools } from '@dequanto/chains/PlatformFactory';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { $require } from '@dequanto/utils/$require';
-import { ChainAccountsService } from '@dequanto/ChainAccountsService';
 import { EoAccount } from '@dequanto/models/TAccount';
+import { ChainAccountService } from '@dequanto/ChainAccountService';
 
 export class HardhatService {
     constructor (public chain: IPlatformTools) {
@@ -20,7 +20,7 @@ export class HardhatService {
 
     async deploy (mix: string, params: { deployer: string }) {
 
-        let accounts = new ChainAccountsService()
+        let accounts = new ChainAccountService()
         let account = await accounts.get(params.deployer);
         $require.notNull(account?.address, `Account ${ params.deployer } not resolved`);
 

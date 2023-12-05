@@ -9,6 +9,7 @@ import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
 import { TxWriter } from '@dequanto/txs/TxWriter';
 import { $tx } from '@core/utils/$tx';
+import { TEth } from '@dequanto/models/TEth';
 
 export function CTx() {
     return <ICommand>{
@@ -143,7 +144,7 @@ export function CTx() {
                 },
                 async process(args: string[], params: any, app: App) {
 
-                    let [hash] = args;
+                    let [ hash ] = args as [ TEth.Hex ];
                     await $tx.log(app.chain.client, app.chain.explorer, hash);
                 }
             }
