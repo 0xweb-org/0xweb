@@ -28,7 +28,19 @@ export function CRestore() {
                         $console.log(`Skip ${pkg.name}(${pkg.address}) as not valid address`);
                         return;
                     }
-                    let output = pkg.main.replace(`${pkg.name}/${pkg.name}.ts`, '');
+                    let pathPfx = '';
+                    let pathFilename = '';
+                    if (pkg.name.includes('/') === false) {
+                        // 0xweb i 0x123 --name chainlink/feed-eth
+                        // is installed into 0xweb/eth/chainlink/feed-eth/feed-eth.ts
+                        pathPfx = pkg.name;
+                        pathFilename = pkg.name;
+                    } else {
+                        pathPfx = pkg.name;
+                        pathFilename = pkg.name.substring(pkg.name.lastIndexOf('/') + 1);
+                    }
+
+                    let output = pkg.main.replace(`${pathPfx}/${pathFilename}.ts`, '');
                     let generator = new Generator({
                         name: pkg.name,
                         platform: pkg.platform,

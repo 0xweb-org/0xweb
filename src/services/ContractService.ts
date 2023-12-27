@@ -33,6 +33,7 @@ import { $abiValues } from '@core/utils/$abiValues';
 import { ContractClassFactory } from '@dequanto/contracts/ContractClassFactory';
 import { TAbiInput, TAbiItem } from '@dequanto/types/TAbi';
 import { TEth } from '@dequanto/models/TEth';
+import { $abiUtils } from '@dequanto/utils/$abiUtils';
 
 
 interface ICallParams {
@@ -55,8 +56,8 @@ export class ContractService {
         let abi = await this.getAbi(pkg);
 
         let methods = await abi.filter(x => x.type === 'function');
-        let reads = methods.filter(x => GeneratorFromAbi.Gen.isReader(x));
-        let writes = methods.filter(x => GeneratorFromAbi.Gen.isReader(x) === false);
+        let reads = methods.filter(x => $abiUtils.isReadMethod(x));
+        let writes = methods.filter(x => $abiUtils.isReadMethod(x) === false);
 
         let lines = [
             `bold<cyan<${pkg.main}>>`
@@ -97,7 +98,7 @@ export class ContractService {
         let methodSignature = this.stringifyAbi(abiItem);
         let isRead = typeof action === 'string'
             ? action === 'read'
-            : await GeneratorFromAbi.Gen.isReader(abiItem);
+            : await $abiUtils.isReadMethod(abiItem);
 
         let platform = params.chain ?? pkg.platform;
         if (platform !== this.app?.chain?.client.platform) {
@@ -250,6 +251,7 @@ export class ContractService {
     async varLoad (nameOrAddress: string | TAddress, path: string, info?: {
         slot?: number
         type?: string
+        offset?: string
     }) {
         let storage: SlotsStorage;
         if ($is.Address(nameOrAddress) && info?.slot != null && info?.type != null) {

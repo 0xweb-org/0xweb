@@ -37,14 +37,9 @@ export class SafeUtils {
         });
 
         let contracts = {
-            multiSendAddress: multiSendContract.address,
-            multiSendAbi: multiSendAbi,
-
-            safeMasterCopyAddress: safeContract.address,
-            safeMasterCopyAbi: safeAbi,
-
-            safeProxyFactoryAbi: proxyFactoryAbi,
-            safeProxyFactoryAddress: proxyFactoryContract.address
+            SafeL2: safeContract.address,
+            SafeProxyFactory: proxyFactoryContract.address,
+            MultiSend: multiSendContract.address,
         };
 
         let path = './test/bin/contracts.json';

@@ -247,6 +247,10 @@ export function CContract() {
                     type: {
                         description: 'Overrides the type for this variable',
                         type: 'string'
+                    },
+                    offset: {
+                        description: 'Reads with storage offset',
+                        type: 'string'
                     }
                 },
                 async process(args, params, app) {
@@ -255,6 +259,7 @@ export function CContract() {
                     await service.varLoad(nameOrAddress, selector, {
                         slot: params.slot,
                         type: params.type,
+                        offset: params.offset,
                     });
                 }
             },

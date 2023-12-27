@@ -5,7 +5,7 @@ import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { File } from 'atma-io';
 import { Shell, run } from 'shellbee';
 import type { IShellParams } from 'shellbee/interface/IProcessParams';
-import { ChainAccount } from '@dequanto/models/TAccount';
+import { EoAccount } from '@dequanto/models/TAccount';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -56,7 +56,7 @@ export const TestUtils = {
         shell.run();
         return shell;
     },
-    async deployFreeToken (client: Web3Client, opts?: { deployer?: ChainAccount }) {
+    async deployFreeToken (client: Web3Client, opts?: { deployer?: EoAccount }) {
         let { contract } = await di.resolve(HardhatProvider).deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
             client,
             deployer: opts?.deployer

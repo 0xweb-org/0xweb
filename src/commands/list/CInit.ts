@@ -43,7 +43,7 @@ export function CInit() {
 
 
 
-            $console.log(`Prepair dequanto package in bold<${directory.toLocalDir()}>`);
+            $console.log(`Prepare dequanto package in bold<${directory.toLocalDir()}>`);
             let worker = new InitWorker(directory, params);
             await worker.init();
         }
@@ -133,13 +133,13 @@ class InitWorker {
     private async ensurePackageJson() {
         let path = this.directory.combine('./package.json');
         let file = new File(path);
-        let pckg = {} as any;
+        let pkg = {} as any;
         let exists = await file.existsAsync();
         if (exists) {
-            pckg = await file.readAsync();
+            pkg = await file.readAsync();
         }
 
-        let modified = extendWithDefaultValues(pckg, {
+        let modified = extendWithDefaultValues(pkg, {
             "atma": {
                 "plugins": [
                     "atma-loader-ts"
@@ -147,7 +147,7 @@ class InitWorker {
                 "settings": {
                     "include": {
                         "amd": true,
-                        "extentionDefault": {
+                        "extensionDefault": {
                             "js": "ts"
                         },
                         "routes": "#import ./tsconfig.json compilerOptions.paths"
@@ -161,7 +161,7 @@ class InitWorker {
         });
 
         if (exists === false || modified === true) {
-            await file.writeAsync(pckg);
+            await file.writeAsync(pkg);
         }
 
         function extendWithDefaultValues(target, source) {
@@ -217,15 +217,15 @@ class InitWorker {
         let filePackageCurrent = new File(this.directory.combine('./package.json'));
         let filePackageDequanto = new File(this.directory.combine('./dequanto/package.json'));
 
-        let [pckgDequanto, pckgCurrent] = await Promise.all([
+        let [pkgDequanto, pkgCurrent] = await Promise.all([
             filePackageDequanto.readAsync<any>(),
             filePackageCurrent.readAsync<any>()
         ]);
-        if (pckgCurrent.dependencies == null) {
-            pckgCurrent.dependencies = {};
+        if (pkgCurrent.dependencies == null) {
+            pkgCurrent.dependencies = {};
         }
 
-        let requiredDeps = pckgDequanto.dependencies;
+        let requiredDeps = pkgDequanto.dependencies;
 
         if (this.params.hardhat) {
             requiredDeps = {
@@ -236,7 +236,7 @@ class InitWorker {
         }
 
         let added = [];
-        let deps = pckgCurrent.dependencies;
+        let deps = pkgCurrent.dependencies;
         for (let name in requiredDeps) {
             if (name in deps === false) {
                 deps[name] = requiredDeps[name];
@@ -249,7 +249,7 @@ class InitWorker {
         }
 
         $console.log(`Extending gray<package.json> with new dependencies: \n ${added.map(x => `   bold<${x}>`).join('\n')}`);
-        await filePackageCurrent.writeAsync(pckgCurrent);
+        await filePackageCurrent.writeAsync(pkgCurrent);
         $console.log(`Starting gray<npm install>`);
         await run({
             command: 'npm install',
@@ -262,12 +262,12 @@ class InitWorker {
 
         let path = this.directory.combine('./tsconfig.json');
         let file = new File(path);
-        let pckg: any = await file.existsAsync()
+        let pkg: any = await file.existsAsync()
             ? await file.readAsync()
             : {};
 
-        if (pckg.compilerOptions == null) {
-            pckg.compilerOptions = {
+        if (pkg.compilerOptions == null) {
+            pkg.compilerOptions = {
                 "baseUrl": "./",
                 "declaration": true,
                 "target": "ES2020",
@@ -279,35 +279,35 @@ class InitWorker {
                 "moduleResolution": "node",
             };
         }
-        if (pckg.compilerOptions.paths == null) {
-            pckg.compilerOptions.paths = {};
+        if (pkg.compilerOptions.paths == null) {
+            pkg.compilerOptions.paths = {};
         }
 
-        if (pckg.compilerOptions.paths['@dequanto/*'] != null) {
+        if (pkg.compilerOptions.paths['@dequanto/*'] != null) {
             return;
         }
 
-        if (pckg.compilerOptions.baseUrl == null) {
-            pckg.compilerOptions.baseUrl = './';
+        if (pkg.compilerOptions.baseUrl == null) {
+            pkg.compilerOptions.baseUrl = './';
         }
 
-        if (pckg.compilerOptions.moduleResolution == null) {
-            pckg.compilerOptions.moduleResolution = 'node';
+        if (pkg.compilerOptions.moduleResolution == null) {
+            pkg.compilerOptions.moduleResolution = 'node';
         }
 
 
         let isNpm = this.params.source === 'npm';
-        pckg.compilerOptions.paths['@dequanto/*'] = isNpm
+        pkg.compilerOptions.paths['@dequanto/*'] = isNpm
             ? ["node_modules/dequanto/src/*"]
             : ["dequanto/src/*"];
-        pckg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
+        pkg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
             ? ["node_modules/dequanto/contracts/*"]
             : ["dequanto/contracts/*"];
 
-        pckg.compilerOptions.paths['0xc/*'] = ["0xc/*"]
+        pkg.compilerOptions.paths['0xc/*'] = ["0xc/*"]
 
         $console.toast('Save modified tsconfig');
-        await file.writeAsync(pckg);
+        await file.writeAsync(pkg);
     }
 
     private async ensureHardhatConfig() {

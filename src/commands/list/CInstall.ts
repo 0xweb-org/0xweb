@@ -38,6 +38,9 @@ export function CInstall() {
             '--source': {
                 description: 'Optional, the solidity source code'
             },
+            '--contract-name': {
+                description: 'Optionally the contract name to extract from the source. Otherwise default is taken'
+            },
             '-g, --global': {
                 description: 'Installs the contract globally, to be available via "0xweb" cli command from any CWD.',
                 type: 'boolean',
@@ -45,6 +48,11 @@ export function CInstall() {
             ...Parameters.chain(),
             '-o, --output': {
                 description: 'Output directory. Default: ./0xc/'
+            },
+            '--save-sources': {
+                description: 'Optionally disables saving the solidity source code to the output directory.',
+                type: 'boolean',
+                default: true
             }
         },
 
@@ -73,6 +81,7 @@ export function CInstall() {
 
             let generator = new Generator({
                 name: params.name,
+                contractName: params.contractName,
                 platform,
                 source: {
                     abi: address,
@@ -81,7 +90,8 @@ export function CInstall() {
                 defaultAddress: address,
                 implementation: params.implementation,
                 output,
-                saveAbi: true
+                saveAbi: true,
+                saveSources: params.saveSources ?? true,
             });
             let { main, implementation, contractName } = await generator.generate();
 
@@ -108,9 +118,11 @@ export function CInstall() {
 
 interface IInstallParams {
     name: string
+    contractName: string
     implementation: string
     chain: string
     output: string
     source: string
     global: boolean
+    saveSources: boolean
 }

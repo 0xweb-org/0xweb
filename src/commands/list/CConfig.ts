@@ -4,6 +4,7 @@ import { class_Uri } from 'atma-utils';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { $promise } from '@dequanto/utils/$promise';
+import { $os } from '@core/utils/$os';
 
 
 export function CConfig() {
@@ -42,7 +43,7 @@ export function CConfig() {
                 }
                 let sysPath = new class_Uri(path).toLocalFile();
                 $console.log(`Open cyan<bold<file://${sysPath}>>`);
-                Os.open(sysPath);
+                await $os.open(sysPath);
                 await $promise.wait(500);
                 return;
             }
@@ -63,26 +64,4 @@ export function CConfig() {
             }
         }
     };
-}
-
-
-namespace Os {
-    export function open(filePath: string) {
-        const { exec } = require('child_process');
-        let command = (function () {
-            switch (process.platform) {
-                case 'darwin': {
-                    return 'open ' + filePath + ' && lsof -p $! +r 1 &>/dev/null';
-                }
-                case 'win32': {
-                    return 'start /wait ' + filePath;
-                }
-                default: {
-                    return 'xdg-open ' + filePath + ' && tail --pid=$! -f /dev/null';
-                }
-            }
-        })();
-
-        let child = exec(command);
-    }
 }

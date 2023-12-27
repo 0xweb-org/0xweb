@@ -6,7 +6,7 @@ UTest({
         await TestUtils.clean();
         //await TestNode.start();
     },
-    async '!compile contract' () {
+    async 'compile contract' () {
         let stdAddOne = await TestUtils.cli(`compile ./test/fixtures/hardhat/Foo.sol`, {
         });
         has_(stdAddOne, `Foo.sol/Foo.json`);

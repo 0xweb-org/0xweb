@@ -34,6 +34,7 @@ import { CRpc } from '@core/commands/list/CRpc';
 import { $logger, ELogLevel } from '@dequanto/utils/$logger';
 import { CSolidity } from '@core/commands/list/CSolidity';
 import { CTools } from '@core/commands/list/CTools';
+import { CNs } from '@core/commands/list/CNs';
 
 declare const global;
 
@@ -81,6 +82,7 @@ export class App {
             .register(CBlock())
             .register(CGas())
             .register(CRpc())
+            .register(CNs())
             .register(CConfig())
             .register(CSolidity())
             .register(CTools())

@@ -110,7 +110,7 @@ export function CSafe() {
                         }
                     },
                     '--contracts': {
-                        description: 'Optionally, JSON serialized file with multiSend, masterCopy and proxyFactory contracts'
+                        description: 'Optionally, JSON serialized file addresses for fields: Safe, SafeL2, SafeProxyFactory, MultiSend, CreateCall',
                     }
                 },
                 async process(args: string[], params: { name, owner, chain, members, contracts }, app: App) {
@@ -135,7 +135,7 @@ export function CSafe() {
                     let gnosisSafe = await GnosisSafeFactory.create(account, app.chain.client, {
                         owners,
                         contracts: {
-                            [app.chain.client.chainId]: contracts ?? void 0
+                            [app.chain.client.platform]: contracts ?? void 0
                         },
                     });
                     $console.table([

@@ -19,7 +19,7 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
     },
-    async '!should sign, send signed tx json' () {
+    async 'should sign, send signed tx json' () {
 
         let STDOUT_SILENT = true;
 

@@ -1,26 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-require("@nomiclabs/hardhat-waffle")
-require("@nomiclabs/hardhat-etherscan")
-
-require("@nomiclabs/hardhat-web3");
-require("@nomiclabs/hardhat-ethers");
-require("@0xweb/hardhat")
+require("@0xweb/hardhat");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig

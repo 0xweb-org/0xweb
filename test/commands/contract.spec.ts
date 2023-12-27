@@ -1,11 +1,8 @@
 import { l } from '@dequanto/utils/$logger';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
-import { $bigint } from '@dequanto/utils/$bigint';
-import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
-import { SafeUtils } from './SafeUtils';
 import { TestUtils } from '../TestUtils';
-import { File, FileSafe } from 'atma-io';
+import { File } from 'atma-io';
 import { run } from 'shellbee';
 
 
@@ -31,6 +28,7 @@ UTest({
             command,
             silent: true,
         });
+
         return UTest({
             async 'check installation' () {
                 let json = await File.readAsync<any>('./0xweb.json');
