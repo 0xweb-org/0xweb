@@ -30,18 +30,18 @@ export class SafeUtils {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
 
-        const { contract: proxyFactoryContract, abi: proxyFactoryAbi } = await provider.deploySol('./dequanto/test/fixtures/gnosis/proxies/GnosisSafeProxyFactory.sol', {
+        const { contract: proxyFactoryContract, abi: proxyFactoryAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/proxies/GnosisSafeProxyFactory.sol', {
             client
         });
-        const { contract: safeContract, abi: safeAbi } = await provider.deploySol('./dequanto/test/fixtures/gnosis/GnosisSafe.sol', {
+        const { contract: safeContract, abi: safeAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/GnosisSafe.sol', {
             client
         });
-        const { contract: multiSendContract, abi: multiSendAbi } = await provider.deploySol('./dequanto/test/fixtures/gnosis/libraries/MultiSend.sol', {
+        const { contract: multiSendContract, abi: multiSendAbi } = await provider.deploySol('/dequanto/test/fixtures/gnosis/libraries/MultiSend.sol', {
             client
         });
 
         let contracts = {
-            SafeL2: safeContract.address,
+            Safe: safeContract.address,
             SafeProxyFactory: proxyFactoryContract.address,
             MultiSend: multiSendContract.address,
         };
