@@ -16,7 +16,7 @@ import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { $tx } from '@core/utils/$tx';
-import { $logger } from '@dequanto/utils/$logger';
+import { $logger, l } from '@dequanto/utils/$logger';
 
 export function CSafe() {
     return <ICommand>{
@@ -103,7 +103,7 @@ export function CSafe() {
                         required: true,
                     },
                     '-m, --members': {
-                        description: 'Additional owners. Comma-seperated addresses.',
+                        description: 'Additional owners. Comma-separated addresses.',
                         default: [],
                         map(line) {
                             return line.split(',').map(x => x.trim()).filter(Boolean);
@@ -132,6 +132,7 @@ export function CSafe() {
                         .toArray();
 
 
+                    console.log(`Deploy safe new ${app.chain.client.platform}`, contracts);
                     let gnosisSafe = await GnosisSafeFactory.create(account, app.chain.client, {
                         owners,
                         contracts: {

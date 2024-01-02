@@ -46,7 +46,7 @@ export class SafeUtils {
             MultiSend: multiSendContract.address,
         };
 
-
+        console.log(`Gnosis Safe Contracts`, contracts);
         await File.writeAsync(path, contracts);
         return path;
     }
