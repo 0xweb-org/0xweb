@@ -132,6 +132,7 @@ export function CSafe() {
                         .toArray();
 
 
+                    console.log(`Deploy safe new ${app.chain.client.platform}`, contracts, owners);
                     let gnosisSafe = await GnosisSafeFactory.create(account, app.chain.client, {
                         owners,
                         contracts: {
