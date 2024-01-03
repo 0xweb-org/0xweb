@@ -12,7 +12,6 @@ import { ContractWriter } from '@dequanto/contracts/ContractWriter';
 import { AccountsService } from './AccountsService';
 import { TPlatform } from '@dequanto/models/TPlatform';
 import { App } from '@core/app/App';
-import { ITxConfig } from '@dequanto/txs/ITxConfig';
 import { ITxWriterOptions } from '@dequanto/txs/TxWriter';
 import { TAddress } from '@dequanto/models/TAddress';
 import { PlatformFactory } from '@dequanto/chains/PlatformFactory';
@@ -34,6 +33,7 @@ import { ContractClassFactory } from '@dequanto/contracts/ContractClassFactory';
 import { TAbiInput, TAbiItem } from '@dequanto/types/TAbi';
 import { TEth } from '@dequanto/models/TEth';
 import { $abiUtils } from '@dequanto/utils/$abiUtils';
+import { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
 
 
 interface ICallParams {
@@ -370,7 +370,7 @@ export class ContractService {
         }
 
         let tx = await writer.writeAsync(account, abi, args, {
-            builderConfig: <ITxConfig> {
+            builderConfig: <ITxBuilderOptions> {
                 nonce: params.nonce
             },
             writerConfig,

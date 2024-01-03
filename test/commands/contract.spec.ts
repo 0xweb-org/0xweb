@@ -57,8 +57,9 @@ UTest({
             },
             async 'list vars' () {
                 let str = await TestUtils.cli(`contract vars Counter`);
-                has_(str, /0\s+count/);
-                has_(str, /1\s+user/);
+                // Slot Offset Name
+                has_(str, /0\s+0\s+count/);
+                has_(str, /1\s+0\s+user/);
             },
             async 'dump' () {
                 let output = `cache/counter-dump/dump`;
