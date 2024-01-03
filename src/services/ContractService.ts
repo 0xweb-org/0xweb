@@ -241,12 +241,15 @@ export class ContractService {
         let slots = await this.getSlots(pkg);
 
         let rows = slots
-        // SlotsParser adds `$` at the end of the name when a property was overridden in inheriting
+        // SlotsParser adds `$` at the end of the name when a property was overridden in inheritance
         .filter(slot => /\$$/.test(slot.name) === false)
         .map(slot => {
-            return [ slot.slot, slot.name, slot.type ]
+            return [ slot.slot, slot.position, slot.name, slot.type ]
         });
-        $console.table(rows);
+        $console.table([
+            [ 'Slot', 'Offset', 'Variable', 'Type' ],
+            ...rows
+        ]);
     }
     async varLoad (nameOrAddress: string | TAddress, path: string, info?: {
         slot?: number
