@@ -46,7 +46,7 @@
         "@0xweb/hardhat": "^0.1.15",
         "@openzeppelin/contracts": "^4.9.3",
         "@types/node": "^12.6.2",
-        "app-bundler": "^0.1.10",
+        "app-bundler": "^0.1.16",
         "atma": "^0.15.20",
         "atma-loader-ts": "^1.1.18",
         "atma-utest": "^0.21.31",
