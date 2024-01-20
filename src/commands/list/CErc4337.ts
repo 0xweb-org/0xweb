@@ -16,6 +16,7 @@ import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { $tx } from '@core/utils/$tx';
+import { CSafe } from './CSafe';
 
 export function CErc4337 () {
     return <ICommand>{
@@ -250,7 +251,7 @@ class SafeWorker {
         $require.Address(json.safeAddress, `No "safeAddress" field in the json file: ${path}`);
 
         let gnosis = di.resolve(GnosisSafeHandler, {
-            owner: account,
+            owners: [ account ],
             safeAddress: json.safeAddress,
             client: this.client,
             transport: new FileServiceTransport(this.client, account, path)

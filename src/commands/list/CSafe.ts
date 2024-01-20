@@ -267,7 +267,7 @@ class SafeWorker {
         $require.Address(json.safeAddress, `No "safeAddress" field in the json file: ${path}`);
 
         let gnosis = di.resolve(GnosisSafeHandler, {
-            owner: account,
+            owners: [ account ],
             safeAddress: json.safeAddress,
             client: this.client,
             transport: new FileServiceTransport(this.client, account, path)
