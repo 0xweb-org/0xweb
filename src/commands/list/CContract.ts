@@ -15,6 +15,21 @@ export function CContract() {
 
         subcommands: [
             {
+                command: 'list',
+                description: ['List installed contracts'],
+                arguments: [
+
+                ],
+                params: {
+                    ...Parameters.chain({ required: false })
+                },
+                async process(args, params, app) {
+
+                    let service = di.resolve(ContractService, app);
+                    await service.printList(params);
+                }
+            },
+            {
                 command: 'abi',
                 description: ['List of the available READ and WRITE methods for the contract'],
                 arguments: [

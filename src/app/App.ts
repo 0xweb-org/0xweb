@@ -97,13 +97,15 @@ export class App {
         let platform = $cli.getParamValue('-c, --chain', params);
         if (platform) {
             let opts = <IWeb3EndpointOptions> {};
-            let endpoint = $cli.getParamValue('--endpoint', params);
+            let endpoint = $cli.getParamValue('--endpoint,--endpoints', params);
             if (endpoint) {
-                opts.endpoints = [ { url: endpoint } ]
+                let urls = endpoint.split(/[,;]/).map(x => x.trim()).filter(Boolean);
+                opts.endpoints = urls.map(x => ({ url: x }));
             }
+
             this.chain = await di
                 .resolve(PlatformFactory)
-                .get(platform as any, opts);
+                .get(platform as TPlatform, opts);
         }
 
         $console.toast(`Process command gray<${ command.command }>`);

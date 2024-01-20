@@ -39,6 +39,10 @@ UTest({
                     contractName: 'StorageCounter'
                 });
             },
+            async 'list installation' () {
+                let str = await TestUtils.cli(`contract list`);
+                has_(str, /^Counter/m);
+            },
             async 'call method by contract name' () {
                 let str = await TestUtils.cli(`contract read Counter getCountMethod --chain hardhat`);
                 has_(str, /^1n$/m);

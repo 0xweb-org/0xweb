@@ -3,7 +3,7 @@ import { $promise } from '@dequanto/utils/$promise';
 
 export namespace $os {
     export async function open(filePath: string) {
-        const { exec } = require('child_process');
+        const { spawn } = require('child_process');
         let command = (function () {
             switch (process.platform) {
                 case 'darwin': {
@@ -18,6 +18,8 @@ export namespace $os {
             }
         })();
 
-        return $promise.fromCallback(exec, command);
+        return $promise.fromCallback(spawn, command, {
+            shell: true
+        });
     }
 }

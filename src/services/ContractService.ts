@@ -51,6 +51,27 @@ export class ContractService {
 
     }
 
+    async printList (options?: { chain?: TPlatform }) {
+        let packageService = di.resolve(PackageService);
+        let pkgs = await packageService.getLocalPackages();
+        if (options?.chain != null) {
+            pkgs = pkgs.filter(pkg => pkg.platform === options.chain);
+        }
+
+        pkgs = alot(pkgs)
+            .sortBy(x => x.platform)
+            .thenBy(x => x.name)
+            .toArray();
+
+        let rows = pkgs.map(x => [
+            x.name, x.address, x.platform
+        ]);
+        $console.table([
+            ['Name', 'Address', 'Platform (default)'],
+            ...rows
+        ]);
+    }
+
     async abi (name: string): Promise<string> {
         let pkg = await this.getPackage(name);
         let abi = await this.getAbi(pkg);
