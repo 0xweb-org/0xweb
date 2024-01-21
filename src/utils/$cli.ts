@@ -8,7 +8,7 @@ import { obj_setProperty } from 'atma-utils';
 
 export namespace $cli {
 
-    let $argv: string[];
+    let $argv: (string | number | boolean)[];
 
 
     export function setParams (argv: string[]) {
@@ -33,6 +33,9 @@ export namespace $cli {
                     return valFromParams;
                 }
                 let i = args.findIndex(arg => {
+                    if (typeof arg !== 'string') {
+                        return false;
+                    }
                     let inputArg = toCommand(arg);
                     return inputArg.isFlag === command.isFlag && inputArg.name === command.name;
                 });
@@ -55,7 +58,7 @@ export namespace $cli {
             .first();
     }
 
-    export function parse (argv: string[] = null) {
+    export function parse (argv: (string | boolean | number)[] = null) {
 
         if (argv == null) {
             argv = $argv;
@@ -66,7 +69,7 @@ export namespace $cli {
         for (let i = 0; i < argv.length; i++) {
             let x = argv[i];
 
-            if (x[0] === '-') {
+            if (typeof x === 'string' && x[0] === '-') {
 
                 let key = x.replace(/^[\-]+/, '');
                 let val;
