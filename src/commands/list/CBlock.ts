@@ -5,6 +5,8 @@ import { $date } from '@dequanto/utils/$date';
 import { $block } from '@dequanto/utils/$block';
 import { $console } from '@core/utils/$console';
 import { type App } from '@core/app/App';
+import { BlockDateResolver } from '@dequanto/blocks/BlockDateResolver';
+import { TEth } from '@dequanto/models/TEth';
 
 
 export function CBlock() {
@@ -20,7 +22,7 @@ export function CBlock() {
                     'Get block info'
                 ],
                 arguments: [
-                    { description: `latest or <blockNumber>` }
+                    { description: `latest or <blockNumber> or <date> e.g. "20.01.2024 14:00:00"` }
                 ],
                 params: {
                     '-c, --chain': {
@@ -29,11 +31,22 @@ export function CBlock() {
                 },
                 async process(args: string[], params: any, app: App) {
 
-
                     let [blockNr] = args;
                     if (blockNr === 'latest') {
                         $console.toast('Getting latest block number...');
                         let nr = await app.chain.client.getBlockNumber();
+                        blockNr = String(nr);
+                    }
+
+                    if (/[\.\-]\d+[\.\-]/.test(blockNr)) {
+                        // Date 'xx.01.xxxx'
+                        let date = $date.parse(blockNr);
+                        if (date == null || isNaN(date.getTime())) {
+                            throw new Error(`Could not parse date ${blockNr}`);
+                        }
+                        $console.toast(`Finding the block for ${date.toISOString()}`);
+                        let resolver = new BlockDateResolver(app.chain.client);
+                        let nr = await resolver.getBlockNumberFor(date);
                         blockNr = String(nr);
                     }
 
@@ -48,11 +61,11 @@ export function CBlock() {
                         ['Hash', block.hash],
                         ['Parent', block.parentHash],
                         ['Miner', block.miner],
-                        ['Time', $date.format($block.getDate(block), 'dd-MM-yyyy HH:mm:ss')],
-                        ['Transactions', block.transactions.length],
+                        ['Time', $date.format($block.getDate(block), 'dd.MM.yyyy HH:mm:ss') + ` gray<(${ block.timestamp })>`],
+                        ['Transactions', block.transactions?.length ?? 0],
                     ]);
-                    let hashes = block.transactions.map((tx, i) => {
-                        return [`#${i + 1}`, tx];
+                    let hashes = block.transactions?.map((tx, i) => {
+                        return [`#${i + 1}`, tx as TEth.Hex];
                     });
                     $console.table([
                         ...hashes
@@ -65,7 +78,7 @@ export function CBlock() {
         },
 
         async process(args: string[], params, app: App) {
-            console.warn(`A sub-command for "block" not found: ${args[0]}. Call "0xweb block --help" to view the list of commands`);
+            console.warn(`A sub-command for "block" not found: ${args[0]}. Call "0xweb block ?" to view the list of commands`);
         }
     };
 }

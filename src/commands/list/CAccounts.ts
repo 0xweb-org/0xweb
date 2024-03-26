@@ -5,9 +5,15 @@ import { $address } from '@dequanto/utils/$address';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
-import { $sig } from '@dequanto/utils/$sig';
+import { $sig, KeyUtils } from '@dequanto/utils/$sig';
 import { $require } from '@dequanto/utils/$require';
 import { EoAccount } from '@dequanto/models/TAccount';
+import alot from 'alot';
+import { $hex } from '@dequanto/utils/$hex';
+import { $promise } from '@dequanto/utils/$promise';
+import { File } from 'atma-io';
+import { $secret } from '@dequanto/utils/$secret';
+import { $crypto } from '@dequanto/utils/$crypto';
 
 export function CAccounts() {
     return <ICommand>{
@@ -136,7 +142,61 @@ export function CAccounts() {
                         ['Key', account.key],
                     ]);
                 }
-            }
+            },
+            {
+                command: 'backup',
+                arguments: [
+                    {
+                        description: 'Json File to export'
+                    }
+                ],
+                description: [
+                    'Backup to file'
+                ],
+                async process(args: string[], params, app: App) {
+                    let service = di.resolve(AccountsService, app.config);
+                    let accounts = await service.list();
+                    if (accounts.length === 0) {
+                        console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);
+                        return;
+                    }
+
+                    let [ path ] = args;
+
+                    let arr = await alot(accounts).mapAsync(async x => {
+                        return new Promise(resolve => {
+                            if (x.key == null) {
+                                resolve([
+                                    x.name,
+                                    x.type,
+                                    $hex.raw(x.address),
+                                ]);
+                                return;
+                            }
+                            KeyUtils.withKey(x as EoAccount, account => {
+                                resolve([
+                                    x.name,
+                                    x.type,
+                                    $hex.raw(x.address),
+                                    $hex.raw(account.key)
+                                ]);
+                            })
+
+                        });
+                    }).toArrayAsync({ threads: 1 });
+
+                    //$require.True(await File.existsAsync(path) === false, `File ${path} already exists`);
+
+                    let str = JSON.stringify(arr);
+                    str = 'Hello World';
+                    let encrypted = await $crypto.encrypt(str, {
+                        secret: '123'
+                    });
+                    let hex = $hex.ensure(encrypted);
+
+                    await File.writeAsync(path, hex, { skipHooks: true });
+                }
+            },
         ],
         params: {
             ...Parameters.pin(),
