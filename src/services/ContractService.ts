@@ -34,6 +34,7 @@ import { TAbiInput, TAbiItem } from '@dequanto/types/TAbi';
 import { TEth } from '@dequanto/models/TEth';
 import { $abiUtils } from '@dequanto/utils/$abiUtils';
 import { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
+import { ContractFactory } from '@core/factories/ContractFactory';
 
 
 interface ICallParams {
@@ -63,13 +64,7 @@ export class ContractService {
             .thenBy(x => x.name)
             .toArray();
 
-        let rows = pkgs.map(x => [
-            x.name, x.address, x.platform
-        ]);
-        $console.table([
-            ['Name', 'Address', 'Platform (default)'],
-            ...rows
-        ]);
+        return pkgs;
     }
 
     async abi (name: string): Promise<string> {
@@ -119,7 +114,7 @@ export class ContractService {
         let methodSignature = this.stringifyAbi(abiItem);
         let isRead = typeof action === 'string'
             ? action === 'read'
-            : await $abiUtils.isReadMethod(abiItem);
+            : $abiUtils.isReadMethod(abiItem);
 
         let platform = params.chain ?? pkg.platform;
         if (platform !== this.app?.chain?.client.platform) {
@@ -143,6 +138,75 @@ export class ContractService {
             await this.$write(pkg, abiItem, params);
         }
     }
+    async calldata (nameOrAddress: string, method: string, params: ICallParams) {
+        let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, method, params);
+
+        let arr = [ ...args ];
+        let isRead = $abiUtils.isReadMethod(abiItem);
+        if (isRead === false) {
+            arr.unshift({});
+        }
+
+        let $data = await contract.$data()[method](...arr);
+        return $data;
+    }
+    async calldataParse (nameOrAddress: string, hex: TEth.Hex, params?: ICallParams) {
+        let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, null, params);
+        let $data = await contract.$parseInputData(hex)
+        return $data;
+    }
+
+    async getContractInstance (nameOrAddress: string, method: string, params: { chain?: TPlatform }) {
+        let pkg = $is.Address(nameOrAddress)
+            ? { address: nameOrAddress } as IPackageItem
+            : await this.getPackage(nameOrAddress);
+
+        let abi: TAbiItem[];
+        let abiItem: TAbiItem;
+        if (pkg != null) {
+            abi = await this.getAbi(pkg);
+        }
+
+        if (method != null) {
+            abiItem = await this.getAbiItem(method, pkg);
+
+            if (abiItem == null) {
+                let str = [
+                    `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
+                    `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
+                ].join(' ');
+                throw new Error(str);
+            }
+            if (abi == null) {
+                abi = [ abiItem ];
+            }
+        }
+
+        let platform = params?.chain ?? pkg.platform;
+        if (platform !== this.app?.chain?.client.platform) {
+            this.app.chain = await di
+                .resolve(PlatformFactory)
+                .get(platform as any);
+        }
+
+
+        let factory = new ContractFactory(this.app.chain.client);
+        let contract = await factory.create({
+            pkg, abi
+        });
+        let args = abiItem == null
+            ? []
+            : await this.getArguments(abiItem, params);
+
+        return {
+            pkg,
+            abi,
+            abiItem,
+            args,
+            contract,
+        };
+    }
+
     async logs (name: string, eventName: string, params: { output, format?: 'csv' | 'json' }) {
         let pkg = await this.getPackage(name);
         let abi = await this.getAbi(pkg);
@@ -293,9 +357,10 @@ export class ContractService {
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
             $console.log(JSON.stringify(result, null, '  '));
-            return;
+        } else {
+            $console.log(result);
         }
-        $console.log(result);
+        return result;
     }
 
     async varSet (name: string, path: string, value: string, info?: {
@@ -413,24 +478,40 @@ export class ContractService {
         }).toArrayAsync({ threads: 1 });
         return args;
     }
-    private async getArgument (abi: TAbiInput, params) {
+    private async getArgument (abi: TAbiInput, params, pfx: string = '') {
         if (abi.components != null) {
-            $console.log('gray<Object input>');
-            $console.table(abi.components.map(x => {
-                return [ x.name, x.type ];
-            }));
-
-            let obj = {};
-            for (let key in params) {
-                let keyPfx = `${abi.name}.`;
-                if (key.startsWith(keyPfx)) {
-                    let subKey = key.replace(keyPfx, '');
-                    obj[subKey] = params[key];
+            // $console.log('gray<Object input>');
+            // $console.table(abi.components.map(x => {
+            //     return [ x.name, x.type ];
+            // }));
+            let obj = null as Record<string, any>;
+            let value = params[abi.name];
+            if (value != null) {
+                if (typeof value === 'string') {
+                    try {
+                        return JSON.parse(value);
+                    } catch (e) {
+                        throw new Error(`Argument "${pfx}${abi.name}" is not a valid JSON string`);
+                    }
+                }
+                return value;
+            }
+            if (obj == null) {
+                // try to get from params, e.g.
+                // foo.prop1
+                // foo.prop2
+                // ...
+                for (let key in params) {
+                    let keyPfx = `${abi.name}.`;
+                    if (key.startsWith(keyPfx)) {
+                        let subKey = key.replace(keyPfx, '');
+                        obj[subKey] = params[key];
+                    }
                 }
             }
 
             let arr = await alot(abi.components).mapAsync(async x => {
-                let value:any = await this.getArgument(x, obj);
+                let value:any = await this.getArgument(x, obj, pfx + abi.name + '.');
                 return {
                     key: x.name,
                     value: value
@@ -443,7 +524,8 @@ export class ContractService {
         if (val != null) {
             return val;
         }
-        return $cli.ask(`Value for bold<${abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
+
+        return $cli.ask(`Value for bold<${pfx + abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
     }
 
     private async getAddress(nameOrAddress): Promise<TAddress> {

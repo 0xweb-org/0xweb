@@ -85,11 +85,12 @@ export namespace $tx {
             let address = $hex.isEmpty(receipt.contractAddress) === false
                 ? receipt.contractAddress
                 : tx.to;
-            let result = await resolver.getAbi(address);
-            abi = result.abiJson;
-        }
 
-        console.log(abi);
+            if (client.network !== 'hardhat') {
+                let result = await resolver.getAbi(address);
+                abi = result.abiJson;
+            }
+        }
 
         let parser = di.resolve(TxLogParser);
         if (abi != null) {
@@ -98,7 +99,7 @@ export namespace $tx {
         let logs = await parser.parse(receipt);
         let knownLogs = logs.filter(x => x != null);
 
-        let transfers: ITxLogsTransferData[] = knownLogs.filter(x => x.event === 'Transfer');
+        let transfers = knownLogs.filter(x => x.event === 'Transfer') as any as ITxLogsTransferData[] ;
         if (transfers.length > 0) {
             let tokenService = new InternalTokenService();
             let tokenPriceService = new TokenPriceService(client, explorer);

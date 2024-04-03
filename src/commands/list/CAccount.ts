@@ -112,7 +112,6 @@ export function CAccount ()  {
                             tableData.push(['Key', key]);
                         }
                     }
-
                     $console.table(tableData);
                 }
             },

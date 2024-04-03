@@ -3,6 +3,7 @@ import { ICommand } from '../ICommand';
 import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
+import { $require } from '@dequanto/utils/$require';
 
 
 export function CContract() {
@@ -26,7 +27,15 @@ export function CContract() {
                 async process(args, params, app) {
 
                     let service = di.resolve(ContractService, app);
-                    await service.printList(params);
+                    let pkgs = await service.printList(params);
+                    let rows = pkgs.map(x => [
+                        x.name, x.address, x.platform
+                    ]);
+                    $console.table([
+                        ['Name', 'Address', 'Platform (default)'],
+                        ...rows
+                    ]);
+                    return rows;
                 }
             },
             {
@@ -47,6 +56,7 @@ export function CContract() {
                     let service = di.resolve(ContractService, app);
                     let str = await service.abi(name);
                     $console.result(str);
+                    return str;
                 }
             },
             {
@@ -116,6 +126,60 @@ export function CContract() {
                     let service = di.resolve(ContractService, app);
                     await service.call(name, method, params, 'write');
                 }
+            },
+            {
+                command: 'calldata',
+                description: ['Serialize transaction calldata. Parameters are resolved by cli flags or will be prompted.'],
+                arguments: [
+                    {
+                        description: 'Installed contract by name or address',
+                        required: true
+                    },
+                    {
+                        description: 'Method name or ABI, e.g.: 0xweb c data foo "approve(address spender, uint256 amount)"',
+                        required: true
+                    }
+                ],
+                params: {
+
+                },
+                async process(args, params, app) {
+                    let [name, method] = args;
+                    let service = di.resolve(ContractService, app);
+                    let json = await service.calldata(name, method, params);
+                    $console.log(json);
+                    return json;
+                },
+
+                subcommands: [
+                    {
+                        command: 'parse',
+                        description: [ 'Parse hex calldata using contracts ABI' ],
+                        arguments: [
+                            {
+                                description: 'Installed contract by name or address',
+                                required: true
+                            },
+                            {
+                                description: 'Hex',
+                                required: true
+                            },
+                        ],
+                        params: {
+
+                        },
+                        async process(args, params, app) {
+                            let [ name, calldata ] = args;
+
+                            $require.Hex(calldata, `Calldata must be a hex string`);
+                            let service = di.resolve(ContractService, app);
+                            let json = await service.calldataParse(name, calldata);
+                            $console.log(json);
+                            return json;
+                        }
+                    },
+
+                ]
             },
             {
                 command: 'logs',
@@ -271,11 +335,12 @@ export function CContract() {
                 async process(args, params, app) {
                     let [ nameOrAddress, selector ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.varLoad(nameOrAddress, selector, {
+                    let value = await service.varLoad(nameOrAddress, selector, {
                         slot: params.slot,
                         type: params.type,
                         offset: params.offset,
                     });
+                    return value;
                 }
             },
             {
@@ -306,7 +371,6 @@ export function CContract() {
                     let [ nameOrAddress, selector, value ] = args;
                     let service = di.resolve(ContractService, app);
                     await service.varSet(nameOrAddress, selector, value, {
-                        slot: params.slot,
                         type: params.type,
                     });
                 }

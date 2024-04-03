@@ -35,6 +35,13 @@ import { $logger, ELogLevel } from '@dequanto/utils/$logger';
 import { CSolidity } from '@core/commands/list/CSolidity';
 import { CTools } from '@core/commands/list/CTools';
 import { CNs } from '@core/commands/list/CNs';
+import { Web3Client } from '@dequanto/clients/Web3Client';
+import { ChainAccountService } from '@dequanto/ChainAccountService';
+import { TokenService } from '@dequanto/tokens/TokenService';
+import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
+import { TokensService } from '@dequanto/tokens/TokensService';
+import { BlockChainExplorerFactory } from '@dequanto/explorer/BlockChainExplorerFactory';
+import { BlockChainExplorerProvider } from '@dequanto/explorer/BlockChainExplorerProvider';
 
 declare const global;
 
@@ -142,5 +149,18 @@ export class App {
                 .resolve(PlatformFactory)
                 .get(platform);
         }
+    }
+    async setChain (client: Web3Client): Promise<this> {
+        const explorer = BlockChainExplorerProvider.get(client.platform);
+        this.chain = {
+            platform: client.network,
+            client,
+            tokens: new TokensService(client.network, explorer),
+            token: new TokenService(client),
+            explorer: explorer,
+            accounts: new ChainAccountService(),
+            transfer: new TokenTransferService(client),
+        };
+        return this;
     }
 }

@@ -20,6 +20,6 @@ export namespace $console {
     }
 
     export function table(arr: (string | number | bigint)[][]) {
-        $logger.table(arr)
+        return $logger.table(arr)
     }
 }

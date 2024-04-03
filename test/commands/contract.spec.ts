@@ -43,6 +43,10 @@ UTest({
                 let str = await TestUtils.cli(`contract list`);
                 has_(str, /^Counter/m);
             },
+            async 'get contract method data' () {
+                let str = await TestUtils.cli(`contract input serialize Counter getCountMethod`);
+                console.log(str);
+            },
             async 'call method by contract name' () {
                 let str = await TestUtils.cli(`contract read Counter getCountMethod --chain hardhat`);
                 has_(str, /^1n$/m);

@@ -10,4 +10,8 @@ contract StorageCounter {
     function getCountMethod () public view returns (uint256) {
         return count;
     }
+
+    function updateUser (User calldata user_) external {
+        user = user_;
+    }
 }
