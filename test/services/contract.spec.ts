@@ -13,7 +13,7 @@ const app = await new App().setChain(client);
 let contract: ContractBase;
 
 UTest({
-    async '$before' () {
+    async '$before'() {
         let path = './test/fixtures/contracts/StorageCounter.sol';
 
         l`Deploy: ${path}`;
@@ -28,7 +28,7 @@ UTest({
             silent: true,
         });
     },
-    async 'list installation' () {
+    async 'list installation'() {
         let str = await app.execute([
             'contract',
             'list'
@@ -37,7 +37,7 @@ UTest({
     },
 
     'calldata': {
-        async 'simple' () {
+        async 'simple'() {
             let result = await app.execute(
                 'contract calldata Counter getCountMethod'.split(' ')
             );
@@ -49,7 +49,9 @@ UTest({
             eq_(resultParsed.name, 'getCountMethod');
             console.log(resultParsed);
         },
-        async 'with argument' () {
+        async 'with argument'() {
+
+            l`Create calldata`
             let result = await app.execute([
                 `contract`,
                 `calldata`,
@@ -59,6 +61,32 @@ UTest({
                 `{"owner": "0x123", "amount": "0x456"}`
             ]);
             eq_(result?.data, '0x48a6e18c00000000000000000000000000000000000000000000000000000000000001230000000000000000000000000000000000000000000000000000000000000456');
+
+            l`Parse calldata`
+            let resultParsed = await app.execute([
+                `contract`,
+                `calldata`,
+                `parse`,
+                `Counter`,
+                result.data,
+            ]);
+
+            deepEq_(resultParsed, {
+                name: 'updateUser',
+                args: [
+                    {
+                        owner: '0x0000000000000000000000000000000000000123',
+                        amount: 1110n
+                    }
+                ],
+                params: {
+                    user_: {
+                        owner: '0x0000000000000000000000000000000000000123',
+                        amount: 1110n
+                    }
+                },
+                value: undefined
+            });
 
             let deployer = hh.deployer();
             let receipt = await app.execute([
