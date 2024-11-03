@@ -98,13 +98,23 @@ export class PackageService {
     }
     private async getBuiltIn (name: string): Promise<IPackageItem> {
         let file: InstanceType<typeof File>;
-        let fromCWD = './dequanto/contracts/openzeppelin/';
-        if (await Directory.existsAsync(fromCWD) === true) {
-            let ozFiles = await Directory.readFilesAsync(fromCWD, '**.json');
+        let fromLocal: string;
+        const DEQUANTO_PATH = 'dequanto/src/prebuilt/openzeppelin/';
+        const LOCAL_GIT = `./${DEQUANTO_PATH}`;
+        const LOCAL_NPM = `./node_modules/${DEQUANTO_PATH}`;
+        if (await Directory.existsAsync(LOCAL_NPM)) {
+            fromLocal = LOCAL_NPM;
+        }
+        if (fromLocal == null && await Directory.existsAsync(LOCAL_GIT)) {
+            fromLocal = LOCAL_GIT;
+        }
+        if (fromLocal != null) {
+            let ozFiles = await Directory.readFilesAsync(fromLocal, '**.json');
             file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());
         }
+
         if (file == null) {
-            let fromApp = env.applicationDir.combine(fromCWD).toString();
+            let fromApp = env.applicationDir.combine(DEQUANTO_PATH).toString();
             if (await Directory.existsAsync(fromApp) === true) {
                 let ozFiles = await Directory.readFilesAsync(fromApp, '**.json');
                 file = ozFiles.find(x => x.uri.getName().toLowerCase() === name.toLowerCase());

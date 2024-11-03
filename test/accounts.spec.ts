@@ -1,4 +1,4 @@
-import { config } from '@dequanto/Config';
+import { config } from '@dequanto/config/Config';
 import { l } from '@dequanto/utils/$logger';
 import { $sig } from '@dequanto/utils/$sig';
 import { File } from 'atma-io';
