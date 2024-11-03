@@ -23,8 +23,7 @@ UTest({
             let paths = [
                 'tsconfig.json',
                 'package.json',
-                'dequanto/',
-                'node_modules/'
+                'node_modules/dequanto/'
             ];
 
             await alot (paths).forEachAsync(async name => {
@@ -58,7 +57,7 @@ UTest({
         await File.writeAsync(`${path_ROOT}check.ts`, `
 
             import { ChainlinkOracleEth } from './0xc/eth/chainlink/oracle-eth/oracle-eth';
-            import { Config } from '@dequanto/Config';
+            import { Config } from '@dequanto/config/Config';
             import { $bigint } from '@dequanto/utils/$bigint';
 
             async function example () {

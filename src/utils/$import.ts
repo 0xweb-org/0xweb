@@ -44,7 +44,7 @@ class Initializer {
             routes: {
                 "@core": "src/{0}",
                 "@dequanto": "dequanto/src/{0}",
-                "@dequanto-contracts": "dequanto/contracts/{0}"
+                "@dequanto-contracts": "dequanto/src/prebuilt/{0}"
             }
         });
 

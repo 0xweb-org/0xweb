@@ -1,7 +1,7 @@
 import di from 'a-di';
 import memd from 'memd';
 import AppConfig from 'appcfg'
-import { Config } from '@dequanto/Config';
+import { Config } from '@dequanto/config/Config';
 import { CommandsHandler } from '../commands/CommandsHandler';
 import { CVersion } from '../commands/list/CVersion';
 import { CInstall } from '../commands/list/CInstall';

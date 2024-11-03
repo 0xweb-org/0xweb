@@ -150,8 +150,18 @@ export function CAccounts() {
                         description: 'Json File to export'
                     }
                 ],
+                params: {
+                    '-s, --secret': {
+                        description: 'Strong password to encrypt the keys',
+                        required: true,
+                        validate (val) {
+                            val = val.trim();
+                            $require.gt(val.length, 6, `Min secret length is 6 characters`);
+                        }
+                    }
+                },
                 description: [
-                    'Backup to file'
+                    'Backup to file. Algo: sha256(secret) as the KEY for AES-GCM with additional IV (16bytes/prefixed)'
                 ],
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config);
@@ -185,12 +195,11 @@ export function CAccounts() {
                         });
                     }).toArrayAsync({ threads: 1 });
 
-                    //$require.True(await File.existsAsync(path) === false, `File ${path} already exists`);
+                    $require.True(await File.existsAsync(path) === false, `File ${path} already exists`);
 
                     let str = JSON.stringify(arr);
-                    str = 'Hello World';
                     let encrypted = await $crypto.encrypt(str, {
-                        secret: '123'
+                        secret:  params.secret
                     });
                     let hex = $hex.ensure(encrypted);
 

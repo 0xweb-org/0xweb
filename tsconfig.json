@@ -5,7 +5,7 @@
         "paths": {
             "@core/*": [ "src/*" ],
             "@dequanto/*": [ "dequanto/src/*" ],
-            "@dequanto-contracts/*": [ "dequanto/contracts/*" ]
+            "@dequanto-contracts/*": [ "dequanto/src/prebuilt/*" ]
         },
         "outDir": "ts-temp",
         "lib": ["es2015", "es2015.promise"],

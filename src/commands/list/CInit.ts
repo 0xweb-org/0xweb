@@ -21,7 +21,8 @@ export function CInit() {
                 description: 'Target directory. Default: current working directory'
             },
             '-s, --source': {
-                description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module'
+                description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module',
+                default: 'npm'
             },
             '--hardhat': {
                 description: 'Initialize also Hardhat project',
@@ -69,7 +70,7 @@ class InitWorker {
     }
 
     private getPathDequanto(path?: string) {
-        let isNpm = this.params.source === 'npm';
+        let isNpm = this.params.source !== 'git';
         let uri = this.directory.combine(isNpm ? './node_modules/dequanto/' : './dequanto/');
         if (path != null) {
             uri = uri.combine(path);
@@ -78,11 +79,11 @@ class InitWorker {
     }
 
     private async ensureDequanto() {
-        if (this.params.source === 'npm') {
-            await this.ensureDequantoFromNpm();
+        if (this.params.source === 'git') {
+            await this.ensureDequantoFromGit();
             return;
         }
-        await this.ensureDequantoFromGit();
+        await this.ensureDequantoFromNpm();
     }
     private async ensureDequantoFromNpm() {
         let hasDependency = await Directory.existsAsync(this.getPathDequanto());
@@ -215,7 +216,7 @@ class InitWorker {
         $console.toast('Check and install required dequanto dependencies');
 
         let filePackageCurrent = new File(this.directory.combine('./package.json'));
-        let filePackageDequanto = new File(this.directory.combine('./dequanto/package.json'));
+        let filePackageDequanto = new File(this.getPathDequanto('package.json'));
 
         let [pkgDequanto, pkgCurrent] = await Promise.all([
             filePackageDequanto.readAsync<any>(),
@@ -296,13 +297,13 @@ class InitWorker {
         }
 
 
-        let isNpm = this.params.source === 'npm';
+        let isNpm = this.params.source !== 'git';
         pkg.compilerOptions.paths['@dequanto/*'] = isNpm
             ? ["node_modules/dequanto/src/*"]
             : ["dequanto/src/*"];
         pkg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
-            ? ["node_modules/dequanto/contracts/*"]
-            : ["dequanto/contracts/*"];
+            ? ["node_modules/dequanto/src/prebuilt/*"]
+            : ["dequanto/src/prebuilt/*"];
 
         pkg.compilerOptions.paths['0xc/*'] = ["0xc/*"]
 
