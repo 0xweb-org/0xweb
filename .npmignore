@@ -3,7 +3,7 @@ artifacts/
 test/
 bin/
 tools/
-src/
+/src/
 typings/
 ts-temp/
 logs/
