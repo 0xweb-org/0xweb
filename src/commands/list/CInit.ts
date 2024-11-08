@@ -63,6 +63,7 @@ class InitWorker {
         await this.ensurePackageJson();
         await this.ensureDequanto();
         await this.ensureTsConfig();
+        await this.ensureTsConfigExtended();
         await this.ensureDependencies();
         await this.ensureHardhatConfig();
 
@@ -155,7 +156,7 @@ class InitWorker {
                     },
                     "atma-loader-ts": {
                         "sourceMap": true,
-                        "typescript": "#import ./tsconfig.json"
+                        "typescript": "#import ./tsconfig-atma.json"
                     }
                 }
             }
@@ -272,12 +273,12 @@ class InitWorker {
                 "baseUrl": "./",
                 "declaration": true,
                 "target": "ES2020",
-                "module": "AMD",
+                "module": "NodeNext",
                 "sourceMap": false,
                 "experimentalDecorators": true,
                 "esModuleInterop": true,
                 "allowSyntheticDefaultImports": true,
-                "moduleResolution": "node",
+                "moduleResolution": "NodeNext",
             };
         }
         if (pkg.compilerOptions.paths == null) {
@@ -305,10 +306,38 @@ class InitWorker {
             ? ["node_modules/dequanto/src/prebuilt/*"]
             : ["dequanto/src/prebuilt/*"];
 
-        pkg.compilerOptions.paths['0xc/*'] = ["0xc/*"]
+        pkg.compilerOptions.paths['@0xc/*'] = ["0xc/*"]
 
         $console.toast('Save modified tsconfig');
         await file.writeAsync(pkg);
+    }
+
+    private async ensureTsConfigExtended() {
+
+        let path = this.directory.combine('./tsconfig-atma.json');
+        let file = new File(path);
+        let pkg: any = await file.existsAsync()
+            ? await file.readAsync()
+            : {};
+
+        let modified = false;
+        if (pkg.compilerOptions?.module == null) {
+            pkg.compilerOptions ??= {};
+            pkg.compilerOptions.module = 'AMD';
+            modified = true;
+        }
+        if (pkg.compilerOptions?.target == null) {
+            pkg.compilerOptions ??= {};
+            pkg.compilerOptions.target = "ES2022";
+            modified = true;
+        }
+        if (pkg.extends == null) {
+            pkg.extends = './tsconfig.json';
+            modified = true;
+        }
+        if (modified) {
+            await file.writeAsync(pkg);
+        }
     }
 
     private async ensureHardhatConfig() {
