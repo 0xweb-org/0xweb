@@ -232,6 +232,7 @@ class InitWorker {
         if (this.params.hardhat) {
             requiredDeps = {
                 ...requiredDeps,
+                'atma-loader-ts': 'latest',
                 'hardhat': 'latest',
                 '@0xweb/hardhat': 'latest'
             };
