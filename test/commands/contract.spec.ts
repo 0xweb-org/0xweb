@@ -101,7 +101,7 @@ UTest({
                     },
                     async 'dump by address and source file' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter/StorageCounter.sol --output cache/counter-dump/dump`);
+                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter/test/fixtures/contracts/StorageCounter.sol --output cache/counter-dump/dump`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);
