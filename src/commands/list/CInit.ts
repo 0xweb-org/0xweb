@@ -251,15 +251,18 @@ class InitWorker {
         }
 
         $console.log(`Extending gray<package.json> with new dependencies: \n ${added.map(x => `   bold<${x}>`).join('\n')}`);
-        // await filePackageCurrent.writeAsync(pkgCurrent);
-        // $console.log(`Starting gray<npm install>`);
-        // await run({
-        //     command: 'npm install',
-        //     cwd: this.directory.toLocalDir(),
-        // });
-        let pkgs = added.map(x => `${x}@latest`).join(' ');
+        await filePackageCurrent.writeAsync(pkgCurrent);
+        $console.log(`Starting gray<npm install>`);
         await run({
-            command: `npm install ${pkgs}`,
+            command: 'npm install',
+            cwd: this.directory.toLocalDir(),
+        });
+
+        // Repeat the install to fix the npm bug:
+        // If initially the 0xweb had some transient dependency version < than in pkgCurrent
+        // after the first install, npm removes the packages from node_modules.
+        await run({
+            command: `npm install`,
             cwd: this.directory.toLocalDir(),
         });
     }
