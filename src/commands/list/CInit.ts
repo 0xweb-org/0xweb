@@ -228,7 +228,6 @@ class InitWorker {
         }
 
         let requiredDeps = pkgDequanto.dependencies;
-
         if (this.params.hardhat) {
             requiredDeps = {
                 ...requiredDeps,
@@ -252,10 +251,15 @@ class InitWorker {
         }
 
         $console.log(`Extending gray<package.json> with new dependencies: \n ${added.map(x => `   bold<${x}>`).join('\n')}`);
-        await filePackageCurrent.writeAsync(pkgCurrent);
-        $console.log(`Starting gray<npm install>`);
+        // await filePackageCurrent.writeAsync(pkgCurrent);
+        // $console.log(`Starting gray<npm install>`);
+        // await run({
+        //     command: 'npm install',
+        //     cwd: this.directory.toLocalDir(),
+        // });
+        let pkgs = added.map(x => `${x}@latest`).join(' ');
         await run({
-            command: 'npm install',
+            command: `npm install ${pkgs}`,
             cwd: this.directory.toLocalDir(),
         });
     }
