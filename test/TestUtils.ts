@@ -2,13 +2,17 @@ import di from 'a-di';
 import alot from 'alot';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
-import { File } from 'atma-io';
+import { Directory, File } from 'atma-io';
 import { Shell, run } from 'shellbee';
 import type { IShellParams } from 'shellbee/interface/IProcessParams';
 import { EoAccount } from '@dequanto/models/TAccount';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
+const HH_CONTRACTS = './0xc/hardhat/';
+const HH_CACHE = './cache/';
+const HH_ASSETS = './assets/';
+const HH_OZ = './contracts/oz/';
 
 const PARAMS_DEF = {
     '--config-accounts': ACCOUNTS_PATH,
@@ -19,11 +23,17 @@ const PARAMS_DEF = {
 };
 
 export const TestUtils = {
-    async clean () {
+    async clean() {
+
         await File.removeAsync(ACCOUNTS_PATH);
         await File.removeAsync(CONFIG_PATH);
+        try { await Directory.removeAsync(HH_CONTRACTS); } catch { }
+        try { await Directory.removeAsync(HH_CACHE); } catch { }
+        try { await Directory.removeAsync(HH_ASSETS); } catch { }
+        try { await Directory.removeAsync(HH_OZ); } catch { }
+
     },
-    async cli (command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
+    async cli(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
         params = {
             ...PARAMS_DEF,
             ...params
@@ -40,7 +50,7 @@ export const TestUtils = {
         }
         return stdout.join('\n').trim();
     },
-    async cliParallel (command: string, params: Record<string, string | number> = {}, opts?: IShellParams ): Promise<Shell> {
+    async cliParallel(command: string, params: Record<string, string | number> = {}, opts?: IShellParams): Promise<Shell> {
         params = {
             ...PARAMS_DEF,
             ...params
@@ -56,7 +66,7 @@ export const TestUtils = {
         shell.run();
         return shell;
     },
-    async deployFreeToken (client: Web3Client, opts?: { deployer?: EoAccount }) {
+    async deployFreeToken(client: Web3Client, opts?: { deployer?: EoAccount }) {
         let { contract } = await di.resolve(HardhatProvider).deploySol('/dequanto/test/fixtures/contracts/FreeToken.sol', {
             client,
             deployer: opts?.deployer

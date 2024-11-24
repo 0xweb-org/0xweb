@@ -183,7 +183,7 @@ export class PackageService {
                     address: d.address,
                     name: d.id ?? d.name,
                     contractName: d.name,
-                    main: d.main,
+                    main: d.main ?? `./0xc/hardhat/${d.name}/${d.name}.ts`,
                     implementation: d.implementation,
                 };
             })

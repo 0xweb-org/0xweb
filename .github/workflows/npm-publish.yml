@@ -30,3 +30,13 @@ jobs:
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - name: Trigger examples with latest 0xweb
+        env:
+          CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
+        run: |
+          curl -X POST https://circleci.com/api/v2/project/github/0xweb-org/examples-storage/pipeline \
+               -H "Circle-Token: $CIRCLECI_TOKEN" \
+               -H "Content-Type: application/json" \
+               -d '{
+                     "branch": "master"
+                   }'

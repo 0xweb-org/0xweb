@@ -260,7 +260,7 @@ class InitWorker {
 
         // Repeat the install to fix the npm bug:
         // If initially the 0xweb had some transient dependency version < than in pkgCurrent
-        // after the first install, npm removes the packages from node_modules.
+        // after the first install, npm removes that package from node_modules.
         await run({
             command: `npm install`,
             cwd: this.directory.toLocalDir(),

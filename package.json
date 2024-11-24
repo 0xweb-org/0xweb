@@ -42,15 +42,16 @@
         "shellbee": "^0.5.22"
     },
     "devDependencies": {
-        "@0xweb/hardhat": "^0.1.15",
-        "@openzeppelin/contracts": "^4.9.3",
+        "@0xweb/hardhat": "^0.1.24",
+        "@openzeppelin/contracts": "^5.0.0",
         "@types/node": "^12.6.2",
+        "0xweb": "^0.10.53",
         "app-bundler": "^0.2.14",
         "atma": "^0.15.23",
         "atma-loader-ts": "^1.2.7",
         "atma-utest": "^0.21.31",
         "dts-bundle": "^0.7.3",
-        "hardhat": "^2.18.0",
+        "hardhat": "^2.22.16",
         "typedoc": "^0.23.14",
         "typescript": "^4.8.2"
     },
