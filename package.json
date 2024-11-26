@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.10.54",
+    "version": "0.10.55",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -38,6 +38,7 @@
         "atma-io": "^1.3.4",
         "atma-io-middleware-yml": "^1.1.25",
         "atma-utils": "^0.2.60",
+        "class-json": "^0.4.2",
         "memd": "^0.3.10",
         "shellbee": "^0.5.22"
     },
