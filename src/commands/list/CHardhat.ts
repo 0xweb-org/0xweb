@@ -10,6 +10,11 @@ import { ProxyAdmin } from '@dequanto/prebuilt/openzeppelin/ProxyAdmin';
 import { UpgradeableBeacon } from '@dequanto/prebuilt/openzeppelin/UpgradeableBeacon';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { $tx } from '@core/utils/$tx';
+import { HardhatWeb3Client } from '@dequanto/hardhat/HardhatWeb3Client';
+import { Web3ClientFactory } from '@dequanto/clients/Web3ClientFactory';
+import { $require } from '@dequanto/utils/$require';
+import { $bigint } from '@dequanto/utils/$bigint';
+import { $logger } from '@dequanto/utils/$logger';
 
 
 export function CHardhat() {
@@ -80,6 +85,106 @@ export function CHardhat() {
                     [ 'Deployed', contract.address ]
                 ]);
             }
+        },
+        {
+            command: 'hardhat',
+            description: [
+                'Hardhat debug commands'
+            ],
+            subcommands: [
+                {
+                    command: 'setBalance',
+                    description: ['Set account balance'],
+                    arguments: [
+                        {
+                            description: 'Account address',
+                            required: true,
+                        },
+                        {
+                            description: 'Balance in wei, or formatted like 2.4ether, 3.7^18',
+                            required: true
+                        },
+                    ],
+                    async process (args, params, app) {
+                        let [ address, amount ] = args;
+                        $require.Address(address);
+
+                        let amountWei = BigInt($bigint.parse(amount));
+                        let client = await Web3ClientFactory.getAsync('hardhat');
+
+                        let balanceBefore = await client.getBalance(address);
+                        $logger.log(`Balance Before bold<${ $bigint.toEther(balanceBefore)}> ether`);
+
+                        await client.debug.setBalance(address, amountWei)
+
+                        let balanceAfter = await client.getBalance(address);
+                        $logger.log(`Balance After bold<${ $bigint.toEther(balanceAfter)}> ether`);
+                    }
+                },
+                {
+                    command: 'impersonateAccount',
+                    description: ['Impersonate Account'],
+                    arguments: [
+                        {
+                            description: 'Account address',
+                            required: true,
+                        }
+                    ],
+                    async process (args, params, app) {
+                        let [ address ] = args;
+                        $require.Address(address);
+
+
+                        let client = await Web3ClientFactory.getAsync('hardhat');
+
+                        await client.debug.impersonateAccount(address);
+
+                        $logger.log(`Impersonating Account ${address}`);
+                    }
+                },
+                {
+                    command: 'stopImpersonatingAccount',
+                    description: ['Stop Impersonating Account'],
+                    arguments: [
+                        {
+                            description: 'Account address',
+                            required: true,
+                        }
+                    ],
+                    async process (args, params, app) {
+                        let [ address ] = args;
+                        $require.Address(address);
+
+                        let client = await Web3ClientFactory.getAsync('hardhat');
+                        await client.debug.stopImpersonatingAccount(address);
+
+                        $logger.log(`Stopped Impersonating Account ${address}`);
+                    }
+                },
+                {
+                    command: 'mine',
+                    description: ['Mines a specified number of blocks at a given interval (1 second)'],
+                    arguments: [
+                        {
+                            description: 'Number of blocks or amount of seconds parsed from a timespan, e.g. 1day, 5minutes, 3weeks, etc',
+                            required: true,
+                        }
+                    ],
+                    async process (args, params, app) {
+                        let [ address ] = args;
+                        $require.Address(address);
+
+                        let client = await Web3ClientFactory.getAsync('hardhat');
+                        let blockNumberBefore = await client.getBlockNumber();
+                        $logger.log(`Block number bold<${ $bigint.toEther(blockNumberBefore)}>`);
+
+                        await client.debug.mine(address);
+
+                        let blockNumberAfter = await client.getBlockNumber();
+                        $logger.log(`Block number bold<${ $bigint.toEther(blockNumberAfter)}>`);
+                    }
+                }
+            ]
         },
     ] as ICommand[]
 }

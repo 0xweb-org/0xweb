@@ -7,6 +7,8 @@ import { $require } from '@dequanto/utils/$require';
 import { $contract } from '@dequanto/utils/$contract';
 import { l } from '@dequanto/utils/$logger';
 import { IDeployment } from '@dequanto/contracts/deploy/storage/DeploymentsStorage';
+import { TEth } from '@dequanto/models/TEth';
+import { $bigint } from '@dequanto/utils/$bigint';
 
 UTest({
     $config: {
@@ -32,8 +34,12 @@ UTest({
         return UTest({
             async $before () {
                 let result = await TestUtils.cli(`accounts new --name deployerFoo`);
-                let address = /Address\s+(?<address>\w+)/.exec(result).groups.address;
-                await client.debug.setBalance($require.Address(address), 10n ** 18n);
+                let address = /Address\s+(?<address>\w+)/.exec(result).groups.address as TEth.Address;
+
+                await TestUtils.cli(`hardhat setBalance ${address} 1ether`)
+
+                let b =  await client.getBalance(address);
+                eq_($bigint.toEther(b), 1);
             },
             async 'single contract' () {
                 let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --deployer deployerFoo --chain hardhat --name FooSingle`, {
