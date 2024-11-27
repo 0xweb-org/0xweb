@@ -15,6 +15,8 @@ import { Web3ClientFactory } from '@dequanto/clients/Web3ClientFactory';
 import { $require } from '@dequanto/utils/$require';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { $logger } from '@dequanto/utils/$logger';
+import { TEth } from '@dequanto/models/TEth';
+import { $is } from '@dequanto/utils/$is';
 
 
 export function CHardhat() {
@@ -97,7 +99,7 @@ export function CHardhat() {
                     description: ['Set account balance'],
                     arguments: [
                         {
-                            description: 'Account address',
+                            description: 'Account address or name',
                             required: true,
                         },
                         {
@@ -106,8 +108,20 @@ export function CHardhat() {
                         },
                     ],
                     async process (args, params, app) {
-                        let [ address, amount ] = args;
-                        $require.Address(address);
+                        let [ accountMix, amount ] = args;
+                        let address: TEth.Address;
+                        if ($is.Address(accountMix)) {
+                            address = accountMix;
+                        } else {
+                            let accounts = new ChainAccountService({
+
+                            });
+                            let acc = await accounts.get(accountMix);
+                            $require.notNull(acc, `Account ${accountMix} not found`);
+                            address = acc.address;
+                        }
+
+                        $require.Address(address, `Invalid address (${address}) for ${accountMix}`);
 
                         let amountWei = BigInt($bigint.parse(amount));
                         let client = await Web3ClientFactory.getAsync('hardhat');

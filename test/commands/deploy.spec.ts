@@ -36,7 +36,7 @@ UTest({
                 let result = await TestUtils.cli(`accounts new --name deployerFoo`);
                 let address = /Address\s+(?<address>\w+)/.exec(result).groups.address as TEth.Address;
 
-                await TestUtils.cli(`hardhat setBalance ${address} 1ether`)
+                await TestUtils.cli(`hardhat setBalance deployerFoo 1ether`)
 
                 let b =  await client.getBalance(address);
                 eq_($bigint.toEther(b), 1);
