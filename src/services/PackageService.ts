@@ -35,11 +35,9 @@ export class PackageService {
             // if the package was installed via local compilation/deployment
             let deploymentsList = await this.getDeploymentsList();
             let platformDeployments = deploymentsList.filter(d => d.platform === this.chain.platform);
-            let deployment = platformDeployments
-                .find(d => d.name === pkg.name);
+            let deployment = platformDeployments.find(d => d.name === pkg.name);
 
-            $require.notNull(deployment, `Package ${name} contains no address, and deployment was not found in ${this.chain.platform}`, platformDeployments );
-            pkg.address = deployment.address;
+            pkg.address = deployment?.address;
         }
         return pkg;
     }
