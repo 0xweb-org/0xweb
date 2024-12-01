@@ -68,7 +68,6 @@
         "apps": {
             "cli": {
                 "file": "src/cli.ts",
-                "//file": "dequanto/src/json/JsonObjectStore.ts",
                 "outputMain": "lib/cli.js",
                 "package": {
                     "moduleWrapper": "custom",

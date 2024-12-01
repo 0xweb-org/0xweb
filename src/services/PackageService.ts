@@ -10,6 +10,7 @@ import { TAbiItem } from '@dequanto/types/TAbi';
 import memd from 'memd';
 import { DeploymentsStorage, IDeployment } from '@dequanto/contracts/deploy/storage/DeploymentsStorage';
 import { $logger } from '@dequanto/utils/$logger';
+import { $require } from '@dequanto/utils/$require';
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -29,6 +30,16 @@ export class PackageService {
         }
         if (pkg == null) {
             pkg = await this.getBuiltIn(name);
+        }
+        if (pkg != null && pkg.address == null) {
+            // if the package was installed via local compilation/deployment
+            let deploymentsList = await this.getDeploymentsList();
+            let platformDeployments = deploymentsList.filter(d => d.platform === this.chain.platform);
+            let deployment = platformDeployments
+                .find(d => d.name === pkg.name);
+
+            $require.notNull(deployment, `Package ${name} contains no address, and deployment was not found in ${this.chain.platform}`, platformDeployments );
+            pkg.address = deployment.address;
         }
         return pkg;
     }
