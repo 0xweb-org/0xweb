@@ -84,7 +84,6 @@ export function CContract() {
                         description: `Overwrite contracts address.`
                     },
                     '--account': {
-                        type: 'address',
                         description: `Make call request from the account.`
                     },
                 },

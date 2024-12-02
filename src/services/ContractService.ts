@@ -411,6 +411,12 @@ export class ContractService {
         $require.Address(address, 'Contracts address invalid');
 
         let args = await this.getArguments(abi, params);
+        if (params.account != null && $is.Address(params.account) === false) {
+            let accounts = di.resolve(AccountsService, this.app.config);
+            let account = await accounts.get(params.account);
+            params.account = account?.address ?? void 0;
+        }
+
         let reader = await this.getContractReader(params);
         let result = await reader.readAsync(address, abi, ...args);
 
