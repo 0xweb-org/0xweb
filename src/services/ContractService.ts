@@ -35,6 +35,7 @@ import { TEth } from '@dequanto/models/TEth';
 import { $abiUtils } from '@dequanto/utils/$abiUtils';
 import { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
 import { ContractFactory } from '@core/factories/ContractFactory';
+import { $abiInput } from '@core/utils/$abiInput';
 
 
 interface ICallParams {
@@ -220,7 +221,7 @@ export class ContractService {
             .filter(tuple => tuple[1] != null)
             .toDictionary(x => x[0], x => x[1]);
 
-        let reader = await this.getContractReader(params);
+        let reader = await this.getContractReader({});
         let logs = await reader.getLogsParsed(event, {
             address: pkg.address,
             fromBlock: 'deployment',
@@ -473,61 +474,8 @@ export class ContractService {
         return writer;
     }
     private async getArguments (abi: TAbiItem, params) {
-        let args = await alot(abi.inputs).mapAsync(async x => {
-            return this.getArgument(x, params);
-        }).toArrayAsync({ threads: 1 });
-        return args;
+        return $abiInput.parseArgumentsFromCli(abi as TEth.Abi.Item, params);
     }
-    private async getArgument (abi: TAbiInput, params, pfx: string = '') {
-        if (abi.components != null) {
-            // $console.log('gray<Object input>');
-            // $console.table(abi.components.map(x => {
-            //     return [ x.name, x.type ];
-            // }));
-            let obj = null as Record<string, any>;
-            let value = params[abi.name];
-            if (value != null) {
-                if (typeof value === 'string') {
-                    try {
-                        return JSON.parse(value);
-                    } catch (e) {
-                        throw new Error(`Argument "${pfx}${abi.name}" is not a valid JSON string`);
-                    }
-                }
-                return value;
-            }
-            if (obj == null) {
-                // try to get from params, e.g.
-                // foo.prop1
-                // foo.prop2
-                // ...
-                for (let key in params) {
-                    let keyPfx = `${abi.name}.`;
-                    if (key.startsWith(keyPfx)) {
-                        let subKey = key.replace(keyPfx, '');
-                        obj[subKey] = params[key];
-                    }
-                }
-            }
-
-            let arr = await alot(abi.components).mapAsync(async x => {
-                let value:any = await this.getArgument(x, obj, pfx + abi.name + '.');
-                return {
-                    key: x.name,
-                    value: value
-                };
-            }).toArrayAsync({ threads: 1 });
-
-            return alot(arr).toDictionary(x => x.key, x => x.value);
-        }
-        let val = params[abi.name];
-        if (val != null) {
-            return val;
-        }
-
-        return $cli.ask(`Value for bold<${pfx + abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
-    }
-
     private async getAddress(nameOrAddress): Promise<TAddress> {
         if ($is.Address(nameOrAddress)) {
             return nameOrAddress;

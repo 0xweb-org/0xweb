@@ -11,6 +11,7 @@ import { Constructor } from 'atma-utils';
 import { IContractWrapped } from '@dequanto/contracts/ContractClassFactory';
 import { ContractBase } from '@dequanto/contracts/ContractBase';
 import { TEth } from '@dequanto/models/TEth';
+import { $abiInput } from '@core/utils/$abiInput';
 
 export class HardhatService {
     constructor (public chain: IPlatformTools) {
@@ -64,15 +65,12 @@ export class HardhatService {
             ...ProxyData
         })
 
-        let args = [];
-        for (let key in params) {
-            let match = /^arg(?<index>\d)$/.exec(key);
-            if (match) {
-                args[Number(match.groups.index)] = params[key];
-            }
-        }
+        let { ContractCtor, source, abi } = await this.compile(mix);
+        let ctorAbi = abi.find(x => x.type === 'constructor');
+        let args = ctorAbi == null
+            ? []
+            : await $abiInput.parseArgumentsFromCli(ctorAbi as TEth.Abi.Item, params);
 
-        let { ContractCtor, source } = await this.compile(mix);
         let id = params.name ?? source.contractName;
         if (withProxy) {
             return await deployments.ensureWithProxy(ContractCtor, {
