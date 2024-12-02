@@ -6,15 +6,22 @@ import { run } from 'shellbee';
 
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
-const COMMAND = (params) => `node ./index.js ${params} --config-accounts ${ACCOUNTS_PATH} -p 12345`
+const ACCOUNT_PATH = './0xc/config/account.json';
+const COMMAND_RAW = (params) => `node ./index.js ${params}`;
+const COMMAND = (params) => COMMAND_RAW(`${params} --config-accounts ${ACCOUNTS_PATH} -p 12345`);
 const cli = async (params: string) => {
     let { stdout, stderr } = await run(COMMAND(params));
+    return stdout.join('\n');
+};
+const cliRaw = async (params: string) => {
+    let { stdout, stderr } = await run(COMMAND_RAW(params));
     return stdout.join('\n');
 };
 
 UTest({
     async '$before' () {
         await File.removeAsync(ACCOUNTS_PATH);
+        await File.removeAsync(ACCOUNT_PATH);
     },
     async 'should add, list, remove account' () {
         let account = $sig.$account.generate();
@@ -44,6 +51,16 @@ UTest({
 
         let address = await $sig.$account.getAddressFromKey(key as any);
         eq_(address, account.address);
+
+        l`> Set default`
+        let strDefaults = await cli(`accounts login foo`);
+        has_(strDefaults, account.address);
+
+        l`> Get default`
+        let strDefaultsCurrent = await cliRaw(`accounts current -p 12345`);
+
+
+        has_(strDefaultsCurrent, account.address);
 
 
         l`> remove`

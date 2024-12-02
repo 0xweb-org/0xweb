@@ -42,7 +42,7 @@ UTest({
                 eq_($bigint.toEther(b), 1);
             },
             async 'single contract' () {
-                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --deployer deployerFoo --chain hardhat --name FooSingle`, {
+                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooSingle`, {
 
                 });
                 has_(stdAddOne, /Deployed\s+0x\w+/);
@@ -67,7 +67,7 @@ UTest({
                 has_(fooResponse, `10n`);
             },
             async 'with proxy' () {
-                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --deployer deployerFoo --chain hardhat --name FooProxy --proxy`, {
+                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooProxy --proxy`, {
 
                 });
                 has_(stdAddOne, /Deployed\s+0x\w+/);

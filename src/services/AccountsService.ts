@@ -1,12 +1,47 @@
 import { $console } from '@core/utils/$console';
 import { EoAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
+import { $buffer } from '@dequanto/utils/$buffer';
+import { $cli } from '@dequanto/utils/$cli';
+import { $crypto } from '@dequanto/utils/$crypto';
 import { $is } from '@dequanto/utils/$is';
+import { $machine } from '@dequanto/utils/$machine';
+import { $require } from '@dequanto/utils/$require';
 import { $sig } from '@dequanto/utils/$sig';
-import appcfg from 'appcfg';
+import type appcfg from 'appcfg';
+import { File } from 'atma-io';
 
 export class AccountsService {
     constructor (public config: appcfg) {
 
+    }
+    static DEFAULTS_PATH = `./0xc/config/account.json`;
+
+    static async getDefaults () {
+        if (await File.existsAsync(AccountsService.DEFAULTS_PATH) === false) {
+            return null;
+        }
+        const cipher = await File.readAsync<string> (AccountsService.DEFAULTS_PATH, {
+            skipHooks: true,
+            encoding: 'utf8'
+        });
+        const secret = await $machine.id();
+        const buffer = await $buffer.fromHex(cipher);
+        const json = await $crypto.decrypt(buffer, { secret, encoding: 'utf8' });
+        return JSON.parse(json);
+    }
+
+    static async saveAsDefaults (accountName: string, params: Record<string, string>, config: appcfg) {
+        $require.notNull(accountName, `At least account name is required`);
+        const account = {
+            configAccounts: $cli.getParamValue('config-accounts', params) ?? void 0,
+            account: accountName
+        } as {
+            account: string
+            configAccounts: string
+        }
+        const secret = await $machine.id();
+        const cipher = await $crypto.encrypt(JSON.stringify(account), { secret, encoding: 'hex' });
+        await File.writeAsync(AccountsService.DEFAULTS_PATH, cipher, { skipHooks: true });
     }
 
     async add (params: EoAccount | SafeAccount | Erc4337Account) {

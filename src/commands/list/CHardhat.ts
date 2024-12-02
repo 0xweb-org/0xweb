@@ -45,7 +45,7 @@ export function CHardhat() {
                 { description: `file or package name` }
             ],
             params: {
-                deployer: {
+                account: {
                     description: 'Address, Key or the Name of the account to deploy from',
                     required: true,
                 },
@@ -53,6 +53,11 @@ export function CHardhat() {
                     description: `Will use TransparentUpgradeableProxy for deploying contracts`,
                     required: false,
                     default: false
+                },
+                verify: {
+                    description: `When deploying to public networks, verify the deployed contract`,
+                    required: false,
+                    default: true
                 },
                 name: {
                     description: 'Name the deployment, defaults to the contract name',

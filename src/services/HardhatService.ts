@@ -29,8 +29,9 @@ export class HardhatService {
     }
 
     async deploy (mix: string, params: {
-        deployer: string
+        account: string
         proxy?: boolean
+        verify?: boolean
         name?: string
         [key: `arg${number}`]: any
     }): Promise<{
@@ -39,8 +40,8 @@ export class HardhatService {
     }> {
 
         let accounts = new ChainAccountService()
-        let account = await accounts.get(params.deployer);
-        $require.notNull(account?.address, `Account ${ params.deployer } not resolved`);
+        let account = await accounts.get(params.account);
+        $require.notNull(account?.address, `Account ${ params.account } not resolved`);
         let withProxy = Boolean(params.proxy);
 
         let ProxyData = {
@@ -76,13 +77,15 @@ export class HardhatService {
             return await deployments.ensureWithProxy(ContractCtor, {
                 id,
                 name: source.contractName,
-                initialize: args.length === 0 ? null : args
+                initialize: args.length === 0 ? null : args,
+                verification: params?.verify ?? true
             });
         }
 
         return await deployments.ensure(ContractCtor, {
             id,
-            arguments: args.length === 0 ? null : args
+            arguments: args.length === 0 ? null : args,
+            verification: params?.verify ?? true
         });
     }
 

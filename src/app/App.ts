@@ -40,8 +40,8 @@ import { ChainAccountService } from '@dequanto/ChainAccountService';
 import { TokenService } from '@dequanto/tokens/TokenService';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { TokensService } from '@dequanto/tokens/TokensService';
-import { BlockChainExplorerFactory } from '@dequanto/explorer/BlockChainExplorerFactory';
 import { BlockChainExplorerProvider } from '@dequanto/explorer/BlockChainExplorerProvider';
+import { AccountsService } from '@core/services/AccountsService';
 
 declare const global;
 
@@ -70,6 +70,10 @@ export class App {
         let { params: cliParams, args: cliArgs } = $cli.parse();
 
         $console.toast('Loading config');
+        let defaults = await AccountsService.getDefaults();
+        if (defaults) {
+            cliParams = { ...defaults,...cliParams };
+        }
         this.config = await Config.fetch(cliParams);
 
         this

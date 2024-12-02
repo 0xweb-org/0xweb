@@ -1,15 +1,18 @@
 require("@0xweb/hardhat");
 
-
 module.exports = {
     solidity: {
-        version: "0.8.2",
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 200
+        compilers: [
+            {
+                version: "0.8.22",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200
+                    }
+                }
             }
-        }
+        ]
     },
     networks: {
         hardhat: {

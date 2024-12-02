@@ -1,4 +1,5 @@
 import di from 'a-di';
+import alot from 'alot';
 import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
 import { $address } from '@dequanto/utils/$address';
@@ -8,11 +9,8 @@ import { Parameters } from '@core/utils/Parameters';
 import { $sig, KeyUtils } from '@dequanto/utils/$sig';
 import { $require } from '@dequanto/utils/$require';
 import { EoAccount } from '@dequanto/models/TAccount';
-import alot from 'alot';
 import { $hex } from '@dequanto/utils/$hex';
-import { $promise } from '@dequanto/utils/$promise';
 import { File } from 'atma-io';
-import { $secret } from '@dequanto/utils/$secret';
 import { $crypto } from '@dequanto/utils/$crypto';
 
 export function CAccounts() {
@@ -39,6 +37,11 @@ export function CAccounts() {
                         description: 'Name of the account',
                         required: true,
                     },
+                    '--login': {
+                        description: 'Save the account as the default one',
+                        type: 'boolean',
+                        default: false,
+                    }
                 },
                 async process(args: string[], params: any, app: App) {
                     let { key, address, name } = params;
@@ -69,10 +72,12 @@ export function CAccounts() {
                         account.key = encryptedKey;
                     }
 
+                    if (params.login) {
+                        await AccountsService.saveAsDefaults(account.name, params, app.config);
+                    }
 
                     let service = di.resolve(AccountsService, app.config);
                     let accounts = await service.add(account);
-
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
                     $console.log(`Accounts:`);
@@ -128,6 +133,11 @@ export function CAccounts() {
                         description: 'Name of the account to create',
                         required: true,
                     },
+                    '--login': {
+                        description: 'Save the account as the default one',
+                        type: 'boolean',
+                        default: false,
+                    }
                 },
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config);
@@ -135,11 +145,55 @@ export function CAccounts() {
                     if (account == null) {
                         return;
                     }
+                    if (params.login) {
+                        await AccountsService.saveAsDefaults(account.name, params, app.config);
+                    }
                     $console.log(`yellow<You must backup the key bold<!!!>>`)
                     $console.table([
                         ['Name', account.name],
                         ['Address', account.address],
                         ['Key', account.key],
+                    ]);
+                }
+            },
+            {
+                command: 'login',
+                description: [
+                    'Save the account as the default one'
+                ],
+                arguments: [
+                    {
+                        description: 'Name of the account to set as default'
+                    }
+                ],
+                async process(args: string[], params, app: App) {
+                    let [ name ] = args;
+                    let service = di.resolve(AccountsService, app.config);
+                    let account = await service.get(name);
+                    $require.notNull(account, `${name} not found`)
+
+                    await AccountsService.saveAsDefaults(account.name, params, app.config);
+                    $console.table([
+                        ['Name', account.name],
+                        ['Address', account.address],
+                    ]);
+                }
+            },
+            {
+                command: 'current',
+                description: [
+                    'Get current logged-in account'
+                ],
+                params: {
+
+                },
+                async process(args: string[], params, app: App) {
+                    let service = di.resolve(AccountsService, app.config);
+                    let account = await service.get(params.account);
+                    $require.notNull(account, `${params.account} not found`)
+                    $console.table([
+                        ['Name', account.name],
+                        ['Address', account.address],
                     ]);
                 }
             },
