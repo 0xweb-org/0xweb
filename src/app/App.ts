@@ -70,7 +70,7 @@ export class App {
         let { params: cliParams, args: cliArgs } = $cli.parse();
 
         $console.toast('Loading config');
-        let defaults = await AccountsService.getDefaults();
+        let defaults = await AccountsService.getDefaults(cliParams);
         if (defaults) {
             for (let key in defaults) {
                 if (key in cliParams === false) {

@@ -16,8 +16,8 @@ export class AccountsService {
     }
     static DEFAULTS_PATH = `./0xc/config/account.json`;
 
-    static async getDefaults () {
-        let p = $cli.getParamValue('pin');
+    static async getDefaults (params) {
+        let p = $cli.getParamValue('pin', params) ?? $cli.getParamValue('p', params);
         if (p == null) {
             return null;
         }
