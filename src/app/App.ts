@@ -43,6 +43,7 @@ import { TokensService } from '@dequanto/tokens/TokensService';
 import { BlockChainExplorerProvider } from '@dequanto/explorer/BlockChainExplorerProvider';
 import { AccountsService } from '@core/services/AccountsService';
 
+
 declare const global;
 
 export class App {

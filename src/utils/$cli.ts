@@ -1,5 +1,6 @@
 import * as readline from 'readline';
 import alot from 'alot';
+import { env } from 'atma-io';
 import { $command } from '@core/commands/utils/$command';
 import { $is } from '@dequanto/utils/$is';
 import { $console } from './$console';
@@ -58,6 +59,10 @@ export namespace $cli {
             .first();
     }
 
+    export function isLocal () {
+        return env.applicationDir.toString().startsWith(env.currentDir.toString());
+    }
+
     export function parse (argv: (string | boolean | number)[] = null) {
 
         if (argv == null) {
@@ -98,10 +103,6 @@ export namespace $cli {
         }
 
         return { params, args };
-
-
-
-
     }
 
     export function ask(question: string, type?: string) {

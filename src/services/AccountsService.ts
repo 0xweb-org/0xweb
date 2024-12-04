@@ -1,51 +1,63 @@
+import { $cli } from '@core/utils/$cli';
 import { $console } from '@core/utils/$console';
 import { EoAccount, Erc4337Account, SafeAccount } from '@dequanto/models/TAccount';
 import { $buffer } from '@dequanto/utils/$buffer';
-import { $cli } from '@dequanto/utils/$cli';
 import { $crypto } from '@dequanto/utils/$crypto';
 import { $is } from '@dequanto/utils/$is';
 import { $machine } from '@dequanto/utils/$machine';
 import { $require } from '@dequanto/utils/$require';
 import { $sig } from '@dequanto/utils/$sig';
 import type appcfg from 'appcfg';
-import { File } from 'atma-io';
+import { env, File } from 'atma-io';
 
 export class AccountsService {
     constructor (public config: appcfg) {
 
     }
-    static DEFAULTS_PATH = `./0xc/config/account.json`;
+    static DEFAULTS_PATH_LOCAL = `./0xc/config/account.json`;
+    static DEFAULTS_PATH_GLOBAL = `%APPDATA%/.daquanto/account.json`;
 
-    static async getDefaults (params) {
-        let p = $cli.getParamValue('pin', params) ?? $cli.getParamValue('p', params);
+    static async getDefaults (params: Record<string, string>) {
+        let isLocal = $cli.isLocal();
+        let p = $cli.getParamValue('--pin, -p', params);
         if (p == null) {
             return null;
         }
-        if (await File.existsAsync(AccountsService.DEFAULTS_PATH) === false) {
+        let path = AccountsService.getDefaultsDir({ isLocal });
+        if (await File.existsAsync(path) === false) {
             return null;
         }
-        const cipher = await File.readAsync<string> (AccountsService.DEFAULTS_PATH, {
+        let cipher = await File.readAsync<string> (path, {
             skipHooks: true,
             encoding: 'utf8'
         });
-        const secret = await $machine.id();
-        const buffer = await $buffer.fromHex(cipher);
-        const json = await $crypto.decrypt(buffer, { secret, encoding: 'utf8' });
+        let secret = await $machine.id();
+        let buffer = await $buffer.fromHex(cipher);
+        let json = await $crypto.decrypt(buffer, { secret, encoding: 'utf8' });
         return JSON.parse(json);
     }
 
     static async saveAsDefaults (accountName: string, params: Record<string, string>, config: appcfg) {
         $require.notNull(accountName, `At least account name is required`);
-        const account = {
-            configAccounts: $cli.getParamValue('config-accounts', params) ?? void 0,
-            account: accountName
+        let isLocal = $cli.isLocal();
+        let account = {
+            'config-accounts': $cli.getParamValue('config-accounts', params) || void 0,
+            'account': accountName
         } as {
             account: string
-            configAccounts: string
+            'config-accounts': string
+        };
+        let path = AccountsService.getDefaultsDir({ isLocal });
+        let secret = await $machine.id();
+        let cipher = await $crypto.encrypt(JSON.stringify(account), { secret, encoding: 'hex' });
+        await File.writeAsync(path, cipher, { skipHooks: true });
+    }
+
+    static getDefaultsDir (opts: { isLocal: boolean }) {
+        if (opts.isLocal) {
+            return AccountsService.DEFAULTS_PATH_LOCAL;
         }
-        const secret = await $machine.id();
-        const cipher = await $crypto.encrypt(JSON.stringify(account), { secret, encoding: 'hex' });
-        await File.writeAsync(AccountsService.DEFAULTS_PATH, cipher, { skipHooks: true });
+        return AccountsService.DEFAULTS_PATH_GLOBAL.replace('%APPDATA%', env.appdataDir)
     }
 
     async add (params: EoAccount | SafeAccount | Erc4337Account) {

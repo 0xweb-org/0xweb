@@ -188,6 +188,7 @@ export function CAccounts() {
 
                 },
                 async process(args: string[], params, app: App) {
+                    $require.notEmpty(params.account, `No default account is loaded`);
                     let service = di.resolve(AccountsService, app.config);
                     let account = await service.get(params.account);
                     $require.notNull(account, `${params.account} not found`)
