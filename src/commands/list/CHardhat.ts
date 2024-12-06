@@ -18,22 +18,32 @@ export function CHardhat() {
         {
             command: 'compile',
             description: [
-                'Compile solidity files or installed packages'
+                'Compile solidity file, directory or installed packages'
             ],
             arguments: [
                 { description: `file or package name` }
             ],
             params: {
+                install: {
+                    description: `csv list of contracts to be additionally installed. Default: all`
+                },
                 ...Parameters.chain({ required: false })
             },
             async process(args: string[], params: any, app: App) {
 
                 let [ mix ] = args;
                 let service = new HardhatService(app.chain);
-                let result = await service.compile(mix);
-                $console.table([
-                    [ 'Compiled', result.output ]
-                ]);
+                let results = await service.compile(mix, {
+                    install: params.install
+                });
+                let rows = results.map(result => {
+                    return [ '✅', result.output ]
+                });
+                if (rows.length > 0) {
+                    $console.table([
+                        ...rows
+                    ]);
+                }
             }
         },
         {

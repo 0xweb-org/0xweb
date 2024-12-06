@@ -2,7 +2,7 @@
 
 
 <p align='center'>
-    <img src='assets/background.jpg'/>
+    <img src='images/background.jpg'/>
 </p>
 
 ----

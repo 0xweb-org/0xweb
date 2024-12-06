@@ -12,20 +12,35 @@ import { IContractWrapped } from '@dequanto/contracts/ContractClassFactory';
 import { ContractBase } from '@dequanto/contracts/ContractBase';
 import { TEth } from '@dequanto/models/TEth';
 import { $abiInput } from '@core/utils/$abiInput';
+import { $path } from '@dequanto/utils/$path';
 
 export class HardhatService {
     constructor (public chain: IPlatformTools) {
 
     }
 
-    async compile (mix: string) {
+    async compile (mix: string, opts?: {
+        install?: string
+    }) {
         let source = await this.getCompilationSource(mix);
         let provider = new HardhatProvider();
-        let result = await provider.compileSol(source.path, {
+
+        let isFile = $path.hasExt(mix);
+        if (isFile) {
+            let result = await provider.compileSol(source.path, {
+                contractName: source.contractName,
+                tsgen: true,
+                install: opts?.install
+            });
+            return [ result ].filter(Boolean);
+        }
+
+        let result = await provider.compileSolDirectory(source.path, {
             contractName: source.contractName,
-            tsgen: true
+            tsgen: true,
+            install: opts?.install
         });
-        return result;
+        return result.filter(Boolean);
     }
 
     async deploy (mix: string, params: {
@@ -66,7 +81,8 @@ export class HardhatService {
             ...ProxyData
         })
 
-        let { ContractCtor, source, abi } = await this.compile(mix);
+        let [ compilation ] = await this.compile(mix);
+        let { ContractCtor, source, abi } = compilation;
         let ctorAbi = abi.find(x => x.type === 'constructor');
         let args = ctorAbi == null
             ? []
@@ -100,68 +116,36 @@ export class HardhatService {
         const baseSource = `./node_modules/@openzeppelin/contracts/proxy`;
         const baseOutput = `./contracts/oz`;
         const deps = {
-            TransparentUpgradeableProxy: `'@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol'`,
-            ProxyAdmin: `'@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol'`,
-            Beacon: `'@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol'`,
-            BeaconProxy: `'@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol'`,
+            TransparentUpgradeableProxy: `@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol`,
+            ProxyAdmin: `@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol`,
+            Beacon: `@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol`,
+            BeaconProxy: `@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol`,
         };
         const paths = {
             TransparentUpgradeableProxy: {
                 source: `${baseSource}/transparent/TransparentUpgradeableProxy.sol`,
                 output: `${baseOutput}/Proxy.sol`,
                 template: `
-                    pragma solidity ^0.8.20;
-                    import { TransparentUpgradeableProxy } from ${deps.TransparentUpgradeableProxy};
-                    contract Proxy is TransparentUpgradeableProxy {
-                        constructor(address logic_, address owner_, bytes memory data_)
-                            TransparentUpgradeableProxy(logic_, owner_, data_) {}
-                    }
-                `
-            },
-            ProxyAdmin: {
-                source: `${baseSource}/transparent/ProxyAdmin.sol`,
-                output: `${baseOutput}/ProxyAdmin.sol`,
-                template: `
-                    pragma solidity ^0.8.20;
-                    import { ProxyAdmin as Admin } from ${deps.ProxyAdmin};
-                    contract ProxyAdmin is Admin {
-                        constructor(address owner_)
-                            Admin(owner_) {}
-                    }
-                `
+                    import \"${deps.TransparentUpgradeableProxy}\";
+                `,
+                //install: `TransparentUpgradeableProxy,ProxyAdmin`,
+                contracts: [`TransparentUpgradeableProxy`,`ProxyAdmin`]
             },
             Beacon: {
                 source: `${baseSource}/beacon/UpgradeableBeacon.sol`,
                 output: `${baseOutput}/Beacon.sol`,
                 template: `
-                    pragma solidity ^0.8.20;
-                    import { UpgradeableBeacon } from ${deps.Beacon};
-                    contract Beacon is UpgradeableBeacon {
-                        constructor(address implementation_, address owner_)
-                            UpgradeableBeacon(implementation_, owner_) {}
-                    }
-                `
-            },
-            BeaconProxy: {
-                source: `${baseSource}/beacon/BeaconProxy.sol`,
-                output: `${baseOutput}/BeaconProxy.sol`,
-                template: `
-                    pragma solidity ^0.8.20;
-                    import { BeaconProxy as Proxy } from ${deps.BeaconProxy};
-                    contract BeaconProxy is Proxy {
-                        constructor(address beacon_, bytes memory data_)
-                            Proxy(beacon_, data_) {}
-                    }
-                `
+                    import \"${deps.Beacon}\";
+                `,
+                //install: `UpgradeableBeacon,BeaconProxy`,
+                contracts: [`UpgradeableBeacon`,`BeaconProxy`],
             }
         };
 
         if (opts?.beacon === false) {
             delete paths.Beacon;
-            delete paths.BeaconProxy;
         }
         if (opts?.proxy === false) {
-            delete paths.ProxyAdmin;
             delete paths.TransparentUpgradeableProxy;
         }
 
@@ -170,22 +154,29 @@ export class HardhatService {
             return template.trim().replace(new RegExp(`^${match[0]}`, 'gm'), '');
         }
 
-        let contracts = await alot.fromObject(paths).map(async entry => {
+        let provider = new HardhatProvider();
+        let contracts = await alot.fromObject(paths).mapMany(async entry => {
             let info = entry.value;
             let code = fmt(info.template);
 
             if (await File.existsAsync(info.output) === false) {
                 await File.writeAsync(info.output, code);
             }
-            let { ContractCtor  } = await this.compile(info.output);
-            return {
-                key: entry.key,
-                Ctor: ContractCtor
-            };
+            await this.compile(info.output);
+
+            return await alot(info.contracts)
+                .mapAsync(async key => {
+                    let compilation = await provider.getContractFromSolPath(deps[key]);
+                    return {
+                        key: key,
+                        Ctor: compilation.ContractCtor
+                    };
+                })
+                .toArrayAsync();
         }).toArrayAsync({ threads: 1 });
 
         return alot(contracts).toDictionary(x => x.key, x => x.Ctor) as {
-            [K in keyof typeof paths]: Constructor<IContractWrapped>
+            [K in keyof typeof deps]: Constructor<IContractWrapped>
         };
     }
 
@@ -193,6 +184,9 @@ export class HardhatService {
 
     }
 
+    /**
+     * @param mix *.sol file, .../ directory or packageName
+     */
     private async getCompilationSource (mix: string): Promise<{
         path: string
         contractName?: string
@@ -212,13 +206,23 @@ export class HardhatService {
                 }
             }
         }
-        let file = new File(mix);
-        let path = file.uri.toString();
-        if (await file.existsAsync() === false) {
-            throw new Error(`File ${path} not found`);
+        if ($path.hasExt(mix)) {
+            let file = new File(mix);
+            let path = file.uri.toString();
+            if (await file.existsAsync() === false) {
+                throw new Error(`File ${path} not found`);
+            }
+            return {
+                path,
+                contractName: null
+            };
+        }
+        let dir = new Directory(mix);
+        if (await dir.existsAsync() === false) {
+            throw new Error(`Directory ${mix} not found`);
         }
         return {
-            path,
+            path: dir.uri.toString(),
             contractName: null
         };
     }

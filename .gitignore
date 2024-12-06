@@ -8,6 +8,7 @@ artifacts/
 0xweb.json
 cache/
 bin/
+assets/
 contracts/oz/
 test/bin/
 de_**.bat

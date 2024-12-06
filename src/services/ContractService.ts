@@ -501,7 +501,15 @@ export class ContractService {
         return pkg;
     }
     private async getAbi(pkg: IPackageItem) {
-        let abi = await File.readAsync<TAbiItem[]>(pkg.main.replace('.ts', '.json'));
+        let paths = [
+            pkg.main.replace('.ts', '.json'),
+            pkg.main.replace('.ts', 'Abi.json'),
+        ];
+        let path = await alot(paths).firstAsync(async path => await File.existsAsync(path));
+        if (path == null) {
+            throw new Error(`ABI file not found for ${pkg.main}`);
+        }
+        let abi = await File.readAsync<TAbiItem[]>(path);
         return abi;
     }
     private async getSlots(pkg: IPackageItem): Promise<ISlotVarDefinition[]> {
