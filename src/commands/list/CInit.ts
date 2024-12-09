@@ -314,6 +314,10 @@ class InitWorker {
             ? ["node_modules/dequanto/src/prebuilt/*"]
             : ["dequanto/src/prebuilt/*"];
 
+        pkg.compilerOptions.paths['dequanto/*'] = isNpm
+            ? ["node_modules/dequanto/src/*"]
+            : ["dequanto/src/*"];
+
         pkg.compilerOptions.paths['@0xc/*'] = ["0xc/*"]
 
         $console.toast('Save modified tsconfig');

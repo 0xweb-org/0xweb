@@ -105,10 +105,12 @@ export class HardhatService {
         });
     }
 
-    async verify () {
+    async verify (params: { id?: string, address?: TEth.Address }) {
         let deployments = new Deployments(this.chain.client, null);
-        let verifier = new ContractVerifier(deployments, this.chain.explorer);
-        verifier.ensure(Ctor)
+        await deployments.verify({
+            id: params.id,
+            address: params.address,
+        });
     }
 
     private async getOpenzeppelinUpgradable (opts?: { proxy?: boolean, beacon?: boolean }) {

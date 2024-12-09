@@ -18,6 +18,7 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
         await Directory.copyTo('./lib/', './node_modules/0xweb/lib/', { verbose: true });
+        await Directory.copyTo('./dequanto/src/gen/', './node_modules/0xweb/dequanto/src/gen/', { verbose: true });
     },
     async 'compile contract'() {
         let stdAddOne = await TestUtils.cli(`compile ./test/fixtures/hardhat/Foo.sol`, {

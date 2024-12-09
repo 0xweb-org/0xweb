@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.10.72",
+    "version": "0.10.73",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -47,8 +47,8 @@
         "@openzeppelin/contracts": "^5.0.0",
         "@types/node": "^12.6.2",
         "0xweb": "^0.10.53",
-        "app-bundler": "^0.2.14",
-        "atma": "^0.15.23",
+        "app-bundler": "^0.2.15",
+        "atma": "^0.15.24",
         "atma-loader-ts": "^1.2.7",
         "atma-utest": "^0.21.31",
         "dts-bundle": "^0.7.3",
