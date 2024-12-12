@@ -53,6 +53,11 @@ export function CInstall() {
                 description: 'Optionally disables saving the solidity source code to the output directory.',
                 type: 'boolean',
                 default: true
+            },
+            '--target': {
+                description: 'The output source: js | mjs | ts',
+                type:'string',
+                default: 'ts'
             }
         },
 
@@ -82,6 +87,7 @@ export function CInstall() {
             let generator = new Generator({
                 name: params.name,
                 contractName: params.contractName,
+                target: params.target as any,
                 platform,
                 source: {
                     abi: address,
@@ -120,6 +126,7 @@ interface IInstallParams {
     name: string
     contractName: string
     implementation: string
+    target: 'js' |'mjs' | 'ts'
     chain: string
     output: string
     source: string

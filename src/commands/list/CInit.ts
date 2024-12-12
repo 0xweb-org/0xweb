@@ -302,21 +302,22 @@ class InitWorker {
         }
 
         if (pkg.compilerOptions.moduleResolution == null) {
-            pkg.compilerOptions.moduleResolution = 'node';
+            pkg.compilerOptions.moduleResolution = 'NodeNext';
         }
 
 
-        let isNpm = this.params.source !== 'git';
-        pkg.compilerOptions.paths['@dequanto/*'] = isNpm
-            ? ["node_modules/dequanto/src/*"]
-            : ["dequanto/src/*"];
-        pkg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
-            ? ["node_modules/dequanto/src/prebuilt/*"]
-            : ["dequanto/src/prebuilt/*"];
+        /** Remove. Default "dequanto/*" that should be resolved without further configuration */
+        // let isNpm = this.params.source !== 'git';
+        // pkg.compilerOptions.paths['@dequanto/*'] = isNpm
+        //     ? ["node_modules/dequanto/src/*"]
+        //     : ["dequanto/src/*"];
+        // pkg.compilerOptions.paths['@dequanto-contracts/*'] = isNpm
+        //     ? ["node_modules/dequanto/src/prebuilt/*"]
+        //     : ["dequanto/src/prebuilt/*"];
 
-        pkg.compilerOptions.paths['dequanto/*'] = isNpm
-            ? ["node_modules/dequanto/src/*"]
-            : ["dequanto/src/*"];
+        // pkg.compilerOptions.paths['dequanto/*'] = isNpm
+        //     ? ["node_modules/dequanto/src/*"]
+        //     : ["dequanto/src/*"];
 
         pkg.compilerOptions.paths['@0xc/*'] = ["0xc/*"]
 

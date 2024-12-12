@@ -40,6 +40,14 @@ UTest({
             eq_('@noble/curves' in packageJson.dependencies, true, `No noble packages in dependencies`);
             eq_('@scure/bip32' in packageJson.dependencies, true, `No @scure in dependencies`);
             eq_('hardhat' in packageJson.dependencies, false, 'Command without --hardhat flag still has the hardhat library');
+
+            await run({ command: `npm i atma@latest`,  cwd: path_ROOT });
+
+            let tsConfigFile = new File(`${path_ROOT}tsconfig.json`);
+            let tsConfig = await tsConfigFile.readAsync<any>();
+            tsConfig.compilerOptions.paths['dequanto/*'] = ["node_modules/dequanto/src/*"];
+            tsConfig.compilerOptions.paths['@dequanto/*'] = ["node_modules/dequanto/src/*"];
+            await tsConfigFile.writeAsync(tsConfig)
         },
     },
     async 'install contract' () {
@@ -57,8 +65,8 @@ UTest({
         await File.writeAsync(`${path_ROOT}check.ts`, `
 
             import { ChainlinkOracleEth } from './0xc/eth/chainlink/oracle-eth/oracle-eth';
-            import { Config } from '@dequanto/config/Config';
-            import { $bigint } from '@dequanto/utils/$bigint';
+            import { Config } from 'dequanto/config/Config';
+            import { $bigint } from 'dequanto/utils/$bigint';
 
             async function example () {
                 await Config.fetch();
