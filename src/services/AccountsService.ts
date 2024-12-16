@@ -14,7 +14,7 @@ export class AccountsService {
     constructor (public config: appcfg) {
 
     }
-    static DEFAULTS_PATH_LOCAL = `./0xc/config/accounts.json`;
+    static DEFAULTS_PATH_LOCAL = `./0xc/config/account.json`;
     static DEFAULTS_PATH_GLOBAL = `%APPDATA%/.dequanto/account.json`;
 
     static async getDefaults (params: Record<string, string>) {
@@ -42,10 +42,10 @@ export class AccountsService {
         let isLocal = $cli.isLocal(params);
         let account = {
             'config-accounts': $cli.getParamValue('config-accounts', params) || void 0,
-            'account': accountName
+            'session-account': accountName
         } as {
-            account: string
             'config-accounts': string
+            'session-account': string
         };
         let path = AccountsService.getDefaultsDir({ isLocal });
         let secret = await $machine.id();

@@ -6,6 +6,7 @@ export const Parameters = {
             '-a, --account': {
                 description: 'Account name. Accounts should be unlocked with gray<-p, --pin> parameter',
                 required: opts?.required ?? true,
+                fallback: 'session-account',
             }
         }
     },

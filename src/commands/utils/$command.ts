@@ -61,10 +61,15 @@ export namespace $command {
                 value = params[definition.key] = definition.default;
             }
             if (value == null && definition.required) {
-                params[definition.key] = await $cli.ask(
-                    `\n${definition.description}\n--${definition.key}: `,
-                    definition.type
-                );
+                if (definition.fallback) {
+                    value = params[definition.key] = cliParams[definition.fallback];
+                }
+                if (value == null) {
+                    params[definition.key] = await $cli.ask(
+                        `\n${definition.description}\n--${definition.key}: `,
+                        definition.type
+                    );
+                }
             }
         }
 

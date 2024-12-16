@@ -23,6 +23,9 @@ export interface ICommand {
             oneOf?: (string | number)[]
             validate?: (any) => any
             default?: any
+
+            // alias
+            fallback?: string
         }
     }
     subcommands?: ICommand[]
