@@ -180,25 +180,6 @@ export function CAccounts() {
                 }
             },
             {
-                command: 'current',
-                description: [
-                    'Get current logged-in account'
-                ],
-                params: {
-
-                },
-                async process(args: string[], params, app: App) {
-                    $require.notEmpty(params.account, `No default account is loaded`);
-                    let service = di.resolve(AccountsService, app.config);
-                    let account = await service.get(params.account);
-                    $require.notNull(account, `${params.account} not found`)
-                    $console.table([
-                        ['Name', account.name],
-                        ['Address', account.address],
-                    ]);
-                }
-            },
-            {
                 command: 'backup',
                 arguments: [
                     {

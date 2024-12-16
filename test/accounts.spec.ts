@@ -57,7 +57,7 @@ UTest({
         has_(strDefaults, account.address);
 
         l`> Get default`
-        let strDefaultsCurrent = await cliRaw(`accounts current -p 12345`);
+        let strDefaultsCurrent = await cliRaw(`account current -p 12345`);
 
 
         has_(strDefaultsCurrent, account.address);
