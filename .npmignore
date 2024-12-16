@@ -5,6 +5,7 @@ test/
 bin/
 tools/
 /src/
+/0xc/
 typings/
 ts-temp/
 logs/

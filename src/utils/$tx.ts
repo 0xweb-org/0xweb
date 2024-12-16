@@ -15,7 +15,7 @@ import { InternalTokenService } from '@core/services/InternalTokenService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { TxLogParser } from '@dequanto/txs/receipt/TxLogParser';
 import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
-import { IBlockChainExplorer } from '@dequanto/explorer/IBlockChainExplorer';
+import { IBlockchainExplorer } from '@dequanto/explorer/IBlockchainExplorer';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
 import { TEth } from '@dequanto/models/TEth';
 import { TAbiItem } from '@dequanto/types/TAbi';
@@ -29,7 +29,7 @@ import { $abiValues } from './$abiValues';
 
 export namespace $tx {
 
-    export async function log(client: Web3Client, explorer: IBlockChainExplorer, hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
+    export async function log(client: Web3Client, explorer: IBlockchainExplorer, hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
         $require.TxHash(hash, `Not valid hash bold<${hash}>`);
         if (tx == null) {
             $console.toast(`Fetch Tx ${hash}`);
