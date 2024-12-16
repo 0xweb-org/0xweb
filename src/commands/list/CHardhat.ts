@@ -55,10 +55,6 @@ export function CHardhat() {
                 { description: `file or package name` }
             ],
             params: {
-                account: {
-                    description: 'Address, Key or the Name of the account to deploy from',
-                    required: true,
-                },
                 proxy: {
                     description: `Will use TransparentUpgradeableProxy for deploying contracts`,
                     required: false,
@@ -75,6 +71,7 @@ export function CHardhat() {
                 },
                 ...Parameters.pin({ required: false }),
                 ...Parameters.chain({ required: true }),
+                ...Parameters.account({ required: true})
             },
             async process(args: string[], params: any, app: App) {
 
