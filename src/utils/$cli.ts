@@ -59,8 +59,19 @@ export namespace $cli {
             .first();
     }
 
-    export function isLocal () {
-        return env.applicationDir.toString().startsWith(env.currentDir.toString());
+    export function isLocal (params?: Record<string, string>) {
+        if (params != null) {
+            let local = $cli.getParamValue('--local', params) as any;
+            if (local === true  || local === '' || local === 'local') {
+                return true;
+            }
+            let global = $cli.getParamValue('--global', params) as any;
+            if (global === true  || global === '' || global === 'global') {
+                return false;
+            }
+        }
+        let isLocal = env.applicationDir.toString().startsWith(env.currentDir.toString());
+        return isLocal;
     }
 
     export function parse (argv: (string | boolean | number)[] = null) {

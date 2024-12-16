@@ -40,7 +40,7 @@ export function CHelp() {
         printCommand(command: ICommand, paramsDefinition?, opts?) {
             let str = print.command({
                 ...command,
-                params: paramsDefinition ?? void 0
+                params: paramsDefinition ?? command.params
             }, opts);
             $console.log(str);
         }

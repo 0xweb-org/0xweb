@@ -1,10 +1,11 @@
 import { ICommand } from '../ICommand';
-import { env, File } from 'atma-io';
-import { class_Uri } from 'atma-utils';
+import { File } from 'atma-io';
+import { obj_setProperty } from 'atma-utils';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { $promise } from '@dequanto/utils/$promise';
 import { $os } from '@core/utils/$os';
+import { $require } from '@dequanto/utils/$require';
 
 
 export function CConfig() {
@@ -20,7 +21,17 @@ export function CConfig() {
                 description: 'Print current configuration. ',
             },
             '-e, --edit': {
-                description: 'Open/create the configuration file in AppData to edit',
+                description: 'Open/create the configuration file in AppData or CWD folder to edit',
+            },
+            '--local': {
+                description: 'Edit local config',
+            },
+            '--global': {
+                description: 'Edit global config',
+            },
+            '--set': {
+                description: 'Set configuration value',
+                type:'string',
             }
         },
 
@@ -33,18 +44,51 @@ export function CConfig() {
                         "atma-io-middleware-yml:read",
                         "atma-io-middleware-yml:write"
                     ]
-                }, false)
+                }, false);
 
-                let path = env.appdataDir.combine('.dequanto/config.yml').toString();
+                let source = app.config.$sources.array.find(x =>x.data.name === 'main');
+                $require.notNull(source, `Main config source not found`);
+                let path = source.data.path;
+
+
                 if (await File.existsAsync(path) === false) {
-                    let json = getJson();
+                    let json = {};
                     $console.log(`Create bold<${path}>`);
                     await File.writeAsync(path, json);
                 }
-                let sysPath = new class_Uri(path).toLocalFile();
+                let sysPath = new File(path).uri.toLocalFile();
+                let github = `https://github.com/0xweb-org/dequanto/blob/master/configs/dequanto.yml`;
+                $console.log(`Defaults yellow<bold<file://${github}>>`);
                 $console.log(`Open cyan<bold<file://${sysPath}>>`);
                 await $os.open(sysPath);
                 await $promise.wait(500);
+                return;
+            }
+
+            if (params.set) {
+                let json = {};
+                let source = app.config.$sources.array.find(x =>x.data.name === 'main');
+                $require.notNull(source, `Main config source not found`);
+                let values = params.set.split(';');
+                values.forEach(str => {
+                    let [ key, value ] = str.split('=');
+                    if (value === 'true') {
+                        obj_setProperty(json, key, true);
+                        return;
+                    }
+                    if (value === 'false') {
+                        obj_setProperty(json, key, false);
+                        return;
+                    }
+                    if (/^[\d\.]+$/.test(value)) {
+                        obj_setProperty(json, key, Number(value));
+                        return;
+                    }
+                    obj_setProperty(json, key, value);
+                });
+                $console.log(`Set the configuration at ${source.data.path} : ` + JSON.stringify(json, null, 2));
+
+                await source.write(json, /*deepExtend*/ true);
                 return;
             }
 

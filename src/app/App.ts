@@ -78,7 +78,9 @@ export class App {
                     cliParams[key] = defaults[key];
                 }
             }
-
+        }
+        if ($cli.isLocal(cliParams)) {
+            cliParams['isLocal'] = true;
         }
         this.config = await Config.fetch(cliParams);
 

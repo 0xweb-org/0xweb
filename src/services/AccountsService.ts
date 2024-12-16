@@ -14,11 +14,11 @@ export class AccountsService {
     constructor (public config: appcfg) {
 
     }
-    static DEFAULTS_PATH_LOCAL = `./0xc/config/account.json`;
-    static DEFAULTS_PATH_GLOBAL = `%APPDATA%/.daquanto/account.json`;
+    static DEFAULTS_PATH_LOCAL = `./0xc/config/accounts.json`;
+    static DEFAULTS_PATH_GLOBAL = `%APPDATA%/.dequanto/account.json`;
 
     static async getDefaults (params: Record<string, string>) {
-        let isLocal = $cli.isLocal();
+        let isLocal = $cli.isLocal(params);
         let p = $cli.getParamValue('--pin, -p', params);
         if (p == null) {
             return null;
@@ -39,7 +39,7 @@ export class AccountsService {
 
     static async saveAsDefaults (accountName: string, params: Record<string, string>, config: appcfg) {
         $require.notNull(accountName, `At least account name is required`);
-        let isLocal = $cli.isLocal();
+        let isLocal = $cli.isLocal(params);
         let account = {
             'config-accounts': $cli.getParamValue('config-accounts', params) || void 0,
             'account': accountName
