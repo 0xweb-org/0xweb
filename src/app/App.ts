@@ -40,8 +40,8 @@ import { ChainAccountService } from '@dequanto/ChainAccountService';
 import { TokenService } from '@dequanto/tokens/TokenService';
 import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { TokensService } from '@dequanto/tokens/TokensService';
-import { BlockchainExplorerProvider } from '@dequanto/explorer/BlockchainExplorerProvider';
 import { AccountsService } from '@core/services/AccountsService';
+import { BlockchainExplorerFactory } from '@dequanto/explorer/BlockchainExplorerFactory';
 
 
 declare const global;
@@ -161,7 +161,7 @@ export class App {
         }
     }
     async setChain (client: Web3Client): Promise<this> {
-        const explorer = BlockchainExplorerProvider.get(client.platform);
+        const explorer = BlockchainExplorerFactory.get(client.platform);
         this.chain = {
             platform: client.network,
             client,
