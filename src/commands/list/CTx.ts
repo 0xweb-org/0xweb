@@ -77,10 +77,9 @@ export function CTx() {
                     let tx = builder.getTxData();
                     let rpc = await app.chain.client.getRpc();
                     let txSignedRaw = await $sig.signTx(tx, account, rpc);
-                    console.log(txSignedRaw, '<');
+
                     let { v, r, s } = $sig.TxDeserializer.deserialize(txSignedRaw);
                     let txJson = builder.toJSON();
-
 
                     json.signature = { v, r, s };
                     json.account = txJson.account;

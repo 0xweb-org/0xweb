@@ -55,9 +55,8 @@ export function CInstall() {
                 default: true
             },
             '--target': {
-                description: 'The output source: js | mjs | ts',
-                type:'string',
-                default: 'ts'
+                description: 'The output source: js | mjs | ts. Default is configured in "settings.generate.target"',
+                type:'string'
             }
         },
 

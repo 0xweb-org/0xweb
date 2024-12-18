@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.10.79",
+    "version": "0.10.80",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -46,7 +46,7 @@
         "@0xweb/hardhat": "^0.1.24",
         "@openzeppelin/contracts": "^5.0.0",
         "@types/node": "^12.6.2",
-        "0xweb": "^0.10.53",
+        "0xweb": "^0.10.79",
         "app-bundler": "^0.2.15",
         "atma": "^0.15.24",
         "atma-loader-ts": "^1.2.7",

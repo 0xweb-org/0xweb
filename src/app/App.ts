@@ -132,7 +132,7 @@ export class App {
         let result = await command.process(args, params, this);
 
         // flush all caches on exit
-        await memd.Cache.flushAllAsync();
+        //- await memd.Cache.flushAllAsync();
         return result;
     }
 
