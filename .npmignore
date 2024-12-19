@@ -27,6 +27,7 @@ dequanto/0xc/
 dequanto/cache/
 dequanto/test/
 dequanto/dist/
+dequanto/lib/
 dequanto/typings/
 dequanto/*.json
 dequanto/*.js
