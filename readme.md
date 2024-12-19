@@ -1,4 +1,4 @@
-## [`0xWeb`](https://0xweb.org) - Contract package manager and CLI Web3 Toolkit
+## [`0xweb`](https://0xweb.org) - Contract package manager and CLI Web3 Toolkit
 
 
 <p align='center'>
@@ -12,8 +12,12 @@
 [![CircleCI](https://circleci.com/gh/0xweb-org/0xweb.svg?style=svg)](https://circleci.com/gh/0xweb-org/0xweb)
 
 
+|--|--|
+|[Demo: Backend](https://github.com/0xweb-org/examples-backend) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-backend/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-backend/tree/master) |
+|[Demo: Storage](https://github.com/0xweb-org/examples-storage) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-storage/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-storage/tree/master) |
 
-## Contract Package Manager
+
+
 
 Generate TypeScript or ES6 classes for contracts fetched from Etherscan and Co.
 
