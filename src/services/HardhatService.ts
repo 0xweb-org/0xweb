@@ -59,26 +59,26 @@ export class HardhatService {
         $require.notNull(account?.address, `Account ${ params.account } not resolved`);
         let withProxy = Boolean(params.proxy);
 
-        let ProxyData = {
-            Proxy: null,
-            ProxyAdmin: null,
-            Beacon: {
-                Beacon: null,
-                BeaconProxy: null,
-            }
-        }
-        if (withProxy) {
-            let proxyContracts = await this.getOpenzeppelinUpgradable({ beacon: false });
+        // let ProxyData = {
+        //     Proxy: null,
+        //     ProxyAdmin: null,
+        //     Beacon: {
+        //         Beacon: null,
+        //         BeaconProxy: null,
+        //     }
+        // }
+        // if (withProxy) {
+        //     let proxyContracts = await this.getOpenzeppelinUpgradable({ beacon: false });
 
-            ProxyData.Proxy = proxyContracts.TransparentUpgradeableProxy;
-            ProxyData.ProxyAdmin = proxyContracts.ProxyAdmin;
-            ProxyData.Beacon.Beacon = proxyContracts.Beacon;
-            ProxyData.Beacon.BeaconProxy = proxyContracts.BeaconProxy;
-        }
+        //     ProxyData.Proxy = proxyContracts.TransparentUpgradeableProxy;
+        //     ProxyData.ProxyAdmin = proxyContracts.ProxyAdmin;
+        //     ProxyData.Beacon.Beacon = proxyContracts.Beacon;
+        //     ProxyData.Beacon.BeaconProxy = proxyContracts.BeaconProxy;
+        // }
 
         let deployments = new Deployments(this.chain.client, account, {
             directory: './0xc/deployments/',
-            ...ProxyData
+            //...ProxyData
         })
 
         let [ compilation ] = await this.compile(mix);
@@ -113,74 +113,74 @@ export class HardhatService {
         });
     }
 
-    private async getOpenzeppelinUpgradable (opts?: { proxy?: boolean, beacon?: boolean }) {
-        // We can't compile OpenZeppelin's contracts directly from node_modules folder, so create the wrappers
-        const baseSource = `./node_modules/@openzeppelin/contracts/proxy`;
-        const baseOutput = `./contracts/oz`;
-        const deps = {
-            TransparentUpgradeableProxy: `@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol`,
-            ProxyAdmin: `@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol`,
-            Beacon: `@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol`,
-            BeaconProxy: `@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol`,
-        };
-        const paths = {
-            TransparentUpgradeableProxy: {
-                source: `${baseSource}/transparent/TransparentUpgradeableProxy.sol`,
-                output: `${baseOutput}/Proxy.sol`,
-                template: `
-                    import \"${deps.TransparentUpgradeableProxy}\";
-                `,
-                //install: `TransparentUpgradeableProxy,ProxyAdmin`,
-                contracts: [`TransparentUpgradeableProxy`,`ProxyAdmin`]
-            },
-            Beacon: {
-                source: `${baseSource}/beacon/UpgradeableBeacon.sol`,
-                output: `${baseOutput}/Beacon.sol`,
-                template: `
-                    import \"${deps.Beacon}\";
-                `,
-                //install: `UpgradeableBeacon,BeaconProxy`,
-                contracts: [`UpgradeableBeacon`,`BeaconProxy`],
-            }
-        };
+    // private async getOpenzeppelinUpgradable (opts?: { proxy?: boolean, beacon?: boolean }) {
+    //     // We can't compile OpenZeppelin's contracts directly from node_modules folder, so create the wrappers
+    //     const baseSource = `./node_modules/@openzeppelin/contracts/proxy`;
+    //     const baseOutput = `./contracts/oz`;
+    //     const deps = {
+    //         TransparentUpgradeableProxy: `@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol`,
+    //         ProxyAdmin: `@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol`,
+    //         Beacon: `@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol`,
+    //         BeaconProxy: `@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol`,
+    //     };
+    //     const paths = {
+    //         TransparentUpgradeableProxy: {
+    //             source: `${baseSource}/transparent/TransparentUpgradeableProxy.sol`,
+    //             output: `${baseOutput}/Proxy.sol`,
+    //             template: `
+    //                 import \"${deps.TransparentUpgradeableProxy}\";
+    //             `,
+    //             //install: `TransparentUpgradeableProxy,ProxyAdmin`,
+    //             contracts: [`TransparentUpgradeableProxy`,`ProxyAdmin`]
+    //         },
+    //         Beacon: {
+    //             source: `${baseSource}/beacon/UpgradeableBeacon.sol`,
+    //             output: `${baseOutput}/Beacon.sol`,
+    //             template: `
+    //                 import \"${deps.Beacon}\";
+    //             `,
+    //             //install: `UpgradeableBeacon,BeaconProxy`,
+    //             contracts: [`UpgradeableBeacon`,`BeaconProxy`],
+    //         }
+    //     };
 
-        if (opts?.beacon === false) {
-            delete paths.Beacon;
-        }
-        if (opts?.proxy === false) {
-            delete paths.TransparentUpgradeableProxy;
-        }
+    //     if (opts?.beacon === false) {
+    //         delete paths.Beacon;
+    //     }
+    //     if (opts?.proxy === false) {
+    //         delete paths.TransparentUpgradeableProxy;
+    //     }
 
-        function fmt (template: string) {
-            let match = /^ +/m.exec(template);
-            return template.trim().replace(new RegExp(`^${match[0]}`, 'gm'), '');
-        }
+    //     function fmt (template: string) {
+    //         let match = /^ +/m.exec(template);
+    //         return template.trim().replace(new RegExp(`^${match[0]}`, 'gm'), '');
+    //     }
 
-        let provider = new HardhatProvider();
-        let contracts = await alot.fromObject(paths).mapMany(async entry => {
-            let info = entry.value;
-            let code = fmt(info.template);
+    //     let provider = new HardhatProvider();
+    //     let contracts = await alot.fromObject(paths).mapMany(async entry => {
+    //         let info = entry.value;
+    //         let code = fmt(info.template);
 
-            if (await File.existsAsync(info.output) === false) {
-                await File.writeAsync(info.output, code);
-            }
-            await this.compile(info.output);
+    //         if (await File.existsAsync(info.output) === false) {
+    //             await File.writeAsync(info.output, code);
+    //         }
+    //         await this.compile(info.output);
 
-            return await alot(info.contracts)
-                .mapAsync(async key => {
-                    let compilation = await provider.getContractFromSolPath(deps[key]);
-                    return {
-                        key: key,
-                        Ctor: compilation.ContractCtor
-                    };
-                })
-                .toArrayAsync();
-        }).toArrayAsync({ threads: 1 });
+    //         return await alot(info.contracts)
+    //             .mapAsync(async key => {
+    //                 let compilation = await provider.getContractFromSolPath(deps[key]);
+    //                 return {
+    //                     key: key,
+    //                     Ctor: compilation.ContractCtor
+    //                 };
+    //             })
+    //             .toArrayAsync();
+    //     }).toArrayAsync({ threads: 1 });
 
-        return alot(contracts).toDictionary(x => x.key, x => x.Ctor) as {
-            [K in keyof typeof deps]: Constructor<IContractWrapped>
-        };
-    }
+    //     return alot(contracts).toDictionary(x => x.key, x => x.Ctor) as {
+    //         [K in keyof typeof deps]: Constructor<IContractWrapped>
+    //     };
+    // }
 
     private async ensureSolidityVersion (solPath: string) {
 
