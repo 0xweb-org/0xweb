@@ -65,8 +65,7 @@ UTest({
             l`Parse calldata`
             let resultParsed = await app.execute([
                 `contract`,
-                `calldata`,
-                `parse`,
+                `calldata-parse`,
                 `Counter`,
                 result.data,
             ]);
