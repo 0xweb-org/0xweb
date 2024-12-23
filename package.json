@@ -131,7 +131,8 @@
                 "^@gnosis.pm",
                 "ethereumjs-util",
                 "^papaparse$",
-                "^ws$"
+                "^ws$",
+                "^atma-server$"
             ],
             "middlewares": {
                 "ts": [

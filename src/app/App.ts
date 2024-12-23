@@ -117,6 +117,7 @@ export class App {
             .register(CReset())
             .register(CInfo())
             .register(CHelp())
+
             ;
 
         let { command, params, args, paramsDefinition } = await this.commands.findCommand(cliArgs, cliParams);

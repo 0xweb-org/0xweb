@@ -8,6 +8,7 @@ import { $command } from '@core/commands/utils/$command';
 import { CRpc } from '@core/commands/list/CRpc';
 import { CContract } from '@core/commands/list/CContract';
 import { CTx } from '@core/commands/list/CTx';
+import { CBlock } from '@core/commands/list/CBlock';
 
 export class ServerService {
 
@@ -23,6 +24,7 @@ export class ServerService {
             CContract(),
             CRpc(),
             CTx(),
+            CBlock(),
         ], this.app);
 
         this.server = await Application.create({
@@ -42,8 +44,8 @@ export class ServerService {
     async start (params: {
         port: number
     }) {
-        await this.createServer();
-        await this.server.listen(params.port);
+        let server = await this.createServer();
+        await server.listen(params.port);
     }
 }
 

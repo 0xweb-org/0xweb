@@ -181,19 +181,22 @@ export function CHardhat() {
                     description: ['Mines a specified number of blocks at a given interval (1 second)'],
                     arguments: [
                         {
+                            name: 'CountOrDateRange',
                             description: 'Number of blocks or amount of seconds parsed from a timespan, e.g. 1day, 5minutes, 3weeks, etc',
                             required: true,
                         }
                     ],
                     async process (args, params, app) {
-                        let [ address ] = args;
-                        $require.Address(address);
+                        let [ toMine ] = args;
+                        if (/^\d+$/.test(toMine)) {
+                            toMine = Number(toMine);
+                        }
 
                         let client = await Web3ClientFactory.getAsync('hardhat');
                         let blockNumberBefore = await client.getBlockNumber();
                         $logger.log(`Block number bold<${ $bigint.toEther(blockNumberBefore)}>`);
 
-                        await client.debug.mine(address);
+                        await client.debug.mine(toMine);
 
                         let blockNumberAfter = await client.getBlockNumber();
                         $logger.log(`Block number bold<${ $bigint.toEther(blockNumberAfter)}>`);
