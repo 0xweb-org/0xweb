@@ -44,7 +44,7 @@ UTest({
             eq_(result.data, '0xe3412189');
 
             let resultParsed = await app.execute(
-                'contract calldata parse Counter 0xe3412189'.split(' ')
+                'contract calldata-parse Counter 0xe3412189'.split(' ')
             );
             eq_(resultParsed.name, 'getCountMethod');
             console.log(resultParsed);
