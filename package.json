@@ -37,7 +37,7 @@
         "appcfg": "^0.5.4",
         "atma-io": "^1.3.4",
         "atma-io-middleware-yml": "^1.1.25",
-        "atma-server": "^0.5.25",
+        "atma-server": "^0.5.26",
         "atma-utils": "^0.2.60",
         "class-json": "^0.4.2",
         "memd": "^0.3.16",
