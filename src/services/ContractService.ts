@@ -519,14 +519,15 @@ export class ContractService extends BaseService {
     }
     private async getAbi(pkg: IPackageItem) {
         let paths = [
-            pkg.main.replace('.ts', '.json'),
-            pkg.main.replace('.ts', 'Abi.json'),
+            pkg.main.replace(/\.[a-z]+$/, '.json'),
+            pkg.main.replace(/\.[a-z]+$/, 'Abi.json'),
         ];
         let path = await alot(paths).firstAsync(async path => await File.existsAsync(path));
         if (path == null) {
             throw new Error(`ABI file not found for ${pkg.main}`);
         }
         let abi = await File.readAsync<TAbiItem[]>(path);
+        $require.Array(abi, `"${path}" should contain an array of ABI items`);
         return abi;
     }
     private async getSlots(pkg: IPackageItem): Promise<ISlotVarDefinition[]> {
