@@ -1,7 +1,8 @@
 import { ICommand } from '../ICommand';
-import { App } from '@core/app/App';
 import { $promise } from '@dequanto/utils/$promise';
 import { ServerService } from '@core/services/ServerService';
+import type { App } from '@core/app/App';
+import { TAppProcessResult } from '@core/app/types';
 
 
 export function CServer() {
@@ -31,6 +32,8 @@ export function CServer() {
                     const service = new ServerService(app);
                     await service.start(params);
                     await $promise.wait(10 ** 9);
+
+                    return { status: 'wait' } as TAppProcessResult
                 }
             },
         ],

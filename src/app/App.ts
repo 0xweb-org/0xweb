@@ -44,6 +44,7 @@ import { AccountsService } from '@core/services/AccountsService';
 import { BlockchainExplorerFactory } from '@dequanto/explorer/BlockchainExplorerFactory';
 import { CServer } from '@core/commands/list/CServer';
 import { IConfigData } from '@dequanto/config/interface/IConfigData';
+import { TAppProcessResult } from './types';
 
 
 declare const global;
@@ -63,7 +64,7 @@ export class App {
         }
     }
 
-    async execute (argv?: string[]): Promise<any> {
+    async execute (argv?: string[]): Promise<TAppProcessResult> {
         if (argv?.length > 0) {
             $cli.setParams(argv);
         }
@@ -147,7 +148,11 @@ export class App {
 
     async runFromCli () {
         try {
-            await this.execute();
+            let result = await this.execute();
+            if (result?.status === 'wait') {
+                // do not exit on long running commands
+                return;
+            }
             process.exit(0);
         } catch (error) {
             $console.error(`red<${error.message}>`);
