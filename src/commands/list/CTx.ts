@@ -1,3 +1,4 @@
+import di from 'a-di';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
@@ -13,9 +14,8 @@ import type { TEth } from '@dequanto/models/TEth';
 import type { TAddress } from '@dequanto/models/TAddress';
 import type { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
 import { $is } from '@dequanto/utils/$is';
-import { ContractService } from '@core/services/ContractService';
-import di from 'a-di';
 import { PackageService } from '@core/services/PackageService';
+import { TxService } from '@core/services/TxService';
 
 
 type TTxSendParams = {
@@ -174,13 +174,7 @@ export function CTx() {
 
                     let hash = await writer.onSent;
                     let receipt = await writer.onCompleted;
-                    await $tx.log(
-                        app.chain.client,
-                        app.chain.explorer,
-                        hash,
-                        null,
-                        receipt,
-                    );
+                    await TxService.printTx(app, hash as TEth.Hex, null, receipt);
                     return receipt;
                 }
             },
@@ -199,10 +193,12 @@ export function CTx() {
                 params: {
                     ...Parameters.chain()
                 },
+                api: {},
                 async process(args: string[], params: any, app: App) {
 
                     let [ hash ] = args as [ TEth.Hex ];
-                    await $tx.log(app.chain.client, app.chain.explorer, hash);
+                    let service = new TxService(app);
+                    return service.tx(hash);
                 }
             }
         ],

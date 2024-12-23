@@ -18,24 +18,16 @@ export function CContract() {
             {
                 command: 'list',
                 description: ['List installed contracts'],
-                arguments: [
-
-                ],
+                arguments: [],
                 params: {
                     ...Parameters.chain({ required: false })
                 },
+                api: {},
                 async process(args, params, app) {
 
                     let service = di.resolve(ContractService, app);
                     let pkgs = await service.printList(params);
-                    let rows = pkgs.map(x => [
-                        x.name, x.address, x.platform
-                    ]);
-                    $console.table([
-                        ['Name', 'Address', 'Platform (default)'],
-                        ...rows
-                    ]);
-                    return rows;
+                    return pkgs;
                 }
             },
             {
@@ -43,20 +35,21 @@ export function CContract() {
                 description: ['List of the available READ and WRITE methods for the contract'],
                 arguments: [
                     {
+                        name: 'Name',
                         description: 'Installed contract by name',
                         required: true
                     }
                 ],
-                params: {
-
-                },
+                params: {},
+                api: {},
                 async process(args, params, app) {
-                    let [name] = args;
+                    let [ name ] = args;
 
                     let service = di.resolve(ContractService, app);
-                    let str = await service.abi(name);
+                    let { abi, pkg } = await service.abi(name);
+                    let str = await service.formatAbi(pkg, abi);
                     $console.result(str);
-                    return str;
+                    return abi;
                 }
             },
             {
@@ -86,11 +79,15 @@ export function CContract() {
                     '--account': {
                         description: `Make call request from the account.`
                     },
+                    '--abi': {
+                        description: `ABI string that will be parsed.`
+                    },
                 },
+                api: {},
                 async process(args, params, app) {
                     let [ nameOrAddress , method] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.call(nameOrAddress, method, params, 'read');
+                    return await service.call(nameOrAddress, method, params, 'read');
                 }
             },
             {
@@ -104,7 +101,7 @@ export function CContract() {
                     {
                         description: 'Method name or ABI, e.g.: 0xweb c read foo "decimals():uint16"',
                         required: true
-                    }
+                    },
                 ],
                 params: {
                     '-c, --chain': {
@@ -119,11 +116,22 @@ export function CContract() {
                     '--safe-transport': {
                         description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
                     },
+                    '--abi': {
+                        description: `ABI string that will be parsed.`
+                    },
                 },
                 async process(args, params, app) {
                     let [name, method] = args;
                     let service = di.resolve(ContractService, app);
                     await service.call(name, method, params, 'write');
+                },
+                api: {
+                    method: 'post',
+                    async process(args, params, app) {
+                        let [name, method] = args;
+                        let service = di.resolve(ContractService, app);
+                        return await service.call(name, method, params, 'write');
+                    },
                 }
             },
             {
@@ -131,54 +139,61 @@ export function CContract() {
                 description: ['Serialize transaction calldata. Parameters are resolved by cli flags or will be prompted.'],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Installed contract by name or address',
                         required: true
                     },
                     {
-                        description: 'Method name or ABI, e.g.: 0xweb c data foo "approve(address spender, uint256 amount)"',
+                        name: "MethodOrAbi",
+                        description: 'Method name or ABI, e.g.: 0xweb c calldata foo "approve(address spender, uint256 amount)"',
                         required: true
                     }
                 ],
                 params: {
-
+                    '--abi': {
+                        description: 'ABI string (useful for API requests)',
+                    }
                 },
+                api: {},
                 async process(args, params, app) {
                     let [name, method] = args;
                     let service = di.resolve(ContractService, app);
-                    let json = await service.calldata(name, method, params);
-                    $console.log(json);
+                    let data = await service.calldata(name, method, params);
+                    return data;
+                }
+            },
+            {
+                command: 'calldata-parse',
+                description: [ 'Parse hex calldata using contracts ABI' ],
+                arguments: [
+                    {
+                        name: 'NameOrAddress',
+                        description: 'Installed contract by name or address',
+                        required: true
+                    },
+                    {
+                        name: 'calldata',
+                        query: true,
+                        description: 'Hex',
+                        required: true
+                    },
+                ],
+                params: {
+                    '--calldata': {
+                        description: 'Api: calldata to parse; Cli: can be provided via argument'
+                    }
+                },
+                api: {},
+                async process(args, params, app) {
+                    let [ name, calldata ] = args;
+                    if (params.calldata) {
+                        calldata = params.calldata;
+                    }
+                    $require.Hex(calldata, `Calldata must be a hex string`);
+                    let service = di.resolve(ContractService, app);
+                    let json = await service.calldataParse(name, calldata);
                     return json;
                 },
-
-                subcommands: [
-                    {
-                        command: 'parse',
-                        description: [ 'Parse hex calldata using contracts ABI' ],
-                        arguments: [
-                            {
-                                description: 'Installed contract by name or address',
-                                required: true
-                            },
-                            {
-                                description: 'Hex',
-                                required: true
-                            },
-                        ],
-                        params: {
-
-                        },
-                        async process(args, params, app) {
-                            let [ name, calldata ] = args;
-
-                            $require.Hex(calldata, `Calldata must be a hex string`);
-                            let service = di.resolve(ContractService, app);
-                            let json = await service.calldataParse(name, calldata);
-                            $console.log(json);
-                            return json;
-                        }
-                    },
-
-                ]
             },
             {
                 command: 'logs',
@@ -217,6 +232,7 @@ export function CContract() {
                 description: [ `Save contract's complete data-set as raw slot-value file and as JSON model file` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of the installed contract or the Address',
                         required: true
                     }
@@ -250,6 +266,7 @@ export function CContract() {
                 description: [ `In development (Hardhat) chains it is possible to write storage back from a JSON or CSV dump` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of the installed contract or the Address',
                         required: true
                     }
@@ -296,10 +313,11 @@ export function CContract() {
                 params: {
                     ...Parameters.chain()
                 },
+                api: {},
                 async process(args, params, app) {
                     let [ nameOrAddress, location ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.slot(nameOrAddress, location);
+                    return await service.slot(nameOrAddress, location);
                 }
             },
             {
@@ -307,10 +325,12 @@ export function CContract() {
                 description: [ `Read contracts state variable` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of the installed contract or the Address',
                         required: true
                     },
                     {
+                        name: 'Accessor',
                         description: 'Accessor selector. Supports JSON-a-like paths, e.g: users[5].balance',
                         required: true
                     },
@@ -331,6 +351,7 @@ export function CContract() {
                         type: 'string'
                     }
                 },
+                api: {},
                 async process(args, params, app) {
                     let [ nameOrAddress, selector ] = args;
                     let service = di.resolve(ContractService, app);
@@ -386,10 +407,11 @@ export function CContract() {
                 params: {
                     ...Parameters.chain()
                 },
+                api: {},
                 async process(args, params, app) {
                     let [ nameOrAddress ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.varList(nameOrAddress);
+                    return await service.varList(nameOrAddress);
                 }
             },
             {

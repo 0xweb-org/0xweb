@@ -11,6 +11,7 @@ import { $bigint } from '@dequanto/utils/$bigint';
 import { $logger } from '@dequanto/utils/$logger';
 import { TEth } from '@dequanto/models/TEth';
 import { $is } from '@dequanto/utils/$is';
+import { TxService } from '@core/services/TxService';
 
 
 export function CHardhat() {
@@ -80,13 +81,7 @@ export function CHardhat() {
 
                 let { contract, contractReceipt } = await service.deploy(mix, params);
                 if (contractReceipt) {
-                    await $tx.log(
-                        app.chain.client,
-                        app.chain.explorer,
-                        contractReceipt.transactionHash,
-                        null,
-                        contractReceipt,
-                    );
+                    await TxService.printTx(app, contractReceipt.transactionHash, null, contractReceipt);
                 }
 
                 $console.table([

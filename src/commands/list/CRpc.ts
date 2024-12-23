@@ -15,17 +15,21 @@ export function CRpc() {
         ],
         arguments: [
             {
+                name: 'RpcMethodName',
                 description: 'Method Name'
             },
             {
+                query: true,
                 description: 'Argument 1',
                 required: false
             },
             {
+                query: true,
                 description: 'Argument 2',
                 required: false
             },
             {
+                query: true,
                 description: '...',
                 required: false
             }
@@ -33,15 +37,20 @@ export function CRpc() {
         params: {
             ...Parameters.account({ required: false }),
             ...Parameters.chain(),
-        },
-        async process(args: any[], params?, app?: App) {
-            let service = new RpcService();
-            let result = await service.process(args, params, app);
-            if (typeof result !== 'object') {
-                $logger.result(result);
-                return;
+            '--arg0': {
+                description: 'Api: Argument 1; Cli: simple arguments also supported',
+                required: false
+            },
+            '--arg1': {
+                description: 'Api: Argument 2; Cli: simple arguments also supported',
+                required: false
             }
-            $logger.result(JSON.stringify(result, null, 4));
+        },
+        api: {},
+        async process(args: any[], params?, app?: App) {
+            let service = new RpcService(app);
+            let result = await service.process(args, params, app);
+            return result;
         }
     }
 }

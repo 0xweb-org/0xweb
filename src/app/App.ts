@@ -42,18 +42,25 @@ import { TokenTransferService } from '@dequanto/tokens/TokenTransferService';
 import { TokensService } from '@dequanto/tokens/TokensService';
 import { AccountsService } from '@core/services/AccountsService';
 import { BlockchainExplorerFactory } from '@dequanto/explorer/BlockchainExplorerFactory';
+import { CServer } from '@core/commands/list/CServer';
+import { IConfigData } from '@dequanto/config/interface/IConfigData';
 
 
 declare const global;
 
 export class App {
     commands = new CommandsHandler();
-    config: AppConfig;
+    config: AppConfig & IConfigData & { env?: 'cli' | 'api' };
 
     chain?: IPlatformTools
 
     constructor() {
-        global.app = this;
+        if (global.app instanceof App === false) {
+            global.app = this;
+        } else {
+            this.config = global.app.config;
+            this.chain = global.app.chain;
+        }
     }
 
     async execute (argv?: string[]): Promise<any> {
@@ -105,6 +112,7 @@ export class App {
             .register(CConfig())
             .register(CSolidity())
             .register(CTools())
+            .register(CServer())
             .register(CVersion)
             .register(CReset())
             .register(CInfo())

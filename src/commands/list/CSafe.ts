@@ -17,6 +17,8 @@ import { Web3Client } from '@dequanto/clients/Web3Client';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
 import { $tx } from '@core/utils/$tx';
 import { $logger, l } from '@dequanto/utils/$logger';
+import { TxService } from '@core/services/TxService';
+import { TEth } from '@dequanto/models/TEth';
 
 export function CSafe() {
     return <ICommand>{
@@ -210,7 +212,7 @@ export function CSafe() {
                     $console.toast(`Transaction ${hash} sent. Waiting for receipt`);
 
                     let receipt = await tx.onCompleted;
-                    await $tx.log(client, app.chain.explorer, hash, null, receipt);
+                    await TxService.printTx(app, hash as TEth.Hex, null, receipt);
                 }
             },
         ],

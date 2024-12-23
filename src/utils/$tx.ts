@@ -24,12 +24,15 @@ import { $is } from '@dequanto/utils/$is';
 import { $contract } from '@dequanto/utils/$contract';
 import { $hex } from '@dequanto/utils/$hex';
 import { $abiValues } from './$abiValues';
+import { $logger } from '@dequanto/utils/$logger';
 
 
 
 export namespace $tx {
 
+    /** @deprecated Use TxService instead */
     export async function log(client: Web3Client, explorer: IBlockchainExplorer, hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
+        $logger.warn(`$tx.log is deprecated. Use TxService instead.`);
         $require.TxHash(hash, `Not valid hash bold<${hash}>`);
         if (tx == null) {
             $console.toast(`Fetch Tx ${hash}`);

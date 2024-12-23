@@ -4,8 +4,6 @@ import { Directory, File, env } from 'atma-io';
 import { PackageService } from './PackageService';
 import { GeneratorFromAbi } from '@dequanto/gen/GeneratorFromAbi';
 import { IPackageItem } from '@core/models/IPackageJson';
-import { $cli } from '@core/utils/$cli';
-import { $console } from '@core/utils/$console';
 import { ContractReader } from '@dequanto/contracts/ContractReader';
 import { TxTopicInMemoryProvider } from '@dequanto/txs/receipt/TxTopicInMemoryProvider';
 import { ContractWriter } from '@dequanto/contracts/ContractWriter';
@@ -36,6 +34,7 @@ import { $abiUtils } from '@dequanto/utils/$abiUtils';
 import { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
 import { ContractFactory } from '@core/factories/ContractFactory';
 import { $abiInput } from '@core/utils/$abiInput';
+import { BaseService } from './BaseService';
 
 
 interface ICallParams {
@@ -45,15 +44,14 @@ interface ICallParams {
     nonce?: number
     address?: TAddress
     safeTransport?: string
+    abi?: string
 }
 
 
-export class ContractService {
-    constructor(public app: App) {
+export class ContractService extends BaseService {
 
-    }
 
-    async printList (options?: { chain?: TPlatform }) {
+    async printList(options?: { chain?: TPlatform }) {
         let packageService = di.resolve(PackageService);
         let pkgs = await packageService.getLocalPackages();
         if (options?.chain != null) {
@@ -65,12 +63,17 @@ export class ContractService {
             .thenBy(x => x.name)
             .toArray();
 
+        let rows = pkgs.map(x => [
+            x.name, x.address, x.platform
+        ]);
+        this.printLogTable([
+            ['Name', 'Address', 'Platform (default)'],
+            ...rows
+        ]);
         return pkgs;
     }
 
-    async abi (name: string): Promise<string> {
-        let pkg = await this.getPackage(name);
-        let abi = await this.getAbi(pkg);
+    async formatAbi(pkg: IPackageItem, abi: TAbiItem[]): Promise<string> {
 
         let methods = await abi.filter(x => x.type === 'function');
         let reads = methods.filter(x => $abiUtils.isReadMethod(x));
@@ -90,20 +93,29 @@ export class ContractService {
         return lines.join('\n');
     }
 
-    private async getAbiItem (method: string, pkg?: IPackageItem) {
+    async abi(name: string): Promise<{ pkg: IPackageItem, abi: TAbiItem[] }> {
+        let pkg = await this.getPackage(name);
+        let abi = await this.getAbi(pkg);
+        return { pkg, abi };
+    }
+
+    private async getAbiItem(method: string, pkg?: IPackageItem, params?: ICallParams) {
         if (method?.includes(`(`)) {
             return $abiParser.parseMethod(method);
+        }
+        if (params?.abi) {
+            return $abiParser.parseMethod(params.abi);
         }
         let abi = await this.getAbi(pkg);
         let abiItem = abi.find(x => x.name === method && x.type === 'function');
         return abiItem;
     }
 
-    async call (nameOrAddress: string, method: string, params: ICallParams, action: 'read' | 'write') {
+    async call(nameOrAddress: string, method: string, params: ICallParams, action: 'read' | 'write') {
         let pkg = $is.Address(nameOrAddress)
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
-        let abiItem = await this.getAbiItem(method, pkg);
+        let abiItem = await this.getAbiItem(method, pkg, params);
         if (abiItem == null) {
             let str = [
                 `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
@@ -124,40 +136,41 @@ export class ContractService {
                 .get(platform as any);
         }
 
-        $console.log('')
-        $console.table([
+        this.printLog('')
+        this.printLogTable([
             ['Contract', params.address ?? pkg.address],
             ['Platform', platform],
             ['Action', isRead ? 'READ' : 'WRITE'],
-            ['Method',  methodSignature.trim()],
+            ['Method', methodSignature.trim()],
         ]);
-        $console.log('')
+        this.printLog('')
 
         if (isRead) {
-            await this.$read(pkg, abiItem, params);
-        } else {
-            await this.$write(pkg, abiItem, params);
+            return await this.$read(pkg, abiItem, params);
         }
+        return await this.$write(pkg, abiItem, params);
     }
-    async calldata (nameOrAddress: string, method: string, params: ICallParams) {
+    async calldata(nameOrAddress: string, method: string, params: ICallParams) {
         let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, method, params);
 
-        let arr = [ ...args ];
+        let arr = [...args];
         let isRead = $abiUtils.isReadMethod(abiItem);
         if (isRead === false) {
             arr.unshift({});
         }
 
         let $data = await contract.$data()[method](...arr);
+        this.printLog($data);
         return $data;
     }
-    async calldataParse (nameOrAddress: string, hex: TEth.Hex, params?: ICallParams) {
+    async calldataParse(nameOrAddress: string, hex: TEth.Hex, params?: ICallParams) {
         let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, null, params);
-        let $data = await contract.$parseInputData(hex)
+        let $data = await contract.$parseInputData(hex);
+        this.printLog($data);
         return $data;
     }
 
-    async getContractInstance (nameOrAddress: string, method: string, params: { chain?: TPlatform }) {
+    async getContractInstance(nameOrAddress: string, method: string, params: { chain?: TPlatform, abi?: string }) {
         let pkg = $is.Address(nameOrAddress)
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
@@ -169,7 +182,7 @@ export class ContractService {
         }
 
         if (method != null) {
-            abiItem = await this.getAbiItem(method, pkg);
+            abiItem = await this.getAbiItem(method, pkg, params);
 
             if (abiItem == null) {
                 let str = [
@@ -179,7 +192,7 @@ export class ContractService {
                 throw new Error(str);
             }
             if (abi == null) {
-                abi = [ abiItem ];
+                abi = [abiItem];
             }
         }
 
@@ -208,7 +221,7 @@ export class ContractService {
         };
     }
 
-    async logs (name: string, eventName: string, params: { output, format?: 'csv' | 'json' }) {
+    async logs(name: string, eventName: string, params: { output, format?: 'csv' | 'json' }) {
         let pkg = await this.getPackage(name);
         let abi = await this.getAbi(pkg);
         let event = abi.find(x => x.name === eventName && x.type === 'event');
@@ -217,7 +230,7 @@ export class ContractService {
         await this.app.ensureChain(pkg.platform);
 
         let args = alot(event.inputs)
-            .map(input => [ input.name, params?.[input.name] ])
+            .map(input => [input.name, params?.[input.name]])
             .filter(tuple => tuple[1] != null)
             .toDictionary(x => x[0], x => x[1]);
 
@@ -227,7 +240,7 @@ export class ContractService {
             fromBlock: 'deployment',
             params: args
         });
-        $console.log(`Loaded bold<${logs.length}> ${eventName} Events`);
+        this.printLog(`Loaded bold<${logs.length}> ${eventName} Events`);
 
         let blockDates = await BlockDateLoader.load(this.app.chain.client, logs);
 
@@ -255,7 +268,7 @@ export class ContractService {
             str = JSON.stringify(json, null, '  ');
         }
         if (format === 'csv') {
-            let headers = [ 'Block', 'Date', 'Tx', 'Event', ...event.inputs.map(x => x.name) ].join(', ');
+            let headers = ['Block', 'Date', 'Tx', 'Event', ...event.inputs.map(x => x.name)].join(', ');
             let rows = logs.map(log => {
                 let row = [
                     log.blockNumber,
@@ -266,16 +279,16 @@ export class ContractService {
                 ];
                 return row.join(', ');
             });
-            str = `${ headers }\n${ rows.join('\n') }`;
+            str = `${headers}\n${rows.join('\n')}`;
         }
-        let output = params.output ?? `./cache/${eventName}_${pkg.address}.${ format }`;
+        let output = params.output ?? `./cache/${eventName}_${pkg.address}.${format}`;
         let file = new File(output);
 
-        $console.log(`Loaded bold<green<${logs.length}>> Logs`);
+        this.printLog(`Loaded bold<green<${logs.length}>> Logs`);
         await file.writeAsync(str, { skipHooks: true });
-        $console.log(`File cyan<${ file.uri.toString() }>`);
+        this.printLog(`File cyan<${file.uri.toString()}>`);
     }
-    async dump (nameOrAddress: string | TAddress, params: {
+    async dump(nameOrAddress: string | TAddress, params: {
         output?: string
         implementation?: TAddress
         fields?: string
@@ -285,9 +298,9 @@ export class ContractService {
         let dumpService = new ContractDumpService(this.app)
         let { files, json } = await dumpService.dump(nameOrAddress, params);
         if (files != null) {
-            $console.table([
-                [ 'Slots', files.csv ],
-                [ 'JSON', files.json ],
+            this.printLogTable([
+                ['Slots', files.csv],
+                ['JSON', files.json],
             ]);
             return;
         }
@@ -295,7 +308,7 @@ export class ContractService {
         console.dir(json, { depth: null, colors: true });
     }
 
-    async dumpRestore (nameOrAddress: string | TAddress, params: {
+    async dumpRestore(nameOrAddress: string | TAddress, params: {
         file: string
     }) {
         $require.True(await File.existsAsync(params.file), `${params.file} does not exist`);
@@ -304,40 +317,42 @@ export class ContractService {
         let result = await dumpService.dumpRestore(nameOrAddress, params);
     }
 
-    async slot (nameOrAddress: string | TAddress, slotOrRange: string) {
+    async slot(nameOrAddress: string | TAddress, slotOrRange: string) {
         let address = await this.getAddress(nameOrAddress);
         if (slotOrRange.includes('-')) {
-            let [ start, end ] = slotOrRange.split('-').map(Number);
+            let [start, end] = slotOrRange.split('-').map(Number);
             let slots = alot.fromRange(start, end + 1).toArray();
             let values = await this.app.chain.client.getStorageAtBatched(address, slots);
             values.forEach((value, index) => {
-                $console.table([
-                    [ slots[index], value ],
+                this.printLogTable([
+                    [slots[index], value],
                 ]);
             });
             return;
         }
         let slot = slotOrRange as TEth.Hex;
         let slotValue = await this.app.chain.client.getStorageAt(address, slot);
-        $console.log(slotValue);
+        this.printLog(slotValue);
+        return slotValue;
     }
 
-    async varList (nameOrAddress: string | TAddress) {
+    async varList(nameOrAddress: string | TAddress) {
         let pkg = await this.getPackage(nameOrAddress);
         let slots = await this.getSlots(pkg);
 
         let rows = slots
-        // SlotsParser adds `$` at the end of the name when a property was overridden in inheritance
-        .filter(slot => /\$$/.test(slot.name) === false)
-        .map(slot => {
-            return [ slot.slot, slot.position, slot.name, slot.type?.replace(/=>/g, '→') ]
-        });
-        $console.table([
-            [ 'Slot', 'Offset', 'Variable', 'Type' ],
+            // SlotsParser adds `$` at the end of the name when a property was overridden in inheritance
+            .filter(slot => /\$$/.test(slot.name) === false)
+            .map(slot => {
+                return [slot.slot, slot.position, slot.name, slot.type?.replace(/=>/g, '→')]
+            });
+        this.printLogTable([
+            ['Slot', 'Offset', 'Variable', 'Type'],
             ...rows
         ]);
+        return slots;
     }
-    async varLoad (nameOrAddress: string | TAddress, path: string, info?: {
+    async varLoad(nameOrAddress: string | TAddress, path: string, info?: {
         slot?: number
         type?: string
         offset?: string
@@ -354,36 +369,36 @@ export class ContractService {
             let slots = await this.getSlots(pkg);
             storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
         }
-        $console.toast(`Loading storage of "${path}"`);
+        this.printLogToast(`Loading storage of "${path}"`);
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
-            $console.log(JSON.stringify(result, null, '  '));
+            this.printLog(JSON.stringify(result, null, '  '));
         } else {
-            $console.log(result);
+            this.printLog(result);
         }
         return result;
     }
 
-    async varSet (name: string, path: string, value: string, info?: {
+    async varSet(name: string, path: string, value: string, info?: {
         type?: string
     }) {
         let pkg = await this.getPackage(name);
         let slots = await this.getSlots(pkg);
         let storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
 
-        $console.toast(`Writing storage of "${path}"`);
+        this.printLogToast(`Writing storage of "${path}"`);
         await storage.set(path, value);
 
-        $console.toast(`Loading storage of "${path}"`);
+        this.printLogToast(`Loading storage of "${path}"`);
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
-            $console.log(JSON.stringify(result, null, '  '));
+            this.printLog(JSON.stringify(result, null, '  '));
             return;
         }
-        $console.log(result);
+        this.printLog(result);
     }
 
-    async watchLog (nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters }) {
+    async watchLog(nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters }) {
         let pkg = await this.getPackage(nameOrAddress);
         let abi = await this.getAbi(pkg);
 
@@ -391,9 +406,9 @@ export class ContractService {
             let streamHandler = new ContractStream(pkg.address, abi, this.app.chain.client);
             let stream = streamHandler.on(params.event);
 
-            stream.onConnected(() => $logger.toast(`green<WebSocket Connected>`));
+            stream.onConnected(() => this.printLogToast(`green<WebSocket Connected>`));
             stream.onData(event => {
-                $logger.log($abiValues.serializeLog(event));
+                this.printLog($abiValues.serializeLog(event));
             });
         }
         if (params.tx) {
@@ -401,12 +416,12 @@ export class ContractService {
             let stream = contract.$onTransaction({ filter: { method: '*' } });
 
             stream.subscribe(info => {
-                $logger.log($abiValues.serializeCalldata(info.calldata, abi));
+                this.printLog($abiValues.serializeCalldata(info.calldata, abi));
             });
         }
     }
 
-    private async $read (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
+    private async $read(pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
         let address = params.address ?? pkg.address;
         $require.Address(address, 'Contracts address invalid');
 
@@ -423,9 +438,11 @@ export class ContractService {
         let output = result != null && typeof result === 'object'
             ? JSON.stringify(result, null, '  ')
             : result;
-        $console.log(output);
+        this.printLog(output);
+
+        return result;
     }
-    private async getContractReader (params: { block?, account? }) {
+    private async getContractReader(params: { block?, account?}) {
         let reader = di.resolve(ContractReader, this.app.chain.client);
         if (params.block) {
             let block: number | Date;
@@ -444,14 +461,14 @@ export class ContractService {
         }
         return reader;
     }
-    private async $write (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
+    private async $write(pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
         let args = await this.getArguments(abi, params);
         let writer = await this.getContractWriter(pkg, abi, params);
 
         let accounts = di.resolve(AccountsService, this.app.config);
         let account = await accounts.get(params.account);
 
-        let writerConfig = <ITxWriterOptions> {
+        let writerConfig = <ITxWriterOptions>{
 
         };
         if ($account.isSafe(account) && params.safeTransport) {
@@ -463,15 +480,15 @@ export class ContractService {
         }
 
         let tx = await writer.writeAsync(account, abi, args, {
-            builderConfig: <ITxBuilderOptions> {
+            builderConfig: <ITxBuilderOptions>{
                 nonce: params.nonce
             },
             writerConfig,
         });
         let receipt = await tx.onCompleted;
-        $console.log(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
+        this.printLog(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
     }
-    private async getContractWriter (pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
+    private async getContractWriter(pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
 
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
@@ -479,7 +496,7 @@ export class ContractService {
         let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.app.chain.client);
         return writer;
     }
-    private async getArguments (abi: TAbiItem, params) {
+    private async getArguments(abi: TAbiItem, params) {
         return $abiInput.parseArgumentsFromCli(abi as TEth.Abi.Item, params);
     }
     private async getAddress(nameOrAddress): Promise<TAddress> {
@@ -489,7 +506,7 @@ export class ContractService {
         let pkg = await this.getPackage(nameOrAddress);
         return pkg.address;
     }
-    private async getPackage (name: string) {
+    private async getPackage(name: string) {
         let packageService = di.resolve(PackageService, this.app.chain);
         let pkg = await packageService.getPackage(name);
         if (pkg == null) {
@@ -526,15 +543,15 @@ export class ContractService {
         if (rgxEndMatch == null) {
             throw new Error(`${pkg.main}: End not found of the $slots value`);
         }
-        let json = code.substring(rgxStartMatch.index + rgxStartMatch[0].length  - 1, rgxEndMatch.index + 1);
+        let json = code.substring(rgxStartMatch.index + rgxStartMatch[0].length - 1, rgxEndMatch.index + 1);
         try {
             return JSON.parse(json);
         } catch (error) {
-            $console.log(json);
+            this.printLog(json);
             throw error;
         }
     }
-    private stringifyAbi (abi: TAbiItem) {
+    private stringifyAbi(abi: TAbiItem) {
         let str = GeneratorFromAbi.Gen.serializeMethodAbi(abi, true);
         let line = '  ' + str.replace('function', '').trim();
 
@@ -543,11 +560,12 @@ export class ContractService {
         line = line.replace(/([()])/g, 'green<$1>');
         return line;
     }
+
 }
 
 
 namespace BlockDateLoader {
-    export async function load (client: Web3Client, logs: ITxLogItem[]) {
+    export async function load(client: Web3Client, logs: ITxLogItem[]) {
         let blockNrs = alot(logs).map(x => x.blockNumber).distinct().toArray();
         let min = alot(blockNrs).min(x => x);
         let max = alot(blockNrs).max(x => x);
@@ -564,7 +582,7 @@ namespace BlockDateLoader {
         nrs.push(max);
 
         let blocks = await client.getBlocks(nrs);
-        $console.log(`Loaded bold<${blockNrs.length}> block dates by approx ${nrs.length}`);
+        this.printLog(`Loaded bold<${blockNrs.length}> block dates by approx ${nrs.length}`);
 
 
         let knownDates = alot(blocks).map(block => [block.number, Number(block.timestamp)] as const).toArray();
@@ -575,14 +593,14 @@ namespace BlockDateLoader {
             for (let i = 0; i < knownDates.length - 1; i++) {
                 a = knownDates[i];
                 b = knownDates[i + 1];
-                let [ aNr, aTime ] = a;
-                let [ bNr, bTime ] = b;
+                let [aNr, aTime] = a;
+                let [bNr, bTime] = b;
                 if (aNr >= nr && nr <= bNr) {
                     break;
                 }
             }
-            let [ aNr, aTime ] = a;
-            let [ bNr, bTime ] = b;
+            let [aNr, aTime] = a;
+            let [bNr, bTime] = b;
             let avg = (bTime - aTime) / (bNr - aNr);
 
             let startTime = aTime;
@@ -591,7 +609,7 @@ namespace BlockDateLoader {
 
             return [nr, time];
         })
-        .toDictionary(x => x[0], x => new Date(Number(x[1]) * 1000))
+            .toDictionary(x => x[0], x => new Date(Number(x[1]) * 1000))
 
         return dates;
     }

@@ -6,6 +6,9 @@ import { Directory, File } from 'atma-io';
 import { Shell, run } from 'shellbee';
 import type { IShellParams } from 'shellbee/interface/IProcessParams';
 import { EoAccount } from '@dequanto/models/TAccount';
+import { ServerService } from '@core/services/ServerService';
+import { App } from '@core/app/App';
+import { HttpResponse } from 'atma-server';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -32,6 +35,13 @@ export const TestUtils = {
         try { await Directory.removeAsync(HH_ASSETS); } catch { }
         try { await Directory.removeAsync(HH_OZ); } catch { }
 
+    },
+    async api (url: string) {
+        let app = new App();
+        let service = new ServerService(app);
+        let server = await service.createServer();
+        let response = await server.execute(url, 'get') as HttpResponse;
+        return response.content;
     },
     async cli(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
         params = {

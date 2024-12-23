@@ -10,6 +10,8 @@ export interface ICommand {
         name?: string
         type?: 'number' | 'string' | 'boolean'
         required?: boolean
+        // If true, the argument is optional and will be treated as a query parameter in the API request
+        query?: boolean
     }[]
     params?: {
         [definition: string]: {
@@ -29,7 +31,12 @@ export interface ICommand {
         }
     }
     subcommands?: ICommand[]
-    process: (args: any[], params?, app?: App) => Promise<void | any>
+    process: (args: any[], params?, app?: App, command?: ICommand) => Promise<void | any>
+
+    api?: {
+        method?: 'get' | 'post'
+        process?: (args: any[], params?, app?: App, command?: ICommand) => Promise<any>
+    }
 }
 
 export abstract class Command implements ICommand {

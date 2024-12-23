@@ -1,9 +1,6 @@
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
-import { l } from '@dequanto/utils/$logger';
-import { File } from 'atma-io';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
 import { TestUtils } from '../TestUtils';
-import { ethers } from 'ethers';
 
 
 
@@ -26,6 +23,9 @@ UTest({
         let result = await TestUtils.cli('rpc eth_chainId --chain hardhat --silent');
         let chainId = Number(result);
         eq_(chainId, 1337);
+
+        let resultApi = await TestUtils.api(`/api/rpc/eth_chainId?chain=hardhat`);
+        eq_(resultApi, chainId);
     },
 
 })

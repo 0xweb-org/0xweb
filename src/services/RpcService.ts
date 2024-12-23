@@ -1,11 +1,20 @@
 import { App } from '@core/app/App';
 import { $bigint } from '@dequanto/utils/$bigint';
+import { BaseService } from './BaseService';
 
-export class RpcService {
+export class RpcService extends BaseService {
     async process(args: any[], params?, app?: App) {
 
         let client = app.chain.client;
         let [ method, ...methodArgs ] = args as [ string, ...any[]];
+
+        for (let key in params) {
+            let argMatch = /^arg(?<index>\d+)$/.exec(key);
+            if (argMatch) {
+                let index = Number(argMatch.groups.index);
+                methodArgs[index] = params[key];
+            }
+        }
 
         methodArgs = methodArgs.map(arg => {
             let typeMatch = /(?<type>\w+):/.exec(arg);
@@ -20,9 +29,7 @@ export class RpcService {
             return this.toValue(type, value);
         });
 
-
-
-        return await client.with(async wClient => {
+        let result = await client.with(async wClient => {
             let rpc = wClient.rpc;
             if (method in rpc.fns === false) {
                 rpc.extend([{
@@ -32,7 +39,15 @@ export class RpcService {
             }
             let result = await rpc.fns[method](...methodArgs);
             return result;
-        })
+        });
+
+        if (typeof result !== 'object') {
+            this.printResult(result);
+        } else {
+            this.printResult(JSON.stringify(result, null, 4))
+        };
+
+        return result;
     }
 
     private toValue(type: 'boolean' | string, str: string) {

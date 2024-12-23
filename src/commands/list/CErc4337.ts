@@ -15,8 +15,8 @@ import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
-import { $tx } from '@core/utils/$tx';
 import { CSafe } from './CSafe';
+import { TxService } from '@core/services/TxService';
 
 export function CErc4337 () {
     return <ICommand>{
@@ -194,7 +194,7 @@ export function CErc4337 () {
                     $console.toast(`Transaction ${hash} sent. Waiting for receipt`);
 
                     let receipt = await tx.onCompleted;
-                    await $tx.log(client, app.chain.explorer, hash, null, receipt);
+                    await TxService.printTx(app, receipt.transactionHash, null, receipt);
                 }
             },
         ],

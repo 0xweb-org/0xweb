@@ -44,7 +44,6 @@ UTest({
         let balanceBefore = await client.getBalance(owner2.address);
         l`Balance for ${owner2.address}: ${balanceBefore}ETH`
 
-
         let txSendStdout = await TestUtils.cli(`tx send ./test/bin/tx.json`, {
 
         }, { silent: STDOUT_SILENT });
@@ -64,5 +63,10 @@ UTest({
         }, { silent: STDOUT_SILENT });
 
         has_(txViewStdout, tx);
+
+
+        let txDetails = await TestUtils.api(`/api/tx/view/${tx}?chain=hardhat`);
+        eq_(txDetails.tx.hash, tx);
+        eq_(txDetails.tx.from?.toLowerCase(), owner1.address.toLowerCase());
     }
 })

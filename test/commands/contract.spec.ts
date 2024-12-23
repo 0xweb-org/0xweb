@@ -14,10 +14,11 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
     },
-    async 'var'() {
+    async '!var'() {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
         let path = './test/fixtures/contracts/StorageCounter.sol';
+        let deployer = provider.deployer();
 
         let { contract, abi } = await provider.deploySol(path, { client });
 
@@ -42,32 +43,67 @@ UTest({
             async 'list installation' () {
                 let str = await TestUtils.cli(`contract list`);
                 has_(str, /^Counter/m);
+
+                let arr = await TestUtils.api('/api/c/list');
+                has_(arr, [{
+                    platform: 'hardhat',
+                    name: 'Counter',
+                    main: './0xc/hardhat/Counter/Counter.ts',
+                    contractName: 'StorageCounter'
+                }]);
             },
             async 'get contract method data' () {
-                let str = await TestUtils.cli(`contract input serialize Counter getCountMethod`);
-                console.log(str);
+                let str = await TestUtils.cli(`contract calldata Counter getCountMethod`);
+                has_(str, `to: '${contract.address}'`);
+                has_(str, `data: '0xe3412189'`);
+
+                let call = await TestUtils.api('/api/c/calldata/Counter/getCountMethod');
+                deepEq_(call, {
+                    to: contract.address,
+                    data: '0xe3412189'
+                });
             },
             async 'call method by contract name' () {
                 let str = await TestUtils.cli(`contract read Counter getCountMethod --chain hardhat`);
                 has_(str, /^1n$/m);
+
+                let resp = await TestUtils.api('/api/c/read/Counter/getCountMethod');
+                eq_(resp, 1n);
             },
             async 'call method by contract address' () {
                 let str = await TestUtils.cli(`contract read ${ contract.address } "getCountMethod():uint256" --chain hardhat`);
                 has_(str, /^1n$/m);
+
+                let resp = await TestUtils.api(`/api/c/read/${contract.address}/getCountMethod?abi=getCountMethod():uint256&chain=hardhat`);
+                eq_(resp, 1n);
             },
             async 'check var' () {
                 let str = await TestUtils.cli(`contract var Counter count --chain hardhat`);
                 has_(str, /^1n$/m);
+
+                let resp = await TestUtils.api(`/api/c/var/Counter/count`);
+                eq_(resp, 1n);
             },
             async 'check complex var' () {
                 let str = await TestUtils.cli(`contract var Counter user`);
                 has_(str, /"amount": "5"/m);
+                let resp = await TestUtils.api(`/api/c/var/Counter/user`);
+                deepEq_(resp, {
+                    owner: contract.address,
+                    amount: 5n
+                });
             },
             async 'list vars' () {
                 let str = await TestUtils.cli(`contract vars Counter`);
                 // Slot Offset Name
                 has_(str, /0\s+0\s+count/);
                 has_(str, /1\s+0\s+user/);
+
+                let resp = await TestUtils.api(`/api/c/vars/Counter`);
+                deepEq_(resp, [
+                    { slot: 0, position: 0, name: 'count', size: 256, type: 'uint256' },
+                    { slot: 1, position: 0, name: 'user', size: 512, type: '(address owner, uint256 amount)' },
+                ])
             },
             async 'dump' () {
                 let output = `cache/counter-dump/dump`;
