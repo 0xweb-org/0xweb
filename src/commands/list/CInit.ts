@@ -9,6 +9,7 @@ interface IInitOptions {
     dir?: string
     source?: 'git' | 'npm'
     hardhat?: boolean
+    openzeppelin?: boolean
 }
 export function CInit() {
     return <ICommand>{
@@ -26,6 +27,10 @@ export function CInit() {
             },
             '--hardhat': {
                 description: 'Initialize also Hardhat project',
+                type: 'boolean'
+            },
+            '--openzeppelin': {
+                description: 'Installs /contracts and /contracts-upgradeable',
                 type: 'boolean'
             }
         },
@@ -228,12 +233,19 @@ class InitWorker {
         }
 
         let requiredDeps = pkgDequanto.dependencies;
-        if (this.params.hardhat) {
+        if (this.params.hardhat || this.params.openzeppelin) {
             requiredDeps = {
                 ...requiredDeps,
                 'atma-loader-ts': 'latest',
                 'hardhat': 'latest',
                 '@0xweb/hardhat': 'latest'
+            };
+        }
+        if (this.params.openzeppelin) {
+            requiredDeps = {
+                ...requiredDeps,
+                '@openzeppelin/contracts': 'latest',
+                '@openzeppelin/contracts-upgradeable': 'latest'
             };
         }
 
