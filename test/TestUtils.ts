@@ -41,7 +41,7 @@ export const TestUtils = {
         let service = new ServerService(app);
         let server = await service.createServer();
         let response = await server.execute(url, 'get') as HttpResponse;
-        return response.content;
+        return JSON.parse(response.content);
     },
     async cli(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
         params = {
