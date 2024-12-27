@@ -12,3 +12,6 @@ assets/
 contracts/oz/
 test/bin/
 de_**.bat
+
+src/www/
+index-dev.html

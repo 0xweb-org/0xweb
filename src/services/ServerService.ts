@@ -1,6 +1,6 @@
 import alot from 'alot';
 import memd  from 'memd';
-import { Application, HttpService } from 'atma-server';
+import { Application, HttpResponse, HttpService } from 'atma-server';
 import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
@@ -63,6 +63,9 @@ namespace ServerCommands {
                 return `$get ${x.path}`;
             }, x => {
                 return {
+                    meta: {
+                        origins: '*'
+                    },
                     process: wrapProcessor(x.command.api.process ?? x.command.process, app, x.command)
                 };
             });
@@ -101,7 +104,11 @@ namespace ServerCommands {
             let app = appFromRequest ?? appFromCli;
             app.config ??= {} as any;
             app.config.env = 'api';
-            return await process(cliArgs, cliParams, app, command);
+            let result = await process(cliArgs, cliParams, app, command);
+            return new HttpResponse({
+                content: JSON.stringify(result),
+                mimeType: 'application/json; charset=utf-8'
+            })
         }
     }
 
