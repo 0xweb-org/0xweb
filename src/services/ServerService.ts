@@ -106,7 +106,7 @@ namespace ServerCommands {
             app.config.env = 'api';
             let result = await process(cliArgs, cliParams, app, command);
             return new HttpResponse({
-                content: JSON.stringify(result),
+                content: result,
                 mimeType: 'application/json; charset=utf-8'
             })
         }
