@@ -1,21 +1,20 @@
-import alot from 'alot';
 import { Directory, File } from 'atma-io';
 import { PackageService } from './PackageService';
 import { IPlatformTools } from '@dequanto/chains/PlatformFactory';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { $require } from '@dequanto/utils/$require';
 import { ChainAccountService } from '@dequanto/ChainAccountService';
-import { ContractVerifier } from '@dequanto/explorer/ContractVerifier';
 import { Deployments } from '@dequanto/contracts/deploy/Deployments';
-import { Constructor } from 'atma-utils';
-import { IContractWrapped } from '@dequanto/contracts/ContractClassFactory';
 import { ContractBase } from '@dequanto/contracts/ContractBase';
 import { TEth } from '@dequanto/models/TEth';
 import { $abiInput } from '@core/utils/$abiInput';
 import { $path } from '@dequanto/utils/$path';
+import { App } from '@core/app/App';
 
 export class HardhatService {
-    constructor (public chain: IPlatformTools) {
+    public chain: IPlatformTools = this.app.chain;
+
+    constructor (public app: App) {
 
     }
 
@@ -59,26 +58,9 @@ export class HardhatService {
         $require.notNull(account?.address, `Account ${ params.account } not resolved`);
         let withProxy = Boolean(params.proxy);
 
-        // let ProxyData = {
-        //     Proxy: null,
-        //     ProxyAdmin: null,
-        //     Beacon: {
-        //         Beacon: null,
-        //         BeaconProxy: null,
-        //     }
-        // }
-        // if (withProxy) {
-        //     let proxyContracts = await this.getOpenzeppelinUpgradable({ beacon: false });
-
-        //     ProxyData.Proxy = proxyContracts.TransparentUpgradeableProxy;
-        //     ProxyData.ProxyAdmin = proxyContracts.ProxyAdmin;
-        //     ProxyData.Beacon.Beacon = proxyContracts.Beacon;
-        //     ProxyData.Beacon.BeaconProxy = proxyContracts.BeaconProxy;
-        // }
 
         let deployments = new Deployments(this.chain.client, account, {
             directory: './0xc/deployments/',
-            //...ProxyData
         })
 
         let [ compilation ] = await this.compile(mix);
@@ -86,7 +68,9 @@ export class HardhatService {
         let ctorAbi = abi.find(x => x.type === 'constructor');
         let args = ctorAbi == null
             ? []
-            : await $abiInput.parseArgumentsFromCli(ctorAbi as TEth.Abi.Item, params);
+            : await $abiInput.parseArgumentsFromCli(ctorAbi as TEth.Abi.Item, params, {
+                env: this.app.config.env
+            });
 
         let id = params.name ?? source.contractName;
         if (withProxy) {

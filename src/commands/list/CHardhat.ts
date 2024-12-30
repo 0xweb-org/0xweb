@@ -33,7 +33,7 @@ export function CHardhat() {
             async process(args: string[], params: any, app: App) {
 
                 let [ mix ] = args;
-                let service = new HardhatService(app.chain);
+                let service = new HardhatService(app);
                 let results = await service.compile(mix, {
                     install: params.install
                 });
@@ -77,7 +77,7 @@ export function CHardhat() {
             async process(args: string[], params: any, app: App) {
 
                 let [ mix ] = args;
-                let service = new HardhatService(app.chain);
+                let service = new HardhatService(app);
 
                 let { contract, contractReceipt } = await service.deploy(mix, params);
                 if (contractReceipt) {

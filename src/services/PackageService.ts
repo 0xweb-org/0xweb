@@ -11,6 +11,13 @@ import memd from 'memd';
 import { DeploymentsStorage, IDeployment } from '@dequanto/contracts/deploy/storage/DeploymentsStorage';
 import { $logger } from '@dequanto/utils/$logger';
 import { $require } from '@dequanto/utils/$require';
+import { platform } from 'process';
+
+type TDeploymentEntry = {
+    platform: string;
+    name: string;
+    deployments: IDeployment[];
+};
 
 export class PackageService {
     constructor(public chain?: IPlatformTools) {
@@ -165,7 +172,7 @@ export class PackageService {
         return item;
     }
     private async getLocalList (): Promise<IPackageItem[]> {
-        let list = await this.readFromFile('0xweb.json');
+        let { list } = await this.readFromFile('0xweb.json');
         return list;
     }
     private async getDeploymentsList (): Promise<IPackageItem[]> {
@@ -203,13 +210,14 @@ export class PackageService {
 
     private async getGlobalList (): Promise<IPackageItem[]> {
         let path = env.appdataDir.combine('.dequanto/0xweb.json').toString();
-        return this.readFromFile(path);
+        let { list } = await this.readFromFile(path);
+        return list;
     }
 
-    private async readFromFile(path: string): Promise<IPackageItem[]>  {
+    private async readFromFile(path: string): Promise<{ list: IPackageItem[], deployments: TDeploymentEntry[] }>  {
         let file = new File(path);
         if (await file.existsAsync() === false) {
-            return []
+            return { list: [], deployments: [] };
         }
         let $0xweb = await file.readAsync<IPackageJson>();
         let list = [] as IPackageItem[];
@@ -251,8 +259,42 @@ export class PackageService {
                     implementation: d.value.implementation,
                 });
             })
-
         }
-        return list;
+        let deployments = [] as TDeploymentEntry[];
+        if ($0xweb.deployments != null) {
+            deployments = await alot
+                .fromObject($0xweb.deployments)
+                .mapManyAsync(async d => {
+
+                    return alot(d.value)
+                        .mapAsync(async deployment => {
+                            return {
+                                platform: d.key,
+                                name: deployment.name,
+                                deployments: await File.readAsync<IDeployment[]>(deployment.path)
+                            }
+                        })
+                        .toArrayAsync();
+                })
+                .toArrayAsync();
+
+            deployments.forEach(d => {
+
+                d.deployments.forEach(deployment => {
+
+                    let pkgMain = list.find(x => x.main != null && x.name === deployment.name);
+                    list.push({
+                        platform: d.platform as TPlatform,
+                        address: deployment.address as TAddress,
+                        name: deployment.id ?? deployment.name,
+                        contractName: deployment.name,
+                        main: pkgMain?.main,
+                        implementation: deployment.implementation,
+                    });
+                })
+            });
+        }
+
+        return { list, deployments };
     }
 }

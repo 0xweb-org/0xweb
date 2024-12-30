@@ -1,6 +1,7 @@
 import alot from 'alot';
 import memd  from 'memd';
-import { Application, HttpResponse, HttpService } from 'atma-server';
+import { env } from 'atma-io';
+import { Application, HttpResponse, HttpService, middleware } from 'atma-server';
 import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
@@ -35,7 +36,8 @@ export class ServerService {
                         formatted: true
                     }
                 }
-            }
+            },
+
         });
         await this.server.handlers.registerService('^/api', service);
         return this.server;
@@ -45,7 +47,18 @@ export class ServerService {
         port: number
     }) {
         let server = await this.createServer();
-        await server.listen(params.port);
+        await server
+            .processor({
+                middleware: [
+                    middleware.bodyJson(),
+                ],
+                after: [
+                    middleware.static({
+                        base: env.applicationDir.combine('./www/').toLocalDir()
+                    })
+                ]
+            })
+            .listen(params.port);
     }
 }
 
@@ -60,7 +73,7 @@ namespace ServerCommands {
         let definition = alot(routes)
             .filter(x => x.command.api != null)
             .toDictionary(x => {
-                return `$get ${x.path}`;
+                return `$${x.command.api.method ?? 'get'} ${x.path}`;
             }, x => {
                 return {
                     meta: {
@@ -90,7 +103,7 @@ namespace ServerCommands {
             let cliArgs = [];
             let cliParams = params;
             for (let key in params) {
-                let index = /^arg(?<i>\d+)$/.exec(key);
+                let index = /^cliArg(?<i>\d+)$/.exec(key);
                 if (index) {
                     cliArgs[Number(index.groups.i)] = params[key];
                     continue;
@@ -101,6 +114,12 @@ namespace ServerCommands {
                     continue;
                 }
             }
+            if (req.body != null) {
+                for (let key in req.body) {
+                    cliParams[key] = req.body[key];
+                }
+            }
+
             let app = appFromRequest ?? appFromCli;
             app.config ??= {} as any;
             app.config.env = 'api';
@@ -108,7 +127,7 @@ namespace ServerCommands {
             return new HttpResponse({
                 content: JSON.stringify(result),
                 mimeType: 'application/json; charset=utf-8'
-            })
+            });
         }
     }
 
@@ -124,7 +143,7 @@ namespace ServerCommands {
                         // Should be not the URI segment, but the query parameter
                         continue;
                     }
-                    let name = arg.name ?? `arg${i}`;
+                    let name = arg.name ?? `cliArg${i}`;
                     route += `/:${name}`;
                 }
             }

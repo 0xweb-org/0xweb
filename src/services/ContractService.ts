@@ -64,10 +64,10 @@ export class ContractService extends BaseService {
             .toArray();
 
         let rows = pkgs.map(x => [
-            x.name, x.address, x.platform
+            x.name, x.address, x.platform, x.id ?? ''
         ]);
         this.printLogTable([
-            ['Name', 'Address', 'Platform (default)'],
+            ['Name', 'Address', 'Platform (default)', 'ID'],
             ...rows
         ]);
         return pkgs;
@@ -467,7 +467,6 @@ export class ContractService extends BaseService {
 
         let accounts = di.resolve(AccountsService, this.app.config);
         let account = await accounts.get(params.account);
-
         let writerConfig = <ITxWriterOptions>{
 
         };
@@ -485,6 +484,11 @@ export class ContractService extends BaseService {
             },
             writerConfig,
         });
+        if (this.app.config.env === 'api') {
+            let hash = await tx.onSent;
+            return { hash };
+        }
+        // In CLI wait for the Transaction to be mined
         let receipt = await tx.onCompleted;
         this.printLog(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
     }
@@ -497,7 +501,9 @@ export class ContractService extends BaseService {
         return writer;
     }
     private async getArguments(abi: TAbiItem, params) {
-        return $abiInput.parseArgumentsFromCli(abi as TEth.Abi.Item, params);
+        return $abiInput.parseArgumentsFromCli(abi as TEth.Abi.Item, params, {
+            env: this.app.config.env
+        });
     }
     private async getAddress(nameOrAddress): Promise<TAddress> {
         if ($is.Address(nameOrAddress)) {

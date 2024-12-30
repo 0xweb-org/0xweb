@@ -48,6 +48,7 @@ export interface IPackageItem {
     address: TAddress
     name: string
     contractName: string
+    id?: string
     main: string
     abi?: TAbiItem[]
     implementation?: TAddress

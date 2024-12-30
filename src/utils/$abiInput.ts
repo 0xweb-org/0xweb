@@ -18,10 +18,21 @@ export namespace $abiInput {
         get (abi) {
             return $cli.ask(`Value for bold<${abi.name}> gray<(>bold<blue<${abi.type}>>gray<)>: `, abi.type);
         }
-    }
+    };
+    const apiInputAsker = <IArgumentProvider> {
+        get (abi) {
+            throw new Error(`Value for "${abi.name}" as ${abi.type} not provided`);
+        }
+    };
 
-    export async function parseArgumentsFromCli (abi: TEth.Abi.Item, params: Record<string, any>, argumentProvider?: IArgumentProvider): Promise<any[]> {
-        argumentProvider ??= cliInputAsker;
+    export async function parseArgumentsFromCli (abi: TEth.Abi.Item, params: Record<string, any>, opts?:{
+        argumentProvider?: IArgumentProvider
+        env?: 'api' | 'cli'
+    }): Promise<any[]> {
+        let argumentProvider = opts?.argumentProvider;
+        if (argumentProvider == null && opts?.env != null) {
+            argumentProvider = opts.env === 'api' ? apiInputAsker : cliInputAsker;
+        }
         return getArguments(abi, params, argumentProvider);
     }
 
