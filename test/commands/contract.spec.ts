@@ -14,7 +14,7 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
     },
-    async '!var'() {
+    async 'var'() {
         let provider = new HardhatProvider();
         let client = provider.client('localhost');
         let path = './test/fixtures/contracts/StorageCounter.sol';

@@ -69,8 +69,9 @@ UTest({
                 });
                 has_(stdAddOne, /Deployed\s+0x\w+/);
 
+                // Deployed as proxy, the value set in constructor should affect the value in FooProxy, so remains 0
                 let fooResponse = await TestUtils.cli(`c read FooProxy getFoo`);
-                has_(fooResponse, `10n`);
+                has_(fooResponse, /^0n$/m);
             }
         });
     },
