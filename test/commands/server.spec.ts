@@ -25,7 +25,7 @@ UTest({
 
         shell = await TestUtils.cliParallel(`server start --chain hardhat`, {}, {
             matchReady: /Local:/,
-            silent: false,
+            silent: true,
         });
 
         await shell.onReadyAsync();
@@ -48,6 +48,14 @@ UTest({
 
         let fooApi = json.find(c => c.name === 'FooApi');
         notEq_(fooApi, undefined, `FooApi not found`);
+
+        let abi = await getJson('/api/c/abi/FooApi');
+        has_(abi, [
+            {
+                name: 'getFoo',
+                type: 'function',
+            }
+        ]);
 
         let value = await getJson(`/api/c/read/FooApi/getFoo`);
         eq_(value, '10');
