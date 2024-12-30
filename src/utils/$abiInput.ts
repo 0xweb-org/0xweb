@@ -30,8 +30,8 @@ export namespace $abiInput {
         env?: 'api' | 'cli'
     }): Promise<any[]> {
         let argumentProvider = opts?.argumentProvider;
-        if (argumentProvider == null && opts?.env != null) {
-            argumentProvider = opts.env === 'api' ? apiInputAsker : cliInputAsker;
+        if (argumentProvider == null) {
+            argumentProvider = opts?.env === 'api' ? apiInputAsker : cliInputAsker;
         }
         return getArguments(abi, params, argumentProvider);
     }

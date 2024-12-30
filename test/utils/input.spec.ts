@@ -113,7 +113,7 @@ UTest({
         let abi = $abiParser.parseMethod('foo(string name, uint age)');
         var args = await $abiInput.parseArgumentsFromCli(abi, {
 
-        }, provider);
+        }, { argumentProvider: provider });
         deepEq_(args, [ params.name, params.age ]);
     }
 })
