@@ -532,9 +532,12 @@ export class ContractService extends BaseService {
         if (path == null) {
             throw new Error(`ABI file not found for ${pkg.main}`);
         }
-        let abi = await File.readAsync<TAbiItem[]>(path);
-        $require.Array(abi, `"${path}" should contain an array of ABI items`);
-        return abi;
+        let mix = await File.readAsync<IJsonArtifact | TAbiItem[]>(path);
+        if (Array.isArray(mix) === false && mix.abi != null) {
+            mix = mix.abi;
+        }
+        $require.Array(mix, `"${path}" should contain an array of ABI items or artifacts JSON format.`);
+        return mix as TAbiItem[];
     }
     private async getSlots(pkg: IPackageItem): Promise<ISlotVarDefinition[]> {
         let code = await File.readAsync<string>(pkg.main, { skipHooks: true });
@@ -620,4 +623,13 @@ namespace BlockDateLoader {
 
         return dates;
     }
+}
+
+
+
+interface IJsonArtifact {
+    abi: TAbiItem[]
+    bytecode: TEth.Hex
+    contractName: string
+    linkReferences: Record<string /* path */, Record<string /* name */, any>>
 }

@@ -288,10 +288,10 @@ export class PackageService {
                         address: deployment.address as TAddress,
                         name: deployment.id ?? deployment.name,
                         contractName: deployment.name,
-                        main: pkgMain?.main,
+                        main: deployment.main ?? pkgMain?.main,
                         implementation: deployment.implementation,
                     });
-                })
+                });
             });
         }
 
