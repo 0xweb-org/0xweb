@@ -10,6 +10,7 @@ interface IInitOptions {
     source?: 'git' | 'npm'
     hardhat?: boolean
     openzeppelin?: boolean
+    atma?: boolean
 }
 export function CInit() {
     return <ICommand>{
@@ -31,6 +32,10 @@ export function CInit() {
             },
             '--openzeppelin': {
                 description: 'Installs /contracts and /contracts-upgradeable',
+                type: 'boolean'
+            },
+            '--atma': {
+                description: 'Installs also atma resources - packages, ts loader, etc.',
                 type: 'boolean'
             }
         },
@@ -145,27 +150,30 @@ class InitWorker {
         if (exists) {
             pkg = await file.readAsync();
         }
+        let modified = false;
 
-        let modified = extendWithDefaultValues(pkg, {
-            "atma": {
-                "plugins": [
-                    "atma-loader-ts"
-                ],
-                "settings": {
-                    "include": {
-                        "amd": true,
-                        "extensionDefault": {
-                            "js": "ts"
+        if (this.params.atma) {
+            modified = extendWithDefaultValues(pkg, {
+                "atma": {
+                    "plugins": [
+                        "atma-loader-ts"
+                    ],
+                    "settings": {
+                        "include": {
+                            "amd": true,
+                            "extensionDefault": {
+                                "js": "ts"
+                            },
+                            "routes": "#import ./tsconfig.json compilerOptions.paths"
                         },
-                        "routes": "#import ./tsconfig.json compilerOptions.paths"
-                    },
-                    "atma-loader-ts": {
-                        "sourceMap": true,
-                        "typescript": "#import ./tsconfig-atma.json"
+                        "atma-loader-ts": {
+                            "sourceMap": true,
+                            "typescript": "#import ./tsconfig-atma.json"
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         if (exists === false || modified === true) {
             await file.writeAsync(pkg);
@@ -222,21 +230,41 @@ class InitWorker {
         $console.toast('Check and install required dequanto dependencies');
 
         let filePackageCurrent = new File(this.directory.combine('./package.json'));
-        let filePackageDequanto = new File(this.getPathDequanto('package.json'));
+        //-let filePackageDequanto = new File(this.getPathDequanto('package.json'));
 
-        let [pkgDequanto, pkgCurrent] = await Promise.all([
-            filePackageDequanto.readAsync<any>(),
+        let [
+            //- pkgDequanto,
+            pkgCurrent
+        ] = await Promise.all([
+            //- filePackageDequanto.readAsync<any>(),
             filePackageCurrent.readAsync<any>()
         ]);
         if (pkgCurrent.dependencies == null) {
             pkgCurrent.dependencies = {};
+        }
+        let pkgDequanto = {
+            dependencies: {}
+        };
+        if (this.params.source !== 'git') {
+            pkgDequanto.dependencies['dequanto'] = 'latest';
+        }
+        if (this.params.atma) {
+            pkgDequanto.dependencies = {
+                ...pkgDequanto.dependencies,
+                'a-di': 'latest',
+                'alot': 'latest',
+                'appcfg': 'latest',
+                'atma-io': 'latest',
+                'class-json': 'latest',
+                'memd': 'latest',
+                'atma-loader-ts': 'latest',
+            };
         }
 
         let requiredDeps = pkgDequanto.dependencies;
         if (this.params.hardhat || this.params.openzeppelin) {
             requiredDeps = {
                 ...requiredDeps,
-                'atma-loader-ts': 'latest',
                 'hardhat': 'latest',
                 '@0xweb/hardhat': 'latest'
             };

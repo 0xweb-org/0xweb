@@ -39,3 +39,4 @@ readme.md
 de_**.bat
 /hardhat.config.js
 /tsconfig-typedoc.json
+/index-dev.ts
