@@ -18,7 +18,7 @@ UTest({
             }
         },
         async 'initialize' () {
-            let { stdout } = await run(`node index.js init -d ${path_ROOT}`);
+            let { stdout } = await run(`node index.js init -d ${path_ROOT} --atma`);
 
             let paths = [
                 'tsconfig.json',
@@ -37,8 +37,7 @@ UTest({
 
             let packageJson = await File.readAsync<any>(`${path_ROOT}/package.json`);
 
-            eq_('@noble/curves' in packageJson.dependencies, true, `No noble packages in dependencies`);
-            eq_('@scure/bip32' in packageJson.dependencies, true, `No @scure in dependencies`);
+            eq_('dequanto' in packageJson.dependencies, true, `No dequanto package in dependencies`);
             eq_('hardhat' in packageJson.dependencies, false, 'Command without --hardhat flag still has the hardhat library');
 
             await run({ command: `npm i atma@latest`,  cwd: path_ROOT });

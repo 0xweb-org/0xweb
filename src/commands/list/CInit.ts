@@ -367,29 +367,31 @@ class InitWorker {
 
     private async ensureTsConfigExtended() {
 
-        let path = this.directory.combine('./tsconfig-atma.json');
-        let file = new File(path);
-        let pkg: any = await file.existsAsync()
-            ? await file.readAsync()
-            : {};
+        if (this.params.atma) {
+            let path = this.directory.combine('./tsconfig-atma.json');
+            let file = new File(path);
+            let pkg: any = await file.existsAsync()
+                ? await file.readAsync()
+                : {};
 
-        let modified = false;
-        if (pkg.compilerOptions?.module == null) {
-            pkg.compilerOptions ??= {};
-            pkg.compilerOptions.module = 'AMD';
-            modified = true;
-        }
-        if (pkg.compilerOptions?.target == null) {
-            pkg.compilerOptions ??= {};
-            pkg.compilerOptions.target = "ES2022";
-            modified = true;
-        }
-        if (pkg.extends == null) {
-            pkg.extends = './tsconfig.json';
-            modified = true;
-        }
-        if (modified) {
-            await file.writeAsync(pkg);
+            let modified = false;
+            if (pkg.compilerOptions?.module == null) {
+                pkg.compilerOptions ??= {};
+                pkg.compilerOptions.module = 'AMD';
+                modified = true;
+            }
+            if (pkg.compilerOptions?.target == null) {
+                pkg.compilerOptions ??= {};
+                pkg.compilerOptions.target = "ES2022";
+                modified = true;
+            }
+            if (pkg.extends == null) {
+                pkg.extends = './tsconfig.json';
+                modified = true;
+            }
+            if (modified) {
+                await file.writeAsync(pkg);
+            }
         }
     }
 
