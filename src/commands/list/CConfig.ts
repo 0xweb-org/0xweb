@@ -1,6 +1,6 @@
 import { ICommand } from '../ICommand';
 import { File } from 'atma-io';
-import { obj_setProperty } from 'atma-utils';
+import { obj_getProperty, obj_setProperty } from 'atma-utils';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { $promise } from '@dequanto/utils/$promise';
@@ -30,9 +30,13 @@ export function CConfig() {
                 description: 'Edit global config',
             },
             '--set': {
-                description: 'Set configuration value',
+                description: 'Set config value, e.g. --set settings.target=cjs',
                 type:'string',
-            }
+            },
+            '--get': {
+                description: 'Get config value, e.g. --set settings.target',
+                type:'string',
+            },
         },
 
         async process(args: string[], params, app: App) {
@@ -92,7 +96,15 @@ export function CConfig() {
                 return;
             }
 
-            if (true || params.view) {
+            if (params.get != null) {
+                let json = app.config.toJSON();
+                if (params.get?.length > 0) {
+                    json = obj_getProperty(json, params.get);
+                }
+                $console.result(json);
+                return;
+            }
+            if (params.view) {
                 $console.log('Current configuration:');
                 $console.result(getJson());
                 return;

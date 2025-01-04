@@ -15,6 +15,7 @@
 |--|--|
 |[Demo: Backend](https://github.com/0xweb-org/examples-backend) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-backend/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-backend/tree/master) |
 |[Demo: Storage](https://github.com/0xweb-org/examples-storage) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-storage/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-storage/tree/master) |
+|[Demo: Hardhat](https://github.com/0xweb-org/examples-hardhat) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-hardhat/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-hardhat/tree/master) |
 
 
 
