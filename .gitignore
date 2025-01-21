@@ -13,5 +13,6 @@ contracts/oz/
 test/bin/
 de_**.bat
 
+# in progress
 src/www/
-index-dev.html
+index.dev.html

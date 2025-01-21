@@ -16,13 +16,16 @@
 |[Demo: Backend](https://github.com/0xweb-org/examples-backend) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-backend/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-backend/tree/master) |
 |[Demo: Storage](https://github.com/0xweb-org/examples-storage) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-storage/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-storage/tree/master) |
 |[Demo: Hardhat](https://github.com/0xweb-org/examples-hardhat) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-hardhat/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-hardhat/tree/master) |
+|[Demo: Price Loader](https://github.com/0xweb-org/examples-price) | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/0xweb-org/examples-price/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/0xweb-org/examples-price/tree/master) |
 
 
 
+- Generate TypeScript or ES6 classes for contracts fetched from Etherscan and Co.
+- CLI commands to query the contracts or to submit transactions
+- RESTful API for the installed contracts
+- Deploy and track deployed contracts with ease
 
-Generate TypeScript or ES6 classes for contracts fetched from Etherscan and Co.
-
-> We use [📦 dequanto library](https://github.com/0xweb-org/dequanto) for the wrapped classes
+> [Dequanto library 📦](https://github.com/0xweb-org/dequanto) is used for the wrapped classes
 
 Here the example of generated classes: [0xweb-org/0xweb-sample 🔗](https://github.com/0xweb-org/0xweb-sample)
 

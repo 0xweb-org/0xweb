@@ -20,7 +20,7 @@ export class ServerService {
     }
 
     @memd.deco.memoize()
-    async createServer () {
+    async createServer (params?: { dev?: boolean }) {
         const service = ServerCommands.toService([
             CContract(),
             CRpc(),
@@ -30,12 +30,24 @@ export class ServerService {
 
         this.server = await Application.create({
             configs: null,
+            debug: true, //Boolean(params?.dev ?? false),
             config: {
+                debug: true,
                 serializer: {
                     json: {
                         formatted: true
                     }
-                }
+                },
+                rewriteRules: [
+                    {
+                        rule: '^/(contracts|contract|tx)(/[\\w\\-_\\/]+)? /index.dev.html',
+                        conditions: null,
+                    },
+                    {
+                        rule: '^/$ /index.dev.html',
+                        conditions: null,
+                    }
+                ]
             },
 
         });
@@ -44,9 +56,14 @@ export class ServerService {
     }
 
     async start (params: {
-        port: number
+        port: number,
+        dev: boolean
     }) {
-        let server = await this.createServer();
+        let basePath = env.applicationDir.toDir();
+        if (/0xweb\/?$/.test(basePath) === false) {
+            basePath = env.currentDir.toDir();
+        }
+        let server = await this.createServer({ dev: params.dev });
         await server
             .processor({
                 middleware: [
@@ -54,7 +71,7 @@ export class ServerService {
                 ],
                 after: [
                     middleware.static({
-                        base: env.applicationDir.combine('./www/').toLocalDir()
+                        base: basePath
                     })
                 ]
             })
