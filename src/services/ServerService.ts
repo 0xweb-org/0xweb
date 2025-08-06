@@ -28,11 +28,12 @@ export class ServerService {
             CBlock(),
         ], this.app);
 
+        const debug = Boolean(params?.dev ?? false);
         this.server = await Application.create({
             configs: null,
-            debug: true, //Boolean(params?.dev ?? false),
+            //debug: true, //Boolean(params?.dev ?? false),
             config: {
-                debug: true,
+                debug,
                 serializer: {
                     json: {
                         formatted: true
@@ -40,11 +41,21 @@ export class ServerService {
                 },
                 rewriteRules: [
                     {
-                        rule: '^/(contracts|contract|tx)(/[\\w\\-_\\/]+)? /index.dev.html',
+                        rule: debug
+                            ? '^/(contracts|contract|tx|devbook)(/[\\w\\-_\\/]+)? /index.dev.html'
+                            : '^/(contracts|contract|tx|devbook)(/[\\w\\-_\\/]+)? /',
                         conditions: null,
                     },
+                    // {
+                    //     rule: debug
+                    //         ? '^/(\\w+)/tx/(\\w+) /index.dev.html'
+                    //         : '^/(\\w+)/tx/(\\w+) /',
+                    //     conditions: null,
+                    // },
                     {
-                        rule: '^/$ /index.dev.html',
+                        rule: debug
+                            ? '^/$ /index.dev.html'
+                            : '^/$ /',
                         conditions: null,
                     }
                 ]

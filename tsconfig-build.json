@@ -20,6 +20,7 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "module": "AMD",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "useDefineForClassFields": false
     }
 }

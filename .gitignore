@@ -16,3 +16,12 @@ de_**.bat
 # in progress
 src/www/
 index.dev.html
+index.html
+
+# local dev assets
+/dev/
+/tools/
+
+
+# html assets
+/viewer/

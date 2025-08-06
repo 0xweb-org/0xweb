@@ -1,0 +1,9 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/atmajs/maskjs/master/typings.json",
+    "raw": "github:atmajs/maskjs/typings.json",
+    "main": "types/index.d.ts",
+    "name": "mask"
+  }
+}

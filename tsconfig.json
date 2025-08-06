@@ -1,6 +1,8 @@
 {
     "exclude": ["node_modules", "ts-temp"],
+    "include": ["./**/*.ts", "./**/*.mask"],
     "compilerOptions": {
+        "jsx": "preserve",
         "baseUrl": "./",
         "paths": {
             "@core/*": [ "src/*" ],
@@ -8,19 +10,25 @@
             "@dequanto-contracts/*": [ "dequanto/src/prebuilt/*" ]
         },
         "outDir": "ts-temp",
-        "lib": ["es2015", "es2015.promise"],
+        "lib": ["es2024", "DOM"],
         "typeRoots": [
             "node_modules/@types",
             "typings/globals",
             "typings-other"
         ],
         "types": ["node", "assertion", "atma-utest"],
-        "declaration": true,
-        "target": "es2020",
+
+        "target": "es2024",
         "module": "commonjs",
         "sourceMap": false,
         "experimentalDecorators": true,
         "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "useDefineForClassFields": false,
+        "plugins": [
+            {
+                "name": "@astrojs/ts-plugin"
+            }
+        ]
     }
 }

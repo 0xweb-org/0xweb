@@ -27,10 +27,9 @@ export function CServer() {
                         default: 3000
                     }
                 },
-                async process(args: string[], params: { port: number }, app: App) {
+                async process(args: string[], params: { port: number, dev: boolean }, app: App) {
 
-                    process.env.ENV = 'debug'
-                    app.config.debug = true;
+                    //-app.config.debug = params.dev;
                     const service = new ServerService(app);
                     await service.start(params);
                     await $promise.wait(10 ** 9);
