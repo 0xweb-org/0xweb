@@ -89,10 +89,54 @@
             "lib": {
                 "file": "src/export.ts",
                 "outputMain": "lib/0xweb.js"
+            },
+            "web": {
+                "enabled": false,
+                "file": "index.dev.html",
+                "outputMain": "index.html",
+                "outputSources": "viewer/build/",
+                "dynamicDependencies": [
+                    "^crypto$"
+                ],
+                "varDefs": {
+                    "DEBUG": false,
+                    "SERVER": false,
+                    "BROWSER": true
+                },
+                "package": {
+                    "module": "includejs",
+                    "platform": "browser"
+                },
+                "defaultExtensions": {
+                    "js": "js",
+                    "svg": "load"
+                },
+                "version": "${version}",
+                "mappings": {},
+                "middlewares": {
+                    "less": [
+                        "atma-loader-less:read",
+                        "atma-loader-postcss:read"
+                    ],
+                    "scss": [
+                        "atma-loader-sass:read",
+                        "atma-loader-postcss:read"
+                    ],
+                    "css": [
+                        "atma-io-middleware-clean-css:write"
+                    ],
+                    "ts": [
+                        "atma-io-middleware-condcomments:read",
+                        "atma-loader-ts:read"
+                    ],
+                    "html": [
+                        "atma-io-middleware-condcomments:read"
+                    ]
+                }
             }
         },
         "common": {
-            "_package": {
+            "package": {
                 "module": "commonjs",
                 "commonjs": {
                     "output": "simplified"
