@@ -15,7 +15,7 @@ export function CServer() {
             {
                 command: 'start',
                 description: [
-                    'Launches the API server'
+                    'Launches the API/UI Server'
                 ],
                 arguments: [
 
@@ -32,8 +32,6 @@ export function CServer() {
                     //-app.config.debug = params.dev;
                     const service = new ServerService(app);
                     await service.start(params);
-                    await $promise.wait(10 ** 9);
-
                     return { status: 'wait' } as TAppProcessResult
                 }
             },

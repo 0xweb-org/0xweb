@@ -70,6 +70,17 @@ console.log(`ETH Price`, $bigint.toEther(price, decimals));
 $ 0xweb contract chainlink/oracle-eth latestAnswer
 ```
 
+#### WEB Usage
+
+The package has the built-in web interface to make the blockchain analyze and interaction simpler.
+
+1. If you initialize the Transaction via CMD, you may want to sign the transaction with your browser wallet. For this, 0xweb spins up the HTTP server and redirects your browser to visit local page where the details of the transaction being shown, and you can sign and submit the transaction.
+
+2. Launch local server to view the validated contract in UI interface to interact with.
+
+```bash
+0xweb server start
+```
 
 ## Config
 

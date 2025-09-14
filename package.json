@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.10.98",
+    "version": "0.10.99",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -94,7 +94,7 @@
                 "enabled": false,
                 "file": "index.dev.html",
                 "outputMain": "index.html",
-                "outputSources": "viewer/build/",
+                "outputSources": "lib/www/",
                 "dynamicDependencies": [
                     "^crypto$"
                 ],
