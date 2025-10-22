@@ -265,7 +265,7 @@ class InitWorker {
         if (this.params.hardhat || this.params.openzeppelin) {
             requiredDeps = {
                 ...requiredDeps,
-                'hardhat': 'latest',
+                'hardhat': '^2.9.0',
                 '@0xweb/hardhat': 'latest'
             };
         }
