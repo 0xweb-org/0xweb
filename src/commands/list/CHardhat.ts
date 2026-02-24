@@ -4,7 +4,6 @@ import { Parameters } from '@core/utils/Parameters';
 import { HardhatService } from '@core/services/HardhatService';
 import { type App } from '@core/app/App';
 import { ChainAccountService } from '@dequanto/ChainAccountService';
-import { $tx } from '@core/utils/$tx';
 import { Web3ClientFactory } from '@dequanto/clients/Web3ClientFactory';
 import { $require } from '@dequanto/utils/$require';
 import { $bigint } from '@dequanto/utils/$bigint';
@@ -12,6 +11,8 @@ import { $logger } from '@dequanto/utils/$logger';
 import { TEth } from '@dequanto/models/TEth';
 import { $is } from '@dequanto/utils/$is';
 import { TxService } from '@core/services/TxService';
+import { BlockchainExplorerFactory } from '@dequanto/explorer/BlockchainExplorerFactory';
+import { ContractVerifier } from '@dequanto/explorer/ContractVerifier';
 
 
 export function CHardhat() {
@@ -86,6 +87,46 @@ export function CHardhat() {
 
                 $console.table([
                     [ 'Deployed', contract.address ]
+                ]);
+            }
+        },
+        {
+            command: 'verify',
+            description: [
+                'Verify deployed contract using hardhat compiled artifacts. gray<Constructor arguments are automatically parsed from tx data>'
+            ],
+            arguments: [
+                { description: `Contract Address` },
+                { description: `Contract Name` }
+            ],
+            params: {
+                key: {
+                    description: 'Optionally, the ApiKey to override from config'
+                },
+                api: {
+                    description: 'Optionally, the API URL to override from config'
+                },
+                ...Parameters.chain({ required: true })
+            },
+            async process(args: [TEth.Address, string], params: any, app: App) {
+
+
+                let [ address, name ] = args;
+                let { client } = app.chain;
+                let explorer = await BlockchainExplorerFactory.getAsync(client.platform, {
+                    key: params.key,
+                    api: params.api,
+                });
+                let verifier = new ContractVerifier({ client }, explorer);
+
+                let contractInfo = await explorer.getContractCreation(address)
+                let result = await verifier.ensure(name, {
+                    address,
+                    tx: contractInfo.txHash,
+                });
+
+                $console.table([
+                    [ '✅ Verified', address ]
                 ]);
             }
         },
