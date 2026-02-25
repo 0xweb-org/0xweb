@@ -28,8 +28,6 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm publish --provenance --access public
-        env:
-          #NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
       - name: Trigger storage example with latest 0xweb
         env:
           CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
