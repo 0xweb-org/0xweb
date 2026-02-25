@@ -1,7 +1,7 @@
 {
     "name": "0xweb",
     "description": "Contract package manager and other web3 tools",
-    "version": "0.11.6",
+    "version": "0.11.7",
     "main": "./lib/0xweb.js",
     "types": "./lib/0xweb.d.ts",
     "bin": {
@@ -70,7 +70,7 @@
         "bootstrap": "5.3.3",
         "compo-views": "^0.10.48",
         "dts-bundle": "^0.7.3",
-        "hardhat": "^2.22.16",
+        "hardhat": "^2.28.6",
         "mask-animation": "^1.0.20",
         "maskjs": "^0.72.47",
         "ruta": "^0.2.71",
