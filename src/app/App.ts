@@ -1,5 +1,4 @@
 import di from 'a-di';
-import memd from 'memd';
 import AppConfig from 'appcfg'
 import { Config } from '@dequanto/config/Config';
 import { CommandsHandler } from '../commands/CommandsHandler';
@@ -45,6 +44,7 @@ import { BlockchainExplorerFactory } from '@dequanto/explorer/BlockchainExplorer
 import { CServer } from '@core/commands/list/CServer';
 import { IConfigData } from '@dequanto/config/interface/IConfigData';
 import { TAppProcessResult } from './types';
+import { CAbi } from '@core/commands/list/CAbi';
 
 
 declare const global;
@@ -113,6 +113,7 @@ export class App {
             .register(CConfig())
             .register(CSolidity())
             .register(CTools())
+            .register(CAbi())
             .register(CServer())
             .register(CVersion)
             .register(CReset())

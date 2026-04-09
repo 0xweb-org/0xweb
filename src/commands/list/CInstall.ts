@@ -1,4 +1,4 @@
-import di from 'a-di';
+﻿import di from 'a-di';
 import { env } from 'atma-io';
 import { Generator } from '@dequanto/gen/Generator';
 import { ICommand } from '../ICommand';
@@ -18,44 +18,44 @@ export function CInstall() {
         command: 'i, install',
 
         description: [
-            `Download contracts ABI and generate the TS class for it.`,
+            `Download a contract ABI and generate a JavaScript or TypeScript class.`,
             `Supported chains: ${$validate.platforms().join(', ')}`,
         ],
         arguments: [
             {
-                description: 'Contract address or path',
+                description: 'Contract address or source path',
                 required: true
             }
         ],
         params: {
             '-n, --name': {
-                description: 'The class name.',
+                description: 'Class name.',
                 required: true
             },
             '--imp, --implementation': {
-                description: 'We can detect proxies by standard proxy implementations, in some edge cases you can set the implementation address manually.'
+                description: 'Proxy implementations are auto-detected for standard proxy patterns. In edge cases, set the implementation address manually.'
             },
             '--source': {
-                description: 'Optional, the solidity source code'
+                description: 'Optional Solidity source code path.'
             },
             '--contract-name': {
-                description: 'Optionally the contract name to extract from the source. Otherwise default is taken'
+                description: 'Optional contract name to extract from source. If omitted, the default is used.'
             },
             '-g, --global': {
-                description: 'Installs the contract globally, to be available via "0xweb" cli command from any CWD.',
+                description: 'Install the contract globally so it is available via the "0xweb" CLI command from any working directory.',
                 type: 'boolean',
             },
             ...Parameters.chain(),
             '-o, --output': {
-                description: 'Output directory. Default: ./0xc/'
+                description: 'Output root directory. Default: ./0xc/'
             },
             '--save-sources': {
-                description: 'Optionally disables saving the solidity source code to the output directory.',
+                description: 'Save Solidity source code to the output directory. Default: true.',
                 type: 'boolean',
                 default: true
             },
             '--target': {
-                description: 'The output source: js | mjs | ts. Default is configured in "settings.generate.target"',
+                description: 'Output target: js | mjs | ts. Default is taken from "settings.generate.target".',
                 type:'string'
             }
         },
@@ -132,3 +132,4 @@ interface IInstallParams {
     global: boolean
     saveSources: boolean
 }
+
