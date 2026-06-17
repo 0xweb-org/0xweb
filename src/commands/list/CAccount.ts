@@ -134,6 +134,41 @@ export function CAccount ()  {
                     ]);
                 }
             },
+            {
+                command: 'rename',
+                description: [
+                    'Rename an account'
+                ],
+                params: {
+
+                },
+                arguments: [
+                    {
+                        name: '<oldAccountName>',
+                        description: 'Account name added with "accounts" command',
+                        required: true,
+                    },
+                    {
+                        name: '<newAccountName>',
+                        description: 'New account name',
+                        required: true,
+                    }
+                ],
+                async process(args: string[], params, app: App) {
+                    let [oldName, newName ] = args;
+                    $require.notEmpty(oldName, `No default account is loaded`);
+                    let service = di.resolve(AccountsService, app.config);
+                    let account = await service.get(oldName);
+                    $require.notNull(account, `${oldName} not found`);
+
+                    await service.remove(oldName);
+                    await service.add({
+                        ...account,
+                        name: newName,
+                    });
+                    $console.log(`Renamed account from "${oldName}" to "${newName}"`);
+                }
+            },
         ],
         params: {
             ...Parameters.pin(),

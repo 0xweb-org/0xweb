@@ -95,9 +95,6 @@
                 "file": "index.dev.html",
                 "outputMain": "index.html",
                 "outputSources": "lib/www/",
-                "dynamicDependencies": [
-                    "^crypto$"
-                ],
                 "varDefs": {
                     "DEBUG": false,
                     "SERVER": false,

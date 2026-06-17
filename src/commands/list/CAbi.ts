@@ -37,6 +37,30 @@ export function CAbi() {
                     $logger.log(`bold<${topic0}>`);
                     return topic0;
                 }
+            },
+            {
+                command: 'sig',
+                description: ['Encode function sig'],
+                arguments: [
+                    {
+                        description: 'function or error ABI',
+                        name: 'sig',
+                        type:'string',
+                        required: true
+                    }
+                ],
+                params: {
+                    ...Parameters.chain({ required: false })
+                },
+                api: {},
+                async process(args, params, app) {
+                    let [ event ] = args;
+
+                    let abi = $abiParser.parseMethod(event.trim());
+                    let sig = $abiUtils.getMethodSignature(abi);
+                    $logger.log(`bold<${sig}>`);
+                    return sig;
+                }
             }
         ],
 
