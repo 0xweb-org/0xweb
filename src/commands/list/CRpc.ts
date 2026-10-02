@@ -11,12 +11,12 @@ export function CRpc() {
     return <ICommand> {
         command: 'rpc',
         description: [
-            'Send RPC method'
+            'Call an RPC method'
         ],
         arguments: [
             {
                 name: 'RpcMethodName',
-                description: 'Method Name'
+                description: 'RPC method name'
             },
             {
                 query: true,
@@ -30,7 +30,7 @@ export function CRpc() {
             },
             {
                 query: true,
-                description: '...',
+                description: 'Additional RPC arguments',
                 required: false
             }
         ],
@@ -38,11 +38,11 @@ export function CRpc() {
             ...Parameters.account({ required: false }),
             ...Parameters.chain(),
             '--arg0': {
-                description: 'Api: Argument 1; Cli: simple arguments also supported',
+                description: 'First RPC argument. In the CLI, this can also be a positional argument',
                 required: false
             },
             '--arg1': {
-                description: 'Api: Argument 2; Cli: simple arguments also supported',
+                description: 'Second RPC argument. In the CLI, this can also be a positional argument',
                 required: false
             }
         },

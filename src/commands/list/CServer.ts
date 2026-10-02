@@ -15,7 +15,7 @@ export function CServer() {
             {
                 command: 'start',
                 description: [
-                    'Launches the API/UI Server'
+                    'Start the API and UI server'
                 ],
                 arguments: [
 

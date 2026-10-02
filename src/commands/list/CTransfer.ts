@@ -19,39 +19,39 @@ export function CTransfer() {
         command: 'transfer',
         example: '0xweb transfer 0.1 ETH --from 0x... --to 0x... ',
         description: [
-            'Transfer ETH or ERC20'
+            'Transfer ETH or ERC-20 tokens'
         ],
         arguments: [
             {
                 name: '<amount>',
-                description: 'Amount in ETHER, or percents. Supports negative values to leave rest amounts at sender account',
+                description: 'Amount in token units or a percentage of the balance. Use a negative amount to specify how much to leave in the sender account',
                 required: true,
             },
             {
                 name: '<token>',
-                description: 'Token symbol or token address',
+                description: 'Token symbol or address',
                 required: true,
             }
         ],
         params: {
             '-f, --from': {
-                description: 'Senders name or address. ',
+                description: 'Sender account name or address',
                 required: true
             },
             '-t, --to': {
-                description: 'Receivers name or address. ',
+                description: 'Recipient account name or address',
                 required: true
             },
             ...Parameters.chain(),
             ...Parameters.pin(),
             '--safe-transport': {
-                description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
+                description: `File path for manually collected multisig signatures. Default: Gnosis Safe Service`,
             },
             '--sig-transport': {
-                description: `Optionally the file where we save the tx and wait until the signature for the TX is provided.`,
+                description: `File path to save the transaction and wait for an external signature`,
             },
             '--tx-output': {
-                description: `Save the TX to the file, and do not send it to the blockchain`,
+                description: `Save the transaction to a file without broadcasting it`,
             }
         },
         async process(args: string[], params: { from, to, chain, safeTransport?, sigTransport?, txOutput? }, app: App) {

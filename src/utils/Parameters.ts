@@ -4,7 +4,7 @@ export const Parameters = {
     account (opts?: { required?: boolean }) {
         return {
             '-a, --account': {
-                description: 'Account name. Accounts should be unlocked with gray<-p, --pin> parameter',
+                description: 'Account name. Use gray<-p, --pin> to unlock the account',
                 required: opts?.required ?? true,
                 fallback: 'session-account',
             }
@@ -13,7 +13,7 @@ export const Parameters = {
     pin (opts?: { required?: boolean }) {
         return {
             '-p, --pin': {
-                description: 'Accounts storage is encrypted with a derived key from the pin and the local machine key. ',
+                description: 'PIN for account storage encryption. The encryption key is derived from the PIN and the local machine key',
                 required: opts?.required ?? true
             },
         }

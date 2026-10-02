@@ -16,7 +16,7 @@ export function CNs() {
     return <ICommand>{
         command: 'ns',
         description: [
-            'NameService utils: Supports ENS, SpaceID, UnstoppableDomains'
+            'Name service tools for ENS, Space ID, and Unstoppable Domains'
         ],
         subcommands: [
             {
@@ -26,7 +26,7 @@ export function CNs() {
                 ],
                 arguments: [
                     {
-                        description: `Domain with optional path to get as RECORD. e.g. example.eth/foo`,
+                        description: `Domain with an optional record path, e.g. example.eth/foo`,
                         required: true,
                     }
                 ],
@@ -47,11 +47,11 @@ export function CNs() {
             {
                 command: 'go',
                 description: [
-                    'Load a record and navigate to ipfs, https, etc.'
+                    'Resolve a record and open its content URL (IPFS, HTTP, or HTTPS)'
                 ],
                 arguments: [
                     {
-                        description: `Domain with optional path to get as RECORD. e.g. example.eth/foo`,
+                        description: `Domain with an optional record path, e.g. example.eth/foo`,
                         required: true,
                     }
                 ],

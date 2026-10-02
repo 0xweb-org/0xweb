@@ -7,7 +7,7 @@ export function CGas() {
     return <ICommand>{
         command: 'gas',
         description: [
-            'Print current GAS price for a chain'
+            'Show the current gas price for a chain'
         ],
         params: {
             '-c, --chain': {

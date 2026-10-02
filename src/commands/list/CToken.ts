@@ -13,25 +13,25 @@ export function CToken() {
         command: 'token',
 
         description: [
-            'Get token info'
+            'Get token information'
         ],
         subcommands: [
             {
                 command: 'price',
                 example: '0xweb token price ETH -b <blockNumber>',
                 description: [
-                    'Get token price'
+                    'Get the price of a token'
                 ],
                 arguments: [
                     {
                         name: '<token>',
-                        description: 'Token symbol or token address',
+                        description: 'Token symbol or address',
                         required: true,
                     }
                 ],
                 params: {
                     '-b, --block': {
-                        description: 'Price at specific block. Default: latest',
+                        description: 'Block number to query. Default: latest',
                         map: Number
                     }
                 },

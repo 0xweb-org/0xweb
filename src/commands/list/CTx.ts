@@ -35,25 +35,25 @@ export function CTx() {
     return <ICommand>{
         command: 'tx',
         description: [
-            'Transaction utils'
+            'Transaction utilities'
         ],
         subcommands: [
             {
 
                 command: 'sign',
                 description: [
-                    'Sign a transaction in a json file'
+                    'Sign a transaction stored in a JSON file'
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file`,
+                        description: `Path to a transaction JSON file`,
                         required: true
                     }
                 ],
                 params: {
                     ...Parameters.account(),
                     '--output, -o': {
-                        description: 'Optional. Override the output file'
+                        description: 'Override the output file path'
                     }
                 },
                 async process(args: string[], params: any, app: App) {
@@ -92,11 +92,11 @@ export function CTx() {
             {
                 command: 'send',
                 description: [
-                    'Sends the transaction. Could be a serialized JSON Tx or Tx data from CLI'
+                    'Send a transaction from a JSON file or CLI parameters'
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file, otherwise TxParams must be passed via parameters`,
+                        description: `Path to a transaction JSON file. If omitted, supply transaction fields as CLI parameters`,
                         required: false
                     }
                 ],
@@ -109,7 +109,7 @@ export function CTx() {
                         type: 'bigint'
                     },
                     data: {
-                        description: 'Tx data to be sent',
+                        description: 'Transaction data to send',
                         type: 'hex'
                     },
                     ...Parameters.account({ required: false }),
@@ -182,11 +182,11 @@ export function CTx() {
 
                 command: 'view',
                 description: [
-                    'Load transaction by hash'
+                    'Get a transaction by hash'
                 ],
                 arguments: [
                     {
-                        description: `Tx hash`,
+                        description: `Transaction hash`,
                         required: true,
                     }
                 ],

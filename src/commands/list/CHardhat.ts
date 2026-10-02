@@ -20,14 +20,14 @@ export function CHardhat() {
         {
             command: 'compile',
             description: [
-                'Compile solidity file, directory or installed packages'
+                'Compile a Solidity file, directory, or installed package'
             ],
             arguments: [
-                { description: `file or package name` }
+                { description: `File path or package name` }
             ],
             params: {
                 install: {
-                    description: `csv list of contracts to be additionally installed. Default: all`
+                    description: `Comma-separated names of contracts to install after compilation. Default: all`
                 },
                 ...Parameters.chain({ required: false })
             },
@@ -51,24 +51,24 @@ export function CHardhat() {
         {
             command: 'deploy',
             description: [
-                'Deploy solidity files or installed packages'
+                'Deploy contracts from Solidity files or installed packages'
             ],
             arguments: [
-                { description: `file or package name` }
+                { description: `File path or package name` }
             ],
             params: {
                 proxy: {
-                    description: `Will use TransparentUpgradeableProxy for deploying contracts`,
+                    description: `Deploy contracts through TransparentUpgradeableProxy`,
                     required: false,
                     default: false
                 },
                 verify: {
-                    description: `When deploying to public networks, verify the deployed contract`,
+                    description: `Verify the deployed contract on public networks`,
                     required: false,
                     default: true
                 },
                 name: {
-                    description: 'Name the deployment, defaults to the contract name',
+                    description: 'Deployment name. Default: the contract name',
                     required: false,
                 },
                 ...Parameters.pin({ required: false }),
@@ -93,18 +93,18 @@ export function CHardhat() {
         {
             command: 'verify',
             description: [
-                'Verify deployed contract using hardhat compiled artifacts. gray<Constructor arguments are automatically parsed from tx data>'
+                'Verify a deployed contract using Hardhat artifacts. gray<Constructor arguments are parsed automatically from transaction data>'
             ],
             arguments: [
-                { description: `Contract Address` },
-                { description: `Contract Name` }
+                { description: `Contract address` },
+                { description: `Contract name` }
             ],
             params: {
                 key: {
-                    description: 'Optionally, the ApiKey to override from config'
+                    description: 'Override the configured API key'
                 },
                 api: {
-                    description: 'Optionally, the API URL to override from config'
+                    description: 'Override the configured API URL'
                 },
                 ...Parameters.chain({ required: true })
             },
@@ -133,19 +133,19 @@ export function CHardhat() {
         {
             command: 'hardhat',
             description: [
-                'Hardhat debug commands'
+                'Hardhat debugging commands'
             ],
             subcommands: [
                 {
                     command: 'setBalance',
-                    description: ['Set account balance'],
+                    description: ['Set an account balance'],
                     arguments: [
                         {
                             description: 'Account address or name',
                             required: true,
                         },
                         {
-                            description: 'Balance in wei, or formatted like 2.4ether, 3.7^18',
+                            description: 'Balance in wei or a formatted value, e.g. 2.4ether or 3.7^18',
                             required: true
                         },
                     ],
@@ -179,7 +179,7 @@ export function CHardhat() {
                 },
                 {
                     command: 'impersonateAccount',
-                    description: ['Impersonate Account'],
+                    description: ['Impersonate an account'],
                     arguments: [
                         {
                             description: 'Account address',
@@ -200,7 +200,7 @@ export function CHardhat() {
                 },
                 {
                     command: 'stopImpersonatingAccount',
-                    description: ['Stop Impersonating Account'],
+                    description: ['Stop impersonating an account'],
                     arguments: [
                         {
                             description: 'Account address',
@@ -219,11 +219,11 @@ export function CHardhat() {
                 },
                 {
                     command: 'mine',
-                    description: ['Mines a specified number of blocks at a given interval (1 second)'],
+                    description: ['Mine blocks at one-second intervals'],
                     arguments: [
                         {
                             name: 'CountOrDateRange',
-                            description: 'Number of blocks or amount of seconds parsed from a timespan, e.g. 1day, 5minutes, 3weeks, etc',
+                            description: 'Number of blocks, or a duration converted to seconds, e.g. 1day, 5minutes, or 3weeks',
                             required: true,
                         }
                     ],

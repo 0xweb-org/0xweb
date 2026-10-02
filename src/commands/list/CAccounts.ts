@@ -18,27 +18,27 @@ export function CAccounts() {
         command: 'accounts',
 
         description: [
-            'Manage accounts.'
+            'Manage accounts'
         ],
         subcommands: [
             {
                 command: 'add',
                 description: [
-                    'Add existing account'
+                    'Add an existing account'
                 ],
                 params: {
                     '-k, --key': {
-                        description: 'Private key(plain or encrypted). Optional for READs, required for WRITE actions',
+                        description: 'Private key (plain or encrypted). Optional for reads; required for writes',
                     },
                     '-a, --address': {
-                        description: 'Address. Optional, if key is also set',
+                        description: 'Account address. Optional if a private key is provided',
                     },
                     '-n, --name': {
                         description: 'Name of the account',
                         required: true,
                     },
                     '--login': {
-                        description: 'Save the account as the default one',
+                        description: 'Set the account as the default',
                         type: 'boolean',
                         default: false,
                     }
@@ -87,7 +87,7 @@ export function CAccounts() {
             {
                 command: 'remove',
                 description: [
-                    'Remove account'
+                    'Remove an account'
                 ],
                 params: {
                     '-n, --name': {
@@ -126,7 +126,7 @@ export function CAccounts() {
             {
                 command: 'new',
                 description: [
-                    'Create new account'
+                    'Create a new account'
                 ],
                 params: {
                     '-n, --name': {
@@ -134,7 +134,7 @@ export function CAccounts() {
                         required: true,
                     },
                     '--login': {
-                        description: 'Save the account as the default one',
+                        description: 'Set the account as the default',
                         type: 'boolean',
                         default: false,
                     }
@@ -159,7 +159,7 @@ export function CAccounts() {
             {
                 command: 'login',
                 description: [
-                    'Save the account as the default one'
+                    'Set the account as the default'
                 ],
                 arguments: [
                     {
@@ -183,12 +183,12 @@ export function CAccounts() {
                 command: 'backup',
                 arguments: [
                     {
-                        description: 'Json File to export'
+                        description: 'Output file for the encrypted account backup'
                     }
                 ],
                 params: {
                     '-s, --secret': {
-                        description: 'Strong password to encrypt the keys',
+                        description: 'Strong password to encrypt the backup',
                         required: true,
                         validate (val) {
                             val = val.trim();
@@ -197,7 +197,7 @@ export function CAccounts() {
                     }
                 },
                 description: [
-                    'Backup to file. Algo: sha256(secret) as the KEY for AES-GCM with additional IV (16bytes/prefixed)'
+                    'Back up accounts to an encrypted file. Uses AES-GCM with sha256(secret) as the key and a prefixed 16-byte IV'
                 ],
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config);

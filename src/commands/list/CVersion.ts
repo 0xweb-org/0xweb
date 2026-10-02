@@ -5,7 +5,7 @@ import { ICommand } from '../ICommand';
 export const CVersion: ICommand = {
     command: '-v, --version',
     description: [
-        'Show package version'
+        'Show the package version'
     ],
     async process () {
         let path = env.applicationDir.combine(`/package.json`).toString();

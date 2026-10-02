@@ -8,19 +8,19 @@ export function CDeployment() {
         command: 'deployment',
 
         description: [
-            `Deployment toolkit`
+            `Manage contract deployments`
         ],
         subcommands: [
             {
                 command: 'fetch',
-                description: ['Fetch and install existing deployment to local deployments meta. Also detect proxies'],
+                description: ['Import an existing deployment into local deployment metadata and detect proxies'],
                 arguments: [
                     {
                         description: 'Contract address',
                         required: true,
                     },
                     {
-                        description: 'Contract name: should exist in artifacts',
+                        description: 'Contract name matching a compiled artifact',
                         required: true
                     },
                 ],
@@ -30,15 +30,15 @@ export function CDeployment() {
                     //     required: false,
                     // },
                     directory: {
-                        description: 'Local meta directory with the deployments, the file is appended: <dir>/deployments-<chain>.json',
+                        description: 'Local deployment metadata directory. Updates <dir>/deployments-<chain>.json',
                         required: false,
                     },
                     id: {
-                        description: `Will be used as the ID for the deployment`,
+                        description: `ID to assign to the deployment`,
                         required: false,
                     },
                     main: {
-                        description: `The generated class for the contract. The full-path or just the name if no overlappings`,
+                        description: `Generated contract class: full path, or class name if unique`,
                         required: true,
                     },
                     ...Parameters.chain({ required: true }),

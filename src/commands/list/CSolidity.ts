@@ -24,13 +24,13 @@ export function CSolidity() {
                 ],
                 arguments: [
                     {
-                        description: `Solidity path`,
+                        description: `Path to the Solidity source file`,
                         required: true
                     }
                 ],
                 params: {
                     '--output, -o': {
-                        description: 'Optional. Override the output file'
+                        description: 'Override the output file path'
                     }
                 },
                 async process(args: string[], params: any, app: App) {

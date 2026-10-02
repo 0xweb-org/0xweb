@@ -16,26 +16,26 @@ export function CInit() {
     return <ICommand>{
         command: 'init',
         description: [
-            'Clone dequanto sources and configure aliases in tsconfig'
+            'Set up dequanto and configure TypeScript path aliases'
         ],
         params: {
             '-d, --dir': {
                 description: 'Target directory. Default: current working directory'
             },
             '-s, --source': {
-                description: 'Values: git, npm. If "git" - dequanto repo will be installed as a submodule, if "npm" - dequanto will be installed as node_module',
+                description: 'Installation method: git (submodule) or npm (package). Default: npm',
                 default: 'npm'
             },
             '--hardhat': {
-                description: 'Initialize also Hardhat project',
+                description: 'Also initialize a Hardhat project',
                 type: 'boolean'
             },
             '--openzeppelin': {
-                description: 'Installs /contracts and /contracts-upgradeable',
+                description: 'Install OpenZeppelin contracts and contracts-upgradeable',
                 type: 'boolean'
             },
             '--atma': {
-                description: 'Installs also atma resources - packages, ts loader, etc.',
+                description: 'Also install Atma packages and the TypeScript loader',
                 type: 'boolean'
             }
         },

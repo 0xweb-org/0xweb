@@ -8,18 +8,18 @@ export function CBlock() {
     return <ICommand> {
         command: 'block',
         description: [
-            'Block utils'
+            'Block utilities'
         ],
         subcommands: [
             {
                 command: 'get',
                 description: [
-                    'Get block info'
+                    'Get block information'
                 ],
                 arguments: [
                     {
                         name: 'NumberOrDate',
-                        description: `latest or <blockNumber> or <date> e.g. "20.01.2024 14:00:00"`,
+                        description: `Block number, "latest", or a date, e.g. "20.01.2024 14:00:00"`,
                         required: true
                     }
                 ],

@@ -18,7 +18,7 @@ export function CInstall() {
         command: 'i, install',
 
         description: [
-            `Download a contract ABI and generate a JavaScript or TypeScript class.`,
+            `Download a contract ABI and generate a JavaScript or TypeScript class`,
             `Supported chains: ${$validate.platforms().join(', ')}`,
         ],
         arguments: [
@@ -29,20 +29,20 @@ export function CInstall() {
         ],
         params: {
             '-n, --name': {
-                description: 'Class name.',
+                description: 'Generated class name',
                 required: true
             },
             '--imp, --implementation': {
-                description: 'Proxy implementations are auto-detected for standard proxy patterns. In edge cases, set the implementation address manually.'
+                description: 'Implementation address. Standard proxy implementations are detected automatically'
             },
             '--source': {
-                description: 'Optional Solidity source code path.'
+                description: 'Optional path to Solidity source code'
             },
             '--contract-name': {
-                description: 'Optional contract name to extract from source. If omitted, the default is used.'
+                description: 'Contract name to extract from the source. If omitted, the default is used'
             },
             '-g, --global': {
-                description: 'Install the contract globally so it is available via the "0xweb" CLI command from any working directory.',
+                description: 'Install the contract globally for use with 0xweb from any working directory',
                 type: 'boolean',
             },
             ...Parameters.chain(),
@@ -50,12 +50,12 @@ export function CInstall() {
                 description: 'Output root directory. Default: ./0xc/'
             },
             '--save-sources': {
-                description: 'Save Solidity source code to the output directory. Default: true.',
+                description: 'Save Solidity source code to the output directory. Default: true',
                 type: 'boolean',
                 default: true
             },
             '--target': {
-                description: 'Output target: js | mjs | ts. Default is taken from "settings.generate.target".',
+                description: 'Output target: js, mjs, or ts. Default: settings.generate.target',
                 type:'string'
             }
         },

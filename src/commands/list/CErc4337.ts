@@ -23,18 +23,18 @@ export function CErc4337 () {
         command: 'aa',
 
         description: [
-            'ERC-4337: Account abstraction tools',
+            'ERC-4337 account abstraction tools',
         ],
         subcommands: [
 
             {
                 command: 'add',
                 description: [
-                    'Add existing Account Abstraction Account.'
+                    'Add an existing ERC-4337 account'
                 ],
                 params: {
                     '-o, --owner': {
-                        description: 'Owners address or name. The EOA should be already present.',
+                        description: 'Address or name of an existing owner account (EOA)',
                         required: true,
                     },
                     '-a, --address': {
@@ -91,19 +91,19 @@ export function CErc4337 () {
             {
                 command: 'new',
                 description: [
-                    'Deploy new Account Abstraction Account.'
+                    'Deploy a new ERC-4337 account'
                 ],
                 params: {
                     '-n, --name': {
-                        description: 'Name of the account to create.',
+                        description: 'Name of the account to create',
                         required: true,
                     },
                     '-o, --owner': {
-                        description: 'Address or name of the owner. It should be already present.',
+                        description: 'Address or name of an existing owner account',
                         required: true,
                     },
                     '--contracts': {
-                        description: 'Optionally, JSON serialized file with entryPoint, accountFactory contracts'
+                        description: 'Optional JSON file with entryPoint and accountFactory contract addresses'
                     },
                     ...Parameters.pin({ required: true })
                 },
@@ -143,7 +143,7 @@ export function CErc4337 () {
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file`,
+                        description: `Path to a transaction JSON file`,
                         required: true
                     }
                 ],
@@ -166,11 +166,11 @@ export function CErc4337 () {
             {
                 command: 'submit,send',
                 description: [
-                    'Sends a tx from the file to the blockchain. All confirmations should be already included in the file'
+                    'Submit a transaction from a JSON file. The file must already contain all required confirmations'
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file`,
+                        description: `Path to a transaction JSON file`,
                         required: true
                     }
                 ],

@@ -7,7 +7,7 @@ export function CReset() {
     return <ICommand>{
         command: 'reset',
         description: [
-            'Reset various things'
+            'Remove stored accounts or global configuration'
         ],
         subcommands: [
             {
@@ -17,7 +17,7 @@ export function CReset() {
                 ],
                 params: {
                     '--config-accounts': {
-                        description: 'Optional. File path. Default is gray<%appdata%/.dequanto/accounts.json>'
+                        description: 'Accounts file to remove. Default: gray<%appdata%/.dequanto/accounts.json>'
                     }
                 },
                 async process() {
@@ -35,7 +35,7 @@ export function CReset() {
             {
                 command: 'config',
                 description: [
-                    'Remove global config file: bold<%appdata%/.dequanto/config.yml>'
+                    'Remove the global configuration file: bold<%appdata%/.dequanto/config.yml>'
                 ],
                 params: {
 

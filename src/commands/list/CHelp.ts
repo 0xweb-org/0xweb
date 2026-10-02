@@ -7,7 +7,7 @@ export function CHelp() {
     const Help = <ICommand & { printCommand }>{
         command: 'help, -h, --help',
         description: [
-            'Print this overview'
+            'Show command help'
         ],
         async process(args, params: { command?: ICommand }, app: App) {
 
@@ -20,7 +20,7 @@ export function CHelp() {
             }
 
             $console.log('');
-            $console.log('bold<green<!>> We provide our Demo Keys for etherscan and co. Please, replace them with yours: bold<yellow<0xweb config -e>>');
+            $console.log('bold<green<!>> Demo API keys are provided for Etherscan and other services. Replace them with your own: bold<yellow<0xweb config -e>>');
 
             $console.log('');
             $console.log(`0xweb@${json.version} Commands`);
@@ -33,7 +33,7 @@ export function CHelp() {
                 Help.printCommand(command, {}, { short: true });
             }
             $console.log('');
-            $console.log('For more details use "0xweb COMMAND --help" or "0xweb COMMAND SUBCOMMAND --help"');
+            $console.log('For details, run "0xweb COMMAND --help" or "0xweb COMMAND SUBCOMMAND --help"');
 
         },
 

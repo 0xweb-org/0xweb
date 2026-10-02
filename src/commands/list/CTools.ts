@@ -9,25 +9,25 @@ export function CTools ()  {
         command: 'tool',
 
         description: [
-            'Utility tools.'
+            'General utilities'
         ],
         subcommands: [
             {
                 command: 'key-encode',
                 example: '0xweb tool key-encode <key> -p <pin>',
                 description: [
-                    'Encode the private key with the PIN'
+                    'Encrypt a private key with a PIN'
                 ],
                 arguments: [
                     {
                         name: '<key>',
-                        description: 'Private Key',
+                        description: 'Private key',
                         required: true,
                     }
                 ],
                 params: {
                     '-p, --pin': {
-                        description: 'Any password to encrypt the private key with',
+                        description: 'Password to encrypt the private key',
                         required: true
                     },
                 },

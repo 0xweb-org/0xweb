@@ -9,13 +9,13 @@ export function CInfo() {
     return <ICommand>{
         command: 'info',
         description: [
-            'Show various information'
+            'Show network information'
         ],
         subcommands: [
             {
                 command: 'network',
                 description: [
-                    'Show Network info'
+                    'Show network details'
                 ],
                 params: {
                     ...Parameters.chain()

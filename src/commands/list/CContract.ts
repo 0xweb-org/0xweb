@@ -11,7 +11,7 @@ export function CContract() {
         command: 'c, contract',
 
         description: [
-            `Contract actions`
+            `Interact with contracts`
         ],
 
         subcommands: [
@@ -32,11 +32,11 @@ export function CContract() {
             },
             {
                 command: 'abi',
-                description: ['List of the available READ and WRITE methods for the contract'],
+                description: ['List the read and write methods available on a contract'],
                 arguments: [
                     {
                         name: 'Name',
-                        description: 'Installed contract by name',
+                        description: 'Name of an installed contract',
                         required: true
                     }
                 ],
@@ -54,10 +54,10 @@ export function CContract() {
             },
             {
                 command: 'read',
-                description: ['READ contract. Parameters are resolved by cli flags or will be prompted.'],
+                description: ['Read from a contract. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
-                        description: 'Address or the name of the installed contract',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
@@ -67,20 +67,20 @@ export function CContract() {
                 ],
                 params: {
                     '-b, --block': {
-                        description: 'Default: Latest. If archive node is used, READ actions can be performed at specified block number.'
+                        description: 'Block number to read from. Historical reads require an archive node. Default: latest'
                     },
                     '-c, --chain': {
-                        description: `Default: The chain will be taken from the installed contract. `
+                        description: `Chain to use. Default: the installed contract's chain`
                     },
                     '--address': {
                         type: 'address',
-                        description: `Overwrite contracts address.`
+                        description: `Override the contract address`
                     },
                     '--account': {
-                        description: `Make call request from the account.`
+                        description: `Account to use as the caller`
                     },
                     '--abi': {
-                        description: `ABI string that will be parsed.`
+                        description: `ABI string to parse`
                     },
                 },
                 api: {},
@@ -92,32 +92,32 @@ export function CContract() {
             },
             {
                 command: 'write',
-                description: ['Send a Transaction. Parameters are resolved by cli flags or will be prompted.'],
+                description: ['Send a contract transaction. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
-                        description: 'Installed contract by name',
+                        description: 'Name of an installed contract',
                         required: true
                     },
                     {
-                        description: 'Method name or ABI, e.g.: 0xweb c read foo "decimals():uint16"',
+                        description: 'Method name or ABI, e.g. "approve(address spender, uint256 amount)"',
                         required: true
                     },
                 ],
                 params: {
                     '-c, --chain': {
-                        description: `Default: The chain will be taken from the installed contract. `
+                        description: `Chain to use. Default: the installed contract's chain`
                     },
                     ...Parameters.account(),
                     ...Parameters.pin(),
                     '--nonce': {
-                        description: 'Override nonce',
+                        description: 'Override the transaction nonce',
                         type: 'number'
                     },
                     '--safe-transport': {
-                        description: `Optionally the file path for multisig signatures, if collected manually, as per default Gnosis Safe Service is used.`,
+                        description: `File path for manually collected multisig signatures. Default: Gnosis Safe Service`,
                     },
                     '--abi': {
-                        description: `ABI string that will be parsed.`
+                        description: `ABI string to parse`
                     },
                 },
                 async process(args, params, app) {
@@ -136,16 +136,16 @@ export function CContract() {
             },
             {
                 command: 'calldata',
-                description: ['Serialize transaction calldata. Parameters are resolved by cli flags or will be prompted.'],
+                description: ['Encode transaction calldata. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Installed contract by name or address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
                         name: "MethodOrAbi",
-                        description: 'Method name or ABI, e.g.: 0xweb c calldata foo "approve(address spender, uint256 amount)"',
+                        description: 'Method name or ABI, e.g. "approve(address spender, uint256 amount)"',
                         required: true
                     }
                 ],
@@ -164,23 +164,23 @@ export function CContract() {
             },
             {
                 command: 'calldata-parse',
-                description: [ 'Parse hex calldata using contracts ABI' ],
+                description: [ 'Decode hex calldata using the contract ABI' ],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Installed contract by name or address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
                         name: 'calldata',
                         query: true,
-                        description: 'Hex',
+                        description: 'Calldata as a hex string',
                         required: true
                     },
                 ],
                 params: {
                     '--calldata': {
-                        description: 'Api: calldata to parse; Cli: can be provided via argument'
+                        description: 'Calldata to decode. In the CLI, this can also be a positional argument'
                     }
                 },
                 api: {},
@@ -197,26 +197,26 @@ export function CContract() {
             },
             {
                 command: 'logs',
-                description: [ 'Load the logs for the contract' ],
+                description: [ 'Fetch event logs for a contract' ],
                 arguments: [
                     {
-                        description: 'Name of the installed contract',
+                        description: 'Name of an installed contract',
                         required: true
                     },
                     {
-                        description: 'Log name, could be * for all events',
+                        description: 'Event name, or "*" for all events',
                         required: true
                     }
                 ],
                 params: {
                     '-c, --chain': {
-                        description: `Default: The chain will be taken from the installed contract. `
+                        description: `Chain to use. Default: the installed contract's chain`
                     },
                     '-o, --output': {
-                        description: `Output file to save the logs data. Default: terminal output`
+                        description: `Output file for event logs. Default: terminal output`
                     },
                     '--format': {
-                        description: `Data format to output`,
+                        description: `Output format: csv or json`,
                         oneOf: [ 'csv', 'json' ]
                     },
 
@@ -229,29 +229,29 @@ export function CContract() {
             },
             {
                 command: 'dump',
-                description: [ `Save contract's complete data-set as raw slot-value file and as JSON model file` ],
+                description: [ `Save contract storage as raw slot values in CSV and as a JSON model` ],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     }
                 ],
                 params: {
                     '--output': {
-                        description: 'Output file without extension, as 2 files will be generated the .csv and .json, use "std" value to output to console only'
+                        description: 'Output path without an extension; creates .csv and .json files. Use "std" for terminal output only'
                     },
                     '--sources': {
-                        description: `Optionally the solidity file or local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                        description: `Solidity file or local source directory. If omitted, sources are fetched from the blockchain explorer`
                     },
                     '--contract-name': {
-                        description: 'Optionally the contract name, if directory is specified as source'
+                        description: 'Contract name to select when the source is a directory'
                     },
                     '--imp, --implementation': {
                         description: 'Implementation address'
                     },
                     '--fields': {
-                        description: 'Comma separated variable names to restrict dump to specific variables.'
+                        description: 'Comma-separated names of the state variables to include'
                     },
                     ...Parameters.chain({ required: false })
                 },
@@ -263,11 +263,11 @@ export function CContract() {
             },
             {
                 command: 'dump-restore',
-                description: [ `In development (Hardhat) chains it is possible to write storage back from a JSON or CSV dump` ],
+                description: [ `Restore contract storage from a JSON or CSV dump on a Hardhat development network` ],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     }
                 ],
@@ -276,16 +276,16 @@ export function CContract() {
                         description: 'Input .csv or .json file'
                     },
                     '--sources': {
-                        description: `Optionally the solidity file or local directory with the solidity contracts, otherwise it will be fetched from blockchain explorer`
+                        description: `Solidity file or local source directory. If omitted, sources are fetched from the blockchain explorer`
                     },
                     '--contract-name': {
-                        description: 'Optionally the contract name, if directory is specified as source'
+                        description: 'Contract name to select when the source is a directory'
                     },
                     '--imp, --implementation': {
                         description: 'Implementation address'
                     },
                     '--fields': {
-                        description: 'Comma separated variable names to restrict dump to specific variables.'
+                        description: 'Comma-separated names of the state variables to include'
                     },
                     ...Parameters.chain({ required: false })
                 },
@@ -297,16 +297,16 @@ export function CContract() {
             },
             {
                 command: 'slot',
-                description: [ `Read contracts slot` ],
+                description: [ `Read contract storage slots` ],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
                         name: 'SlotOrRange',
-                        description: 'Locations hash. Except ranges, e.g.: 0-50',
+                        description: 'Storage slot or range, e.g. 0-50',
                         required: true
                     }
                 ],
@@ -322,16 +322,16 @@ export function CContract() {
             },
             {
                 command: 'var',
-                description: [ `Read contracts state variable` ],
+                description: [ `Read a contract state variable` ],
                 arguments: [
                     {
                         name: 'NameOrAddress',
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
                         name: 'Accessor',
-                        description: 'Accessor selector. Supports JSON-a-like paths, e.g: users[5].balance',
+                        description: 'State variable path, e.g. users[5].balance',
                         required: true
                     },
 
@@ -339,15 +339,15 @@ export function CContract() {
                 params: {
                     ...Parameters.chain({ required: false }),
                     slot: {
-                        description: 'Overrides the slot number for this variable',
+                        description: 'Override the storage slot for this variable',
                         type: 'number'
                     },
                     type: {
-                        description: 'Overrides the type for this variable',
+                        description: 'Override the type of this variable',
                         type: 'string'
                     },
                     offset: {
-                        description: 'Reads with storage offset',
+                        description: 'Storage offset to use when reading',
                         type: 'string'
                     }
                 },
@@ -365,14 +365,14 @@ export function CContract() {
             },
             {
                 command: 'var-set',
-                description: [ `Sets contracts state variable. Hardhat network only` ],
+                description: [ `Set a contract state variable. Hardhat networks only` ],
                 arguments: [
                     {
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
-                        description: 'Accessor selector. Supports JSON-a-like paths, e.g: users[5].balance',
+                        description: 'State variable path, e.g. users[5].balance',
                         required: true
                     },
                     {
@@ -383,7 +383,7 @@ export function CContract() {
                 params: {
                     ...Parameters.chain({ required: false }),
                     type: {
-                        description: 'Overrides the type for this variable',
+                        description: 'Override the type of this variable',
                         type: 'string'
                     }
                 },
@@ -397,10 +397,10 @@ export function CContract() {
             },
             {
                 command: 'vars',
-                description: [ `Get list of state variables` ],
+                description: [ `List contract state variables` ],
                 arguments: [
                     {
-                        description: 'Name of the installed contract or the Address',
+                        description: 'Contract address or name of an installed contract',
                         required: true
                     },
                 ],
@@ -416,20 +416,20 @@ export function CContract() {
             },
             {
                 command: 'watch',
-                description: [ `Start LOG monitoring for the contract` ],
+                description: [ `Monitor contract logs` ],
                 arguments: [
                     {
-                        description: 'Name of the installed contract',
+                        description: 'Name of an installed contract',
                         required: true
                     },
                 ],
                 params: {
                     '-e, --event': {
-                        description: 'Event name. Supports "*" selector',
+                        description: 'Event name, or "*" for all events',
                         required: false
                     },
                     '-t, --tx': {
-                        description: 'Method name. Supports "*" selector',
+                        description: 'Method name, or "*" for all methods',
                     },
                     ...Parameters.chain()
                 },

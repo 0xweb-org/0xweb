@@ -18,23 +18,23 @@ export function CConfig() {
         ],
         params: {
             '-v, --view': {
-                description: 'Print current configuration. ',
+                description: 'Show the current configuration',
             },
             '-e, --edit': {
-                description: 'Open/create the configuration file in AppData or CWD folder to edit',
+                description: 'Open or create the configuration file in AppData or the current working directory',
             },
             '--local': {
-                description: 'Edit local config',
+                description: 'Edit the local configuration',
             },
             '--global': {
-                description: 'Edit global config',
+                description: 'Edit the global configuration',
             },
             '--set': {
-                description: 'Set config value, e.g. --set settings.target=cjs',
+                description: 'Set a configuration value, e.g. --set settings.target=cjs',
                 type:'string',
             },
             '--get': {
-                description: 'Get config value, e.g. --set settings.target',
+                description: 'Get a configuration value, e.g. --get settings.target',
                 type:'string',
             },
         },

@@ -25,18 +25,18 @@ export function CSafe() {
         command: 'safe',
 
         description: [
-            'Multi-sig account tools.'
+            'Manage Safe multisig accounts'
         ],
         subcommands: [
 
             {
                 command: 'add',
                 description: [
-                    'Add existing safe.'
+                    'Add an existing Safe account'
                 ],
                 params: {
                     '-o, --owner': {
-                        description: 'Owners address or name. The EOA should be already present.',
+                        description: 'Address or name of an existing owner account (EOA)',
                         required: true,
                     },
                     '-a, --address': {
@@ -75,7 +75,7 @@ export function CSafe() {
             {
                 command: 'list',
                 description: [
-                    'List safe account names'
+                    'List Safe account names'
                 ],
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config);
@@ -93,26 +93,26 @@ export function CSafe() {
             {
                 command: 'new',
                 description: [
-                    'Deploy new safe'
+                    'Deploy a new Safe account'
                 ],
                 params: {
                     '-n, --name': {
-                        description: 'Name of the account to create.',
+                        description: 'Name of the account to create',
                         required: true,
                     },
                     '-o, --owner': {
-                        description: 'Address or name of the owner. It should be already present.',
+                        description: 'Address or name of an existing owner account',
                         required: true,
                     },
                     '-m, --members': {
-                        description: 'Additional owners. Comma-separated addresses.',
+                        description: 'Comma-separated addresses of additional owners',
                         default: [],
                         map(line) {
                             return line.split(',').map(x => x.trim()).filter(Boolean);
                         }
                     },
                     '--contracts': {
-                        description: 'Optionally, JSON serialized file addresses for fields: Safe, SafeL2, SafeProxyFactory, MultiSend, CreateCall',
+                        description: 'Optional JSON file with contract addresses for Safe, SafeL2, SafeProxyFactory, MultiSend, and CreateCall',
                     }
                 },
                 async process(args: string[], params: { name, owner, chain, members, contracts }, app: App) {
@@ -161,7 +161,7 @@ export function CSafe() {
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file`,
+                        description: `Path to a transaction JSON file`,
                         required: true
                     }
                 ],
@@ -184,11 +184,11 @@ export function CSafe() {
             {
                 command: 'submit,send',
                 description: [
-                    'Sends a tx from the file to the blockchain. All confirmations should be already included in the file'
+                    'Submit a transaction from a JSON file. The file must already contain all required confirmations'
                 ],
                 arguments: [
                     {
-                        description: `Path to a Tx JSON file`,
+                        description: `Path to a transaction JSON file`,
                         required: true
                     }
                 ],

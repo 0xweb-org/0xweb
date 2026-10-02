@@ -16,10 +16,10 @@ export function CAbi() {
         subcommands: [
             {
                 command: 'topic0',
-                description: ['Create topic0 ID for the event'],
+                description: ['Compute the topic0 hash for an event'],
                 arguments: [
                     {
-                        description: 'event ABI',
+                        description: 'Event ABI',
                         name: 'event',
                         type:'string',
                         required: true
@@ -40,10 +40,10 @@ export function CAbi() {
             },
             {
                 command: 'sig',
-                description: ['Encode function sig'],
+                description: ['Compute the selector for a function or error'],
                 arguments: [
                     {
-                        description: 'function or error ABI',
+                        description: 'Function or error ABI',
                         name: 'sig',
                         type:'string',
                         required: true

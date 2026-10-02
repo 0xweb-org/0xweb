@@ -18,27 +18,27 @@ export function CTokens() {
         command: 'tokens',
 
         description: [
-            'Manage known tokens.'
+            'Manage known tokens'
         ],
         subcommands: [
             {
                 command: 'add',
                 example: '0xweb tokens add --address 0x... --symbol FRT --decimals 18 --chain eth',
                 description: [
-                    'Add a new token to the known list.'
+                    'Add a token to the list of known tokens'
                 ],
                 params: {
                     '-a, --address': {
-                        description: 'Tokens address',
+                        description: 'Token contract address',
                         required: true,
                         validate: $require.Address,
                     },
                     '-s, --symbol': {
-                        description: 'Tokens symbol',
+                        description: 'Token symbol',
                         required: true
                     },
                     '-d, --decimals': {
-                        description: 'Tokens decimals. Default: 18',
+                        description: 'Number of token decimals. Default: 18',
                         default: 18,
                         type: 'number'
                     }
@@ -59,7 +59,7 @@ export function CTokens() {
                 command: 'find',
                 example: '0xweb tokens find USDC',
                 description: [
-                    'Get a token by Symbol or Address, and print the info'
+                    'Find a token by symbol or address and show its details'
                 ],
                 arguments: [
                     {
@@ -89,7 +89,7 @@ export function CTokens() {
                 command: 'for',
                 example: '0xweb tokens for 0x...',
                 description: [
-                    'Get all tokens for the address'
+                    'Find tokens received by an address and show their balances'
                 ],
                 arguments: [
                     {

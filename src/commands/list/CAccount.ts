@@ -15,30 +15,30 @@ export function CAccount ()  {
         command: 'account',
 
         description: [
-            'Account tools.'
+            'View and manage an account'
         ],
         subcommands: [
             {
                 command: 'balance',
                 example: '0xweb account balance <accountName> <tokenSymbol> -p <pin>',
                 description: [
-                    'Get account balance for ETH or any ERC20 token'
+                    'Get the account balance for ETH or an ERC-20 token'
                 ],
                 arguments: [
                     {
                         name: '<accountName>',
-                        description: 'Account name added with "accounts" command',
+                        description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
                     {
                         name: '<tokenSymbol>',
-                        description: 'Token Symbol or Address',
+                        description: 'Token symbol or address',
                         required: true,
                     }
                 ],
                 params: {
                     '-b, --block': {
-                        description: 'Balance at specific block. Default: latest',
+                        description: 'Block number to query. Default: latest',
                         map: Number
                     }
                 },
@@ -76,18 +76,18 @@ export function CAccount ()  {
             {
                 command: 'view',
                 description: [
-                    'View accounts details. '
+                    'View account details'
                 ],
                 arguments: [
                     {
                         name: '<accountName>',
-                        description: 'Account name added with "accounts" command',
+                        description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
                 ],
                 params: {
                     '--encrypted-key': {
-                        description: 'Prints also the KEY encoded with PIN',
+                        description: 'Also show the private key encrypted with the PIN',
                         type: 'boolean',
                     }
                 },
@@ -118,7 +118,7 @@ export function CAccount ()  {
             {
                 command: 'current',
                 description: [
-                    'Get current logged-in account'
+                    'Show the current account'
                 ],
                 params: {
                     ...Parameters.account({ required: true })
@@ -145,7 +145,7 @@ export function CAccount ()  {
                 arguments: [
                     {
                         name: '<oldAccountName>',
-                        description: 'Account name added with "accounts" command',
+                        description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
                     {
