@@ -7,7 +7,9 @@
         "paths": {
             "@core/*": [ "src/*" ],
             "@dequanto/*": [ "dequanto/src/*" ],
-            "@dequanto-contracts/*": [ "dequanto/src/prebuilt/*" ]
+            "@dequanto-contracts/*": [ "dequanto/src/prebuilt/*" ],
+            "dequanto/*": [ "dequanto/src/*" ],
+            "dequanto-contracts/*": [ "dequanto/src/prebuilt/*" ]
         },
         "outDir": "ts-temp",
         "lib": ["es2024", "DOM"],
@@ -24,11 +26,6 @@
         "experimentalDecorators": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "useDefineForClassFields": false,
-        "plugins": [
-            {
-                "name": "@astrojs/ts-plugin"
-            }
-        ]
+        "useDefineForClassFields": false
     }
 }

@@ -58,7 +58,7 @@
         "@types/node": "^12.6.2",
         "0xweb": "^0.10.79",
         "apexcharts": "^4.3.0",
-        "app-bundler": "^0.2.16",
+        "app-bundler": "^0.2.24",
         "atma": "^0.15.24",
         "atma-io-middleware-clean-css": "^1.1.21",
         "atma-io-middleware-condcomments": "^1.2.8",
@@ -201,7 +201,9 @@
                     "routes": {
                         "@core": "src/{0}",
                         "@dequanto": "dequanto/src/{0}",
-                        "@dequanto-contracts": "dequanto/src/prebuilt/{0}"
+                        "@dequanto-contracts": "dequanto/src/prebuilt/{0}",
+                        "dequanto": "dequanto/src/{0}",
+                        "dequanto-contracts": "dequanto/src/prebuilt/{0}"
                     }
                 }
             },
@@ -251,7 +253,9 @@
                 "routes": {
                     "@core": "src/{0}",
                     "@dequanto": "dequanto/src/{0}",
-                    "@dequanto-contracts": "dequanto/src/prebuilt/{0}"
+                    "@dequanto-contracts": "dequanto/src/prebuilt/{0}",
+                    "dequanto": "dequanto/src/{0}",
+                    "dequanto-contracts": "dequanto/src/prebuilt/{0}"
                 }
             },
             "atma-loader-ts": {

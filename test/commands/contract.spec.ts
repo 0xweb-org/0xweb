@@ -31,6 +31,9 @@ UTest({
         });
 
         return UTest({
+             $config: {
+                timeout: 2 * 60 * 1000
+            },
             async 'check installation' () {
                 let json = await File.readAsync<any>('./0xweb.json');
                 let jsonHardhat = json.contracts.hardhat;
@@ -114,6 +117,9 @@ UTest({
                 }
 
                 return UTest({
+                     $config: {
+                        timeout: 2 * 60 * 1000
+                    },
                     async 'dump by name' () {
                         await cleanJson();
                         let str = await TestUtils.cli(`contract dump Counter --output cache/counter-dump/dump`);

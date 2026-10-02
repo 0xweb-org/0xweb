@@ -45,6 +45,7 @@ import { CServer } from '@core/commands/list/CServer';
 import { IConfigData } from '@dequanto/config/interface/IConfigData';
 import { TAppProcessResult } from './types';
 import { CAbi } from '@core/commands/list/CAbi';
+import { CDeployment } from '@core/commands/list/CDeployment';
 
 
 declare const global;
@@ -113,6 +114,7 @@ export class App {
             .register(CConfig())
             .register(CSolidity())
             .register(CTools())
+            .register(CDeployment())
             .register(CAbi())
             .register(CServer())
             .register(CVersion)

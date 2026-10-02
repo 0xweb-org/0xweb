@@ -54,11 +54,11 @@ UTest({
                         ]
                     }
                 });
-                let $deployments = await File.readAsync<IDeployment[]>('./0xc/deployments/deployments-hardhat.json');
-                let $deploymentInfo = $deployments.find(x => x.id === 'FooSingle');
+                let deployments = await File.readAsync<IDeployment[]>('./0xc/deployments/deployments-hardhat.json');
+                let deploymentInfo = deployments.find(x => x.id === 'FooSingle')!;
 
-                notEq_($deploymentInfo, undefined, `The deployment info should be found in the deployments file`);
-                eq_($deploymentInfo.name, 'Foo', `The deployment name should be equal the contract name in sol file: 'Foo'`);
+                notEq_(deploymentInfo, undefined, `The deployment info should be found in the deployments file`);
+                eq_(deploymentInfo.name, 'Foo', `The deployment name should be equal the contract name in sol file: 'Foo'`);
 
                 let fooResponse = await TestUtils.cli(`c read FooSingle getFoo`);
                 has_(fooResponse, `10n`);
