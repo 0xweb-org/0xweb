@@ -89,10 +89,10 @@ export function CInstall() {
                 target: params.target as any,
                 platform,
                 source: {
-                    abi: address,
+                    abi: address ?? undefined,
                     path: sourcePath,
                 },
-                defaultAddress: address,
+                defaultAddress: address ?? undefined,
                 implementation: params.implementation,
                 output,
                 saveAbi: true,
@@ -109,7 +109,7 @@ export function CInstall() {
                 name: params.name,
                 contractName: contractName,
                 main,
-                source: isByAddress ? {
+                source: address != null ? {
                     platform: platform,
                     address: implementationAddress ?? address,
                 } : {

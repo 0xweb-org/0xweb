@@ -99,7 +99,7 @@ export class ContractService extends BaseService {
         return { pkg, abi };
     }
 
-    private async getAbiItem(method: string, pkg?: IPackageItem, params?: ICallParams) {
+    private async getAbiItem(method: string, pkg: IPackageItem, params?: ICallParams) {
         if (method?.includes(`(`)) {
             return $abiParser.parseMethod(method);
         }
@@ -154,7 +154,7 @@ export class ContractService extends BaseService {
         let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, method, params);
 
         let arr = [...args];
-        let isRead = $abiUtils.isReadMethod(abiItem);
+        let isRead = $abiUtils.isReadMethod($require.notNull(abiItem, `Method ${method} not found`));
         if (isRead === false) {
             arr.unshift({});
         }
@@ -170,13 +170,13 @@ export class ContractService extends BaseService {
         return $data;
     }
 
-    async getContractInstance(nameOrAddress: string, method: string, params: { chain?: TPlatform, abi?: string }) {
+    async getContractInstance(nameOrAddress: string, method: string | null, params?: { chain?: TPlatform, abi?: string }) {
         let pkg = $is.Address(nameOrAddress)
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
 
-        let abi: TAbiItem[];
-        let abiItem: TAbiItem;
+        let abi: TAbiItem[] | undefined;
+        let abiItem: TAbiItem | undefined;
         if (pkg != null) {
             abi = await this.getAbi(pkg);
         }
@@ -203,14 +203,15 @@ export class ContractService extends BaseService {
                 .get(platform as any);
         }
 
+        abi = $require.notNull(abi, `ABI not resolved`);
 
-        let factory = new ContractFactory(this.app.chain.client);
+        let factory = new ContractFactory(this.chain.client);
         let contract = await factory.create({
             pkg, abi
         });
         let args = abiItem == null
             ? []
-            : await this.getArguments(abiItem, params);
+            : await this.getArguments(abiItem, params ?? {});
 
         return {
             pkg,
@@ -221,16 +222,19 @@ export class ContractService extends BaseService {
         };
     }
 
-    async logs(name: string, eventName: string, params: { output, format?: 'csv' | 'json' }) {
+    async logs(name: string, eventName: string, params: { output?: string, format?: 'csv' | 'json', [key: string]: unknown }) {
         let pkg = await this.getPackage(name);
         let abi = await this.getAbi(pkg);
-        let event = abi.find(x => x.name === eventName && x.type === 'event');
-        $require.notNull(event, `"${eventName}" is not a valid Event in Contract "${name}". Use "0xweb c ${name} abi" to view the contracts ABI`);
+        let event = $require.notNull(
+            abi.find(x => x.name === eventName && x.type === 'event'),
+            `"${eventName}" is not a valid Event in Contract "${name}". Use "0xweb c ${name} abi" to view the contracts ABI`
+        );
 
         await this.app.ensureChain(pkg.platform);
 
-        let args = alot(event.inputs)
-            .map(input => [input.name, params?.[input.name]])
+        let inputs = $require.notNull(event.inputs, `Event ${eventName} has no inputs definition`);
+        let args = alot(inputs)
+            .mapMany(input => input.name == null ? [] : [[input.name, params[input.name]] as const])
             .filter(tuple => tuple[1] != null)
             .toDictionary(x => x[0], x => x[1]);
 
@@ -242,13 +246,13 @@ export class ContractService extends BaseService {
         });
         this.printLog(`Loaded bold<${logs.length}> ${eventName} Events`);
 
-        let blockDates = await BlockDateLoader.load(this.app.chain.client, logs);
+        let blockDates = await BlockDateLoader.load(this.chain.client, logs, message => this.printLog(message));
 
-        function formatFromOutput(path: string) {
+        function formatFromOutput(path?: string): string | null {
             if (path == null) {
                 return null;
             }
-            return /\.(?<ext>\w+)$/.exec(path)?.groups.ext;
+            return /\.(?<ext>\w+)$/.exec(path)?.groups?.ext ?? null;
         }
 
         let format = params.format ?? formatFromOutput(params.output) ?? 'json';
@@ -268,7 +272,7 @@ export class ContractService extends BaseService {
             str = JSON.stringify(json, null, '  ');
         }
         if (format === 'csv') {
-            let headers = ['Block', 'Date', 'Tx', 'Event', ...event.inputs.map(x => x.name)].join(', ');
+            let headers = ['Block', 'Date', 'Tx', 'Event', ...inputs.map(x => x.name)].join(', ');
             let rows = logs.map(log => {
                 let row = [
                     log.blockNumber,
@@ -322,7 +326,7 @@ export class ContractService extends BaseService {
         if (slotOrRange.includes('-')) {
             let [start, end] = slotOrRange.split('-').map(Number);
             let slots = alot.fromRange(start, end + 1).toArray();
-            let values = await this.app.chain.client.getStorageAtBatched(address, slots);
+            let values: TEth.Hex[] = await this.chain.client.getStorageAtBatched(address, slots);
             values.forEach((value, index) => {
                 this.printLogTable([
                     [slots[index], value],
@@ -331,7 +335,7 @@ export class ContractService extends BaseService {
             return;
         }
         let slot = slotOrRange as TEth.Hex;
-        let slotValue = await this.app.chain.client.getStorageAt(address, slot);
+        let slotValue = await this.chain.client.getStorageAt(address, slot);
         this.printLog(slotValue);
         return slotValue;
     }
@@ -359,15 +363,15 @@ export class ContractService extends BaseService {
     }) {
         let storage: SlotsStorage;
         if ($is.Address(nameOrAddress) && info?.slot != null && info?.type != null) {
-            let name = /^[\w_]+/.exec(path)[0];
+            let name = $require.notNull(/^[\w_]+/.exec(path), `Invalid storage path: ${path}`)[0];
             let slots = [
                 { name, type: info.type, slot: Number(info.slot), position: 0, size: null },
             ];
-            storage = SlotsStorage.createWithClient(this.app.chain.client, nameOrAddress, slots);
+            storage = SlotsStorage.createWithClient(this.chain.client, nameOrAddress, slots);
         } else {
             let pkg = await this.getPackage(nameOrAddress);
             let slots = await this.getSlots(pkg);
-            storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
+            storage = SlotsStorage.createWithClient(this.chain.client, pkg.address, slots);
         }
         this.printLogToast(`Loading storage of "${path}"`);
         let result = await storage.get(path);
@@ -384,7 +388,7 @@ export class ContractService extends BaseService {
     }) {
         let pkg = await this.getPackage(name);
         let slots = await this.getSlots(pkg);
-        let storage = SlotsStorage.createWithClient(this.app.chain.client, pkg.address, slots);
+        let storage = SlotsStorage.createWithClient(this.chain.client, pkg.address, slots);
 
         this.printLogToast(`Writing storage of "${path}"`);
         await storage.set(path, value);
@@ -398,12 +402,12 @@ export class ContractService extends BaseService {
         this.printLog(result);
     }
 
-    async watchLog(nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters }) {
+    async watchLog(nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters?: Record<string, unknown> }) {
         let pkg = await this.getPackage(nameOrAddress);
         let abi = await this.getAbi(pkg);
 
         if (params.event) {
-            let streamHandler = new ContractStream(pkg.address, abi, this.app.chain.client);
+            let streamHandler = new ContractStream(pkg.address, abi, this.chain.client);
             let stream = streamHandler.on(params.event);
 
             stream.onConnected(() => this.printLogToast(`green<WebSocket Connected>`));
@@ -412,7 +416,7 @@ export class ContractService extends BaseService {
             });
         }
         if (params.tx) {
-            let { contract } = ContractClassFactory.fromAbi(pkg.address, abi, this.app.chain.client, this.app.chain.explorer);
+            let { contract } = ContractClassFactory.fromAbi(pkg.address, abi, this.chain.client, this.chain.explorer);
             let stream = contract.$onTransaction({ filter: { method: '*' } });
 
             stream.subscribe(info => {
@@ -442,8 +446,12 @@ export class ContractService extends BaseService {
 
         return result;
     }
-    private async getContractReader(params: { block?, account?}) {
-        let reader = di.resolve(ContractReader, this.app.chain.client);
+    private get chain() {
+        return $require.notNull(this.app.chain, `Chain not initialized`);
+    }
+
+    private async getContractReader(params: Pick<ICallParams, 'block' | 'account'>) {
+        let reader = di.resolve(ContractReader, this.chain.client);
         if (params.block) {
             let block: number | Date;
             if (/^\d+$/.test(params.block as string)) {
@@ -466,16 +474,16 @@ export class ContractService extends BaseService {
         let writer = await this.getContractWriter(pkg, abi, params);
 
         let accounts = di.resolve(AccountsService, this.app.config);
-        let account = await accounts.get(params.account);
+        let account = await accounts.get(params.account!);
         let writerConfig = <ITxWriterOptions>{
 
         };
         if ($account.isSafe(account) && params.safeTransport) {
             let sender: EoAccount = $account.getSender(account);
             if (sender.key == null) {
-                sender = await accounts.get(sender.address ?? sender.name) as EoAccount;
+                sender = await accounts.get(sender.address ?? sender.name!) as EoAccount;
             }
-            writerConfig.safeTransport = new FileServiceTransport(this.app.chain.client, sender, params.safeTransport);
+            writerConfig.safeTransport = new FileServiceTransport(this.chain.client, sender, params.safeTransport);
         }
 
         let tx = await writer.writeAsync(account, abi, args, {
@@ -497,15 +505,15 @@ export class ContractService extends BaseService {
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
 
-        let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.app.chain.client);
+        let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.chain.client);
         return writer;
     }
-    private async getArguments(abi: TAbiItem, params) {
+    private async getArguments(abi: TAbiItem, params: Record<string, any>) {
         return $abiInput.parseArgumentsFromCli(abi as TEth.Abi.Item, params, {
             env: this.app.config.env
         });
     }
-    private async getAddress(nameOrAddress): Promise<TAddress> {
+    private async getAddress(nameOrAddress: string): Promise<TAddress> {
         if ($is.Address(nameOrAddress)) {
             return nameOrAddress;
         }
@@ -575,7 +583,7 @@ export class ContractService extends BaseService {
 
 
 namespace BlockDateLoader {
-    export async function load(client: Web3Client, logs: ITxLogItem[]) {
+    export async function load(client: Web3Client, logs: ITxLogItem[], printLog: (message: string) => void) {
         let blockNrs = alot(logs).map(x => x.blockNumber).distinct().toArray();
         let min = alot(blockNrs).min(x => x);
         let max = alot(blockNrs).max(x => x);
@@ -592,7 +600,7 @@ namespace BlockDateLoader {
         nrs.push(max);
 
         let blocks = await client.getBlocks(nrs);
-        this.printLog(`Loaded bold<${blockNrs.length}> block dates by approx ${nrs.length}`);
+        printLog(`Loaded bold<${blockNrs.length}> block dates by approx ${nrs.length}`);
 
 
         let knownDates = alot(blocks).map(block => [block.number, Number(block.timestamp)] as const).toArray();
@@ -609,8 +617,8 @@ namespace BlockDateLoader {
                     break;
                 }
             }
-            let [aNr, aTime] = a;
-            let [bNr, bTime] = b;
+            let [aNr, aTime] = a!;
+            let [bNr, bTime] = b!;
             let avg = (bTime - aTime) / (bNr - aNr);
 
             let startTime = aTime;

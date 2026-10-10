@@ -9,14 +9,14 @@ export class BaseService {
     }
 
 
-    protected printLog (...args) {
+    protected printLog (...args: Parameters<typeof $logger.log>) {
         if (this.opts?.logger === false) {
             return;
         }
         $logger.log(...args);
     }
     /** @deprecated printLog instead */
-    protected printResult (...args) {
+    protected printResult (...args: Parameters<typeof $logger.result>) {
         if (this.opts?.logger === false) {
             return;
         }

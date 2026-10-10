@@ -51,24 +51,27 @@ export function CAccount ()  {
                     } else {
                         let accounts = di.resolve(AccountsService, app.config);
                         let account = await accounts.get(accountName);
-                        address = account?.address;
+                        address = $require.notNull(account?.address, `Account ${accountName} has no address`);
                     }
                     $require.Address(address);
 
                     $console.toast(`Loading token ${tokenName}`);
-                    let token = await app.chain.tokens.getToken(tokenName, true);
+                    let chain = $require.notNull(app.chain, `Chain not initialized`);
+                    let token = await chain.tokens.getToken(tokenName, true);
                     if (token == null) {
-                        throw new Error(`Unknown token: ${tokenName} for ${app.chain.client.platform}`);
+                        throw new Error(`Unknown token: ${tokenName} for ${chain.client.platform}`);
                     }
 
+                    let decimals = $require.notNull(token.decimals, `Decimals not resolved for token ${tokenName}`);
+
                     $console.toast(`Loading balance for ${address}`);
-                    let balance = await app.chain.token.balanceOf(address, token, { forBlock: params.block });
-                    let eth = $bigint.toEther(balance, token.decimals);
+                    let balance = await chain.token.balanceOf(address, token, { forBlock: params.block });
+                    let eth = $bigint.toEther(balance, decimals);
 
                     $console.table([
                         ['Symbol', tokenName],
                         ['Address', token.address],
-                        ['Decimals', token.decimals.toString()],
+                        ['Decimals', decimals.toString()],
                         ['Balance', `green<${eth}>`]
                     ]);
                 }
@@ -99,7 +102,7 @@ export function CAccount ()  {
                     $require.notNull(account, `Account ${accountName} not found`);
                     let tableData = [
                         ['Account', accountName],
-                        ['Address', account.address],
+                        ['Address', account.address ?? ''],
                     ];
 
                     if (params.encryptedKey) {
@@ -129,8 +132,8 @@ export function CAccount ()  {
                     let account = await service.get(params.account);
                     $require.notNull(account, `${params.account} not found`)
                     $console.table([
-                        ['Name', account.name],
-                        ['Address', account.address],
+                        ['Name', account.name ?? ''],
+                        ['Address', account.address ?? ''],
                     ]);
                 }
             },

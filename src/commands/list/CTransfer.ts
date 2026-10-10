@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { App } from '@core/app/App';
@@ -54,25 +55,26 @@ export function CTransfer() {
                 description: `Save the transaction to a file without broadcasting it`,
             }
         },
-        async process(args: string[], params: { from, to, chain, safeTransport?, sigTransport?, txOutput? }, app: App) {
+        async process(args: string[], params: { from: string, to: string, chain: string, safeTransport?: string, sigTransport?: string, txOutput?: string }, app: App) {
+            let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
             let [amountStr, tokenMix] = args;
 
 
             $console.toast(`Loading token ${tokenMix}`);
-            let token = await app.chain.tokens.getToken(tokenMix, true);
+            let token = await chainTools.tokens.getToken(tokenMix, true);
             if (token == null && $is.Address(tokenMix)) {
                 token = <IToken>{
                     address: tokenMix,
                     decimals: 18,
-                    platform: app.chain.client.platform,
+                    platform: chainTools.client.platform,
                 };
             }
-            if (token == null && tokenMix === app.chain.client.chainToken) {
+            if (token == null && tokenMix === chainTools.client.chainToken) {
                 token = <IToken>{
                     symbol: tokenMix,
                     address: $address.ZERO,
                     decimals: 18,
-                    platform: app.chain.client.platform,
+                    platform: chainTools.client.platform,
                 };
             }
             if (token == null) {
@@ -90,21 +92,23 @@ export function CTransfer() {
             if (accountTo == null) {
                 throw new Error(`Account ${params.to} not found in storage`);
             }
-            if (accountTo.platform && accountTo.platform !== app.chain.client.platform) {
-                //-throw new Error(`Chain mismatch. Account ${accountTo.address} required ${accountTo.platform}, but got ${app.chain.client.platform}`);
+            if (accountTo.platform && accountTo.platform !== chainTools.client.platform) {
+                //-throw new Error(`Chain mismatch. Account ${accountTo.address} required ${accountTo.platform}, but got ${chainTools.client.platform}`);
             }
 
-            let service = di.resolve(TokenTransferService, app.chain.client);
+            let service = di.resolve(TokenTransferService, chainTools.client);
 
             $console.toast(`Loading current balance for ${accountFrom.address}`);
-            let balance = await service.getBalance(accountFrom.address, token);
+            let fromAddress = $require.notNull(accountFrom.address, `Sender account has no address`);
+            let toAddress = $require.notNull(accountTo.address, `Recipient account has no address`);
+            let balance = await service.getBalance(fromAddress, token);
             $console.log(`Account balance: ${$bigint.toEther(balance, token.decimals)}`);
 
 
             let amount: bigint | number;
             let percents = /^(?<value>[\d\.]+)%$/.exec(amountStr);
             if (percents) {
-                let p = Number(percents.groups.value);
+                let p = Number(percents[1]);
                 amount = $bigint.multWithFloat(balance, p / 100);
             } else {
                 let num = Number(amountStr);
@@ -123,7 +127,7 @@ export function CTransfer() {
             let safeTransportFile = params.safeTransport;
             if (safeTransportFile) {
                 service.$configWriter({
-                    safeTransport: new FileServiceTransport(app.chain.client, accountFrom, safeTransportFile)
+                    safeTransport: new FileServiceTransport(chainTools.client, accountFrom, safeTransportFile)
                 });
             }
             let sigTransportFile = params.sigTransport;
@@ -141,11 +145,11 @@ export function CTransfer() {
 
             let tx: TxWriter;
             if (amount === balance) {
-                tx = await service.transferAll(accountFrom, accountTo.address, token);
+                tx = await service.transferAll(accountFrom, toAddress, token);
             } else if (amount < 0) {
-                tx = await service.transferAllWithRemainder(accountFrom, accountTo.address, token, amount);
+                tx = await service.transferAllWithRemainder(accountFrom, toAddress, token, amount);
             } else {
-                tx = await service.transfer(accountFrom, accountTo.address, token, amount);
+                tx = await service.transfer(accountFrom, toAddress, token, amount);
             }
 
             if (txOutput) {

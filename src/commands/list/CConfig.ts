@@ -39,7 +39,7 @@ export function CConfig() {
             },
         },
 
-        async process(args: string[], params, app: App) {
+        async process(args: string[], params: { edit?: boolean, set?: string, get?: string, view?: boolean }, app: App) {
 
             if (params.edit) {
 
@@ -50,9 +50,13 @@ export function CConfig() {
                     ]
                 }, false);
 
-                let source = app.config.$sources.array.find(x =>x.data.name === 'main');
-                $require.notNull(source, `Main config source not found`);
-                let path = source.data.path;
+                let source = app.config.$sources.array.find(x => x.data?.name === 'main');
+                source = $require.notNull(source, `Main config source not found`);
+                let data = $require.notNull(source.data, `Main config source data not found`);
+                if (!('path' in data) || typeof data.path !== 'string') {
+                    throw new Error(`Main config source has no file path`);
+                }
+                let path = data.path;
 
 
                 if (await File.existsAsync(path) === false) {
@@ -71,8 +75,12 @@ export function CConfig() {
 
             if (params.set) {
                 let json = {};
-                let source = app.config.$sources.array.find(x =>x.data.name === 'main');
-                $require.notNull(source, `Main config source not found`);
+                let source = app.config.$sources.array.find(x => x.data?.name === 'main');
+                source = $require.notNull(source, `Main config source not found`);
+                let data = $require.notNull(source.data, `Main config source data not found`);
+                if (!('path' in data) || typeof data.path !== 'string') {
+                    throw new Error(`Main config source has no file path`);
+                }
                 let values = params.set.split(';');
                 values.forEach(str => {
                     let [ key, value ] = str.split('=');
@@ -90,8 +98,11 @@ export function CConfig() {
                     }
                     obj_setProperty(json, key, value);
                 });
-                $console.log(`Set the configuration at ${source.data.path} : ` + JSON.stringify(json, null, 2));
+                $console.log(`Set the configuration at ${data.path} : ` + JSON.stringify(json, null, 2));
 
+                if (source.write == null) {
+                    throw new Error(`Main config source is not writable`);
+                }
                 await source.write(json, /*deepExtend*/ true);
                 return;
             }

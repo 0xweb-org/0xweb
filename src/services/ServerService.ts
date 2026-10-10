@@ -13,7 +13,7 @@ import { CBlock } from '@core/commands/list/CBlock';
 
 export class ServerService {
 
-    server: Application;
+    server: Application | undefined;
 
     constructor (public app: App) {
 
@@ -44,7 +44,7 @@ export class ServerService {
                         rule: debug
                             ? '^/(contracts|contract|tx|devbook)(/[\\w\\-_\\/]+)? /index.dev.html'
                             : '^/(contracts|contract|tx|devbook)(/[\\w\\-_\\/]+)? /',
-                        conditions: null,
+                        conditions: [],
                     },
                     // {
                     //     rule: debug
@@ -56,7 +56,7 @@ export class ServerService {
                         rule: debug
                             ? '^/$ /index.dev.html'
                             : '^/$ /',
-                        conditions: null,
+                        conditions: [],
                     }
                 ]
             },
@@ -98,16 +98,16 @@ namespace ServerCommands {
             return getRoutes('', command);
         }).toArray();
 
-        let definition = alot(routes)
-            .filter(x => x.command.api != null)
+        let apiRoutes = routes.flatMap(route => route.command.api == null ? [] : [{ ...route, api: route.command.api }]);
+        let definition = alot(apiRoutes)
             .toDictionary(x => {
-                return `$${x.command.api.method ?? 'get'} ${x.path}`;
+                return `$${x.api.method ?? 'get'} ${x.path}`;
             }, x => {
                 return {
                     meta: {
                         origins: '*'
                     },
-                    process: wrapProcessor(x.command.api.process ?? x.command.process, app, x.command)
+                    process: wrapProcessor(x.api.process ?? x.command.process, app, x.command)
                 };
             });
 
@@ -115,13 +115,13 @@ namespace ServerCommands {
     }
 
     function wrapProcessor(
-        process: (args: any[], params?, app?: App, command?: ICommand) => Promise<any>,
+        process: ICommand['process'],
         appFromCli: App,
         command: ICommand
     ) {
-        return async function (req, res, params) {
+        return async function (req: { body?: Record<string, any> }, res: unknown, params: Record<string, any>) {
 
-            let appFromRequest: App = null;
+            let appFromRequest: App | undefined;
             let platform = params.chain;
             if (platform) {
                 appFromRequest = new App();
@@ -133,10 +133,10 @@ namespace ServerCommands {
             for (let key in params) {
                 let index = /^cliArg(?<i>\d+)$/.exec(key);
                 if (index) {
-                    cliArgs[Number(index.groups.i)] = params[key];
+                    cliArgs[Number(index[1])] = params[key];
                     continue;
                 }
-                let named = command.arguments?.findIndex(x => x.name === key);
+                let named = command.arguments?.findIndex(x => x.name === key) ?? -1;
                 if (named > -1) {
                     cliArgs[named] = params[key];
                     continue;

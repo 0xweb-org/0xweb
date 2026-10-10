@@ -8,7 +8,7 @@ import { $date } from '@dequanto/utils/$date';
 export class BlockService extends BaseService {
 
     async getBlock(blockNr: string) {
-        let { client } = this.app.chain;
+        let { client } = $require.notNull(this.app.chain, `Chain not initialized`);
 
         if (blockNr === 'latest') {
             this.printLogToast('Getting latest block number...');
@@ -46,7 +46,7 @@ export class BlockService extends BaseService {
             return [`#${i + 1}`, tx as TEth.Hex];
         });
         this.printLogTable([
-            ...hashes
+            ...(hashes ?? [])
         ]);
         return block;
     }

@@ -44,9 +44,10 @@ export function CTokens() {
                     }
                 },
                 async process(args: string[], params: any, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let { address, symbol, decimals, chain } = params;
 
-                    await app.chain.tokens.addKnownToken(<IToken>{
+                    await chainTools.tokens.addKnownToken(<IToken>{
                         address,
                         symbol,
                         decimals,
@@ -70,14 +71,15 @@ export function CTokens() {
 
                 },
                 async process(args: string[], params: any, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let [query] = args;
 
                     try {
-                        let token = await app.chain.tokens.getKnownToken(query);
+                        let token = await chainTools.tokens.getKnownToken(query);
                         $console.table([
-                            ['Symbol', token.symbol],
+                            ['Symbol', token.symbol ?? ''],
                             ['Address', token.address],
-                            ['Decimals', token.decimals],
+                            ['Decimals', token.decimals ?? ''],
                             ['Platform', token.platform],
                         ]);
                     } catch (error) {
@@ -100,12 +102,13 @@ export function CTokens() {
 
                 },
                 async process(args: TEth.Address[], params: any, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
 
                     let [eoa] = args;
                     $require.Address(eoa, 'Provide the valid address to get the tokens for');
 
                     $console.toast('Loading Transfer events...');
-                    let erc20 = new ERC20(null, app.chain.client);
+                    let erc20 = new ERC20(undefined, chainTools.client);
                     let transfers = await erc20.getPastLogsTransfer({
                         params: {
                             to: eoa
@@ -120,7 +123,7 @@ export function CTokens() {
                     $console.log(`Got bold<cyan<${tokenAddresses.length}>> tokens for ${eoa}`);
 
                     $console.toast(`Loading tokens info...`);
-                    let tokensService = di.resolve(TokensService, app.chain.platform);
+                    let tokensService = di.resolve(TokensService, chainTools.platform);
                     let tokens = await alot(tokenAddresses)
                         .mapAsync(async address => {
                             return tokensService.getKnownToken(address);
@@ -132,13 +135,13 @@ export function CTokens() {
 
                     $console.log(`Got bold<cyan<${knownTokens.length}>> known ERC20 tokens`);
 
-                    let priceService = di.resolve(TokenPriceService, app.chain.client, app.chain.explorer);
+                    let priceService = di.resolve(TokenPriceService, chainTools.client, chainTools.explorer);
 
                     $console.toast(`Loading account balances...`);
                     let balances = await alot(knownTokens)
                         .mapAsync(async token => {
                             $console.toast(`Loading balance for ${token.symbol}...`);
-                            let balance = await new ERC20(token.address, app.chain.client).balanceOf(eoa)
+                            let balance = await new ERC20(token.address, chainTools.client).balanceOf(eoa)
                             let priceInfo = await priceService.getPrice(token, {
                                 amountWei: balance
                             });
@@ -152,7 +155,7 @@ export function CTokens() {
 
                     let table = balances.map(result => {
                         return [
-                            result.token.symbol ?? result.token.name,
+                            result.token.symbol ?? result.token.name ?? '',
                             result.token.address,
                             `${result.balance}`,
                             result.priceInfo.error

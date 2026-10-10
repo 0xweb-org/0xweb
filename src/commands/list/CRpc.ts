@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import { ICommand } from '../ICommand';
 import { Parameters } from '@core/utils/Parameters';
 import { App } from '@core/app/App';
@@ -48,6 +49,7 @@ export function CRpc() {
         },
         api: {},
         async process(args: any[], params?, app?: App) {
+            app = $require.notNull(app, `Application not initialized`);
             let service = new RpcService(app);
             let result = await service.process(args, params, app);
             return result;

@@ -73,11 +73,11 @@ export function CAccounts() {
                     }
 
                     if (params.login) {
-                        await AccountsService.saveAsDefaults(account.name, params, app.config);
+                        await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
                     }
 
                     let service = di.resolve(AccountsService, app.config);
-                    let accounts = await service.add(account);
+                    let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.add(account);
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
                     $console.log(`Accounts:`);
@@ -98,7 +98,7 @@ export function CAccounts() {
                 async process(args: string[], params: any, app: App) {
                     let { name } = params;
                     let service = di.resolve(AccountsService, app.config);
-                    let accounts = await service.remove(name);
+                    let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.remove(name);
 
                     let str = accounts.length > 0
                         ? accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n')
@@ -146,13 +146,13 @@ export function CAccounts() {
                         return;
                     }
                     if (params.login) {
-                        await AccountsService.saveAsDefaults(account.name, params, app.config);
+                        await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
                     }
                     $console.log(`yellow<You must backup the key bold<!!!>>`)
                     $console.table([
-                        ['Name', account.name],
-                        ['Address', account.address],
-                        ['Key', account.key],
+                        ['Name', account.name ?? ''],
+                        ['Address', account.address ?? ''],
+                        ['Key', account.key ?? ''],
                     ]);
                 }
             },
@@ -172,10 +172,10 @@ export function CAccounts() {
                     let account = await service.get(name);
                     $require.notNull(account, `${name} not found`)
 
-                    await AccountsService.saveAsDefaults(account.name, params, app.config);
+                    await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
                     $console.table([
-                        ['Name', account.name],
-                        ['Address', account.address],
+                        ['Name', account.name ?? ''],
+                        ['Address', account.address ?? ''],
                     ]);
                 }
             },
@@ -210,12 +210,13 @@ export function CAccounts() {
                     let [ path ] = args;
 
                     let arr = await alot(accounts).mapAsync(async x => {
+                        let address = $require.notNull(x.address, `Account ${x.name} has no address`);
                         return new Promise(resolve => {
                             if (x.key == null) {
                                 resolve([
                                     x.name,
                                     x.type,
-                                    $hex.raw(x.address),
+                                    $hex.raw(address),
                                 ]);
                                 return;
                             }
@@ -223,8 +224,8 @@ export function CAccounts() {
                                 resolve([
                                     x.name,
                                     x.type,
-                                    $hex.raw(x.address),
-                                    $hex.raw(account.key)
+                                    $hex.raw(address),
+                                    $hex.raw($require.notNull(account.key, `Account ${x.name} has no private key`))
                                 ]);
                             })
 

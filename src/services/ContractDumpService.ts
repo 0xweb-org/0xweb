@@ -1,6 +1,7 @@
 import alot from 'alot'
 import { App } from '@core/export'
 import { $console } from '@core/utils/$console'
+import type { TEth } from '@dequanto/models/TEth'
 import { TAddress } from '@dequanto/models/TAddress'
 import { SlotsDump } from '@dequanto/solidity/SlotsDump'
 import { $is } from '@dequanto/utils/$is'
@@ -31,14 +32,14 @@ export class ContractDumpService {
         let { _address, _output, _implementation, _sources, _contractName } = await this.getContractData(nameOrAddress, params);
 
         $require.String(_output, 'Output file not defined');
-        $require.notNull(this.app.chain, `--chain not specified`);
+        let chain = $require.notNull(this.app.chain, `--chain not specified`);
 
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
             contractName: _contractName,
-            client: this.app.chain.client,
-            explorer: this.app.chain.explorer,
+            client: chain.client,
+            explorer: chain.explorer,
             fields: params.fields?.split(',').map(x => x.trim()),
             sources: _sources,
             parser: {
@@ -74,17 +75,19 @@ export class ContractDumpService {
 
     async dumpRestore(nameOrAddress: string, params: IContractDumpServiceParams) {
         let { _address, _output, _implementation, _sources } = await this.getContractData(nameOrAddress, params);
+        let chain = $require.notNull(this.app.chain, `--chain not specified`);
+        let file = $require.notNull(params.file, `Restore file not specified`);
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
-            client: this.app.chain.client,
-            explorer: this.app.chain.explorer,
+            client: chain.client,
+            explorer: chain.explorer,
             fields: params.fields?.split(',').map(x => x.trim()),
             sources: _sources
         });
 
-        if (/\.json$/.test(params.file)) {
-            let json = await File.readAsync<any>(params.file);
+        if (/\.json$/.test(file)) {
+            let json = await File.readAsync<any>(file);
             if (Array.isArray(json) && Array.isArray(json[0])) {
                 let table = json;
                 await dump.restoreStorageFromTable(table);
@@ -93,11 +96,12 @@ export class ContractDumpService {
             await dump.restoreStorageFromJSON(json);
             return;
         }
-        if (/.csv$/.test(params.file)) {
-            let csv = await File.readAsync<string>(params.file);
-            let table = csv.split('\n').map(x => x.trim()).filter(Boolean).map(row => {
-                return row.split(',').map(x => x.trim()).filter(Boolean);
-            }) as [string,string][];
+        if (/.csv$/.test(file)) {
+            let csv = await File.readAsync<string>(file);
+            let table = csv.split('\n').map(x => x.trim()).filter(Boolean).map((row): [string, TEth.Hex] => {
+                let [slot, value] = row.split(',').map(x => x.trim()).filter(Boolean);
+                return [slot, $require.Hex(value, `Invalid storage value for slot ${slot}`)];
+            });
             await dump.restoreStorageFromTable(table)
             return;
         }
@@ -107,13 +111,13 @@ export class ContractDumpService {
 
     private async getContractData (nameOrAddress: string, params: IContractDumpServiceParams) {
         let _address: TAddress;
-        let _implementation: TAddress;
+        let _implementation: TAddress | undefined = params.implementation;
         let _sources;
         let _sourcesPath = params.sources;
         let _contractName = params.contractName;
 
         // file-output without extensions ()
-        let _output: string
+        let _output: string | undefined
         if ($is.Address(nameOrAddress)) {
             _address = nameOrAddress;
             _output = params.output;
@@ -138,7 +142,7 @@ export class ContractDumpService {
                 let filesContent = await alot(files).mapAsync(async file => {
                     return {
                         path: file.uri.toString(),
-                        content: await file.readAsync(),
+                        content: await file.readAsync<string>(),
                     }
                 }).toDictionaryAsync(x => x.path, x => ({ content: x.content }));
                 _sources = {
@@ -153,7 +157,7 @@ export class ContractDumpService {
                 let content = await file.readAsync <string> ();
                 _sources = {
                     files: {
-                        [ path ]: content,
+                        [ path ]: { content },
                     },
                 };
                 if (_contractName == null) {
@@ -163,21 +167,20 @@ export class ContractDumpService {
                         if (match == null) {
                             break;
                         }
-                        _contractName = match.groups.contractName;
+                        _contractName = match[1];
                     } while (true);
                 }
             }
-
-            return {
-                _output,
-                _address,
-                _implementation,
-                _sources,
-                //_sourcesPath,
-                _contractName,
-            };
-
         }
+
+        return {
+            _output,
+            _address,
+            _implementation,
+            _sources,
+            //_sourcesPath,
+            _contractName,
+        };
     }
 
     private async getPackage (name: string) {

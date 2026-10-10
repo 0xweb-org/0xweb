@@ -31,7 +31,7 @@ type TTransactionDetails = {
     calldata?: {
         method?: string
         bytecode?: TEth.Hex
-        args?: TEth.Hex[]
+        args?: string[]
     }
     calldataParsed?: {
         method: string;
@@ -42,9 +42,9 @@ type TTransactionDetails = {
         value?: string | number | bigint;
     }
 
-    abi: TAbiItem[]
+    abi?: TAbiItem[]
 
-    block: TEth.Block
+    block: TEth.Block | null
     tx: TEth.Tx
     receipt?: TEth.TxReceipt
 
@@ -55,7 +55,7 @@ type TTransactionDetails = {
             decimals: number;
             address: `0x${string}`;
             platform: string;
-        };
+        } | null;
         usd: string | number;
         event: string;
         from: TAddress;
@@ -72,12 +72,14 @@ export class TxService extends BaseService {
     static async printTx (app: App, hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
         let service = new TxService(app);
         let details = await service.getTx(hash, tx, receipt);
-        await service.printTx(details);
+        if (details != null) {
+            await service.printTx(details);
+        }
     }
 
-    async tx(hash: TEth.Hex): Promise<TTransactionDetails> {
+    async tx(hash: TEth.Hex): Promise<TTransactionDetails | null> {
         let details = await this.getTx(hash);
-        if (this.opts.logger !== false) {
+        if (details != null && this.opts.logger !== false) {
             await this.printTx(details);
         }
         return details;
@@ -85,7 +87,7 @@ export class TxService extends BaseService {
 
 
     async getTx (hash: TEth.Hex, tx?: TEth.Tx, receipt?: TEth.TxReceipt) {
-        let { client, explorer } = this.app.chain;
+        let { client, explorer } = $require.notNull(this.app.chain, `Chain not initialized`);
 
         $require.TxHash(hash, `Not valid hash bold<${hash}>`);
         if (tx == null) {
@@ -114,14 +116,14 @@ export class TxService extends BaseService {
         let eventsOther: TTransactionDetails['events'];
         let dataArguments: TTransactionDetails['calldataParsed'];
 
-        let abi: TAbiItem[];
+        let abi: TAbiItem[] | undefined;
         if (calldata.method || calldata.bytecode) {
             let resolver = new ContractAbiProvider(client, explorer);
-            let address = $hex.isEmpty(receipt.contractAddress) === false
-                ? receipt.contractAddress
+            let address = $hex.isEmpty(receipt?.contractAddress ?? '0x') === false
+                ? receipt?.contractAddress
                 : tx.to;
 
-            if (client.network !== 'hardhat') {
+            if (client.network !== 'hardhat' && address != null) {
                 let result = await resolver.getAbi(address);
                 abi = result.abiJson;
             }
@@ -131,7 +133,7 @@ export class TxService extends BaseService {
         if (abi != null) {
             parser.topics.register(abi);
         }
-        let logs = await parser.parse(receipt);
+        let logs = receipt == null ? [] : await parser.parse(receipt);
         let knownLogs = logs.filter(x => x != null);
 
         let transfers = knownLogs.filter(x => x.event === 'Transfer') as any as ITxLogsTransferData[];
@@ -179,12 +181,14 @@ export class TxService extends BaseService {
 
         if (abi) {
             let parsed = decodeInput(tx, abi);
-            dataArguments = {
-                method: parsed.name,
-                args: parsed.args,
-                params: parsed.params,
-                value: 'value' in parsed ? parsed.value : 0
-            };
+            if (parsed != null && parsed.name != null) {
+                dataArguments = {
+                    method: parsed.name,
+                    args: parsed.args,
+                    params: parsed.params,
+                    value: 'value' in parsed ? parsed.value : 0
+                };
+            }
         }
 
 
@@ -213,9 +217,9 @@ export class TxService extends BaseService {
                 ['Block', `#${block.number} yellow<${$date.format($block.getDate(block), 'dd-MM-yyyy HH:mm:ss')}>`]
             ] : []),
             ['Tx', `cyan<${hash}>`],
-            ['From', tx.from],
-            ['To', tx.to],
-            ['Nonce', tx.nonce],
+            ['From', tx.from ?? ''],
+            ['To', tx.to ?? ''],
+            ['Nonce', tx.nonce ?? ''],
             ['Value', tx.value?.toString() ?? 0],
             ['Data', ''],
             ...(calldata?.method ? [
@@ -224,18 +228,18 @@ export class TxService extends BaseService {
             ...(calldata?.bytecode ? [
                 ['   Bytecode', `gray<${calldata?.bytecode}>`],
             ] : []),
-            ...(calldata.args ? [
+            ...(calldata?.args ? [
                 ['   Arguments', calldata.args.map(x => `gray<${x}>`).join('\n')],
             ] : []),
-            ['Gas', $gas.formatUsed(tx, receipt)]
+            ['Gas', receipt == null ? '' : $gas.formatUsed(tx, receipt)]
         ]);
 
 
-        if (transfers?.length > 0) {
+        if (transfers != null && transfers.length > 0) {
             this.printLog(`\ncyan<bold<Transfers>>\n`);
             let rows = transfers.map(event => {
                 return [
-                    event.token?.symbol,
+                    event.token?.symbol ?? '',
                     event.from,
                     event.to,
                     event.amount != null
@@ -252,7 +256,7 @@ export class TxService extends BaseService {
         }
 
 
-        if (events?.length > 0) {
+        if (events != null && events.length > 0) {
             this.printLog(`\ncyan<bold<Known Events>>\n`);
             let rows = events.map(event => {
                 return [
@@ -301,15 +305,15 @@ export class TxService extends BaseService {
 function splitInput (tx: TEth.Tx): {
     method?: string
     bytecode?: TEth.Hex
-    args?: TEth.Hex[]
+    args?: string[]
 } {
-    let inputHex = tx.input ?? tx.data;
+    let inputHex = tx.input ?? tx.data ?? '0x';
     if ($hex.isEmpty(inputHex)) {
         return { };
     }
-    if ($hex.isEmpty(tx.to)) {
+    if ($hex.isEmpty(tx.to ?? '0x')) {
         let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(inputHex);
-        let argsArr = [];
+        let argsArr: string[] = [];
         if ($hex.isEmpty(argsHex) === false) {
             let hex = `0x00000000` + $hex.raw(argsHex);
             let split = InputDataUtils.split(hex);
@@ -320,19 +324,16 @@ function splitInput (tx: TEth.Tx): {
             args: argsArr
         };
     }
-    return InputDataUtils.split(inputHex) as {
-        method: string
-        args: TEth.Hex[]
-    };
+    return InputDataUtils.split(inputHex);
 }
 
 function decodeInput(tx: TEth.Tx, abi: TAbiItem[]) {
-    if ($hex.isEmpty(tx.to)) {
-        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(tx.input);
+    if ($hex.isEmpty(tx.to ?? '0x')) {
+        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(tx.input ?? tx.data ?? '0x');
         let ctorAbi = abi.find(x => x.type === 'constructor');
         if (ctorAbi) {
             return {
-                ...$abiUtils.decode(ctorAbi.inputs, argsHex),
+                ...$abiUtils.decode(ctorAbi.inputs ?? [], argsHex),
                 name: 'constructor',
             };
         }

@@ -100,7 +100,7 @@ export class AccountsService {
         }
         let name = mix;
         let accounts = await this.list();
-        let account = this.getAccount(name);
+        let account = await this.getAccount(name);
         if (account == null) {
             $console.log('Available accounts:');
             $console.log(accounts.map(x => x.name).join('\n'));
@@ -108,7 +108,7 @@ export class AccountsService {
         }
         return account;
     }
-    async create (name: string): Promise<EoAccount> {
+    async create (name: string): Promise<EoAccount | null> {
         let current = await this.getAccount(name);
         if (current != null) {
             $console.log(`Account green<bold<${name}>> already exists`);
@@ -120,13 +120,13 @@ export class AccountsService {
     }
 
 
-    private getAccounts () {
+    private getAccounts (): (EoAccount | SafeAccount | Erc4337Account)[] {
         let source = this.getConfig();
         let accounts = source.config?.accounts ?? [];
         return accounts;
     }
     private getConfig () {
-        let source = this.config.$sources.array.find(x =>x.data.name === 'accounts');
+        let source = this.config.$sources.array.find(x => x.data?.name === 'accounts');
         if (source == null) {
             throw new Error(`Configuration source for accounts not found`);
         }
@@ -135,13 +135,16 @@ export class AccountsService {
         }
         return source;
     }
-    private async getAccount (name: string): Promise<EoAccount | SafeAccount | Erc4337Account | null> {
+    private async getAccount (name: string): Promise<EoAccount | SafeAccount | Erc4337Account | undefined> {
         let accounts = await this.list();
         let account = accounts.find(x => x.name === name);
         return account;
     }
-    private async save (accounts) {
+    private async save (accounts: (EoAccount | SafeAccount | Erc4337Account)[]) {
         let source = this.getConfig();
+        if (source.write == null) {
+            throw new Error(`Configuration source for accounts is not writable`);
+        }
         await source.write({ accounts }, false);
     }
 }

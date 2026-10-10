@@ -12,7 +12,7 @@ import { $path } from '@dequanto/utils/$path';
 import { App } from '@core/app/App';
 
 export class HardhatService {
-    public chain: IPlatformTools = this.app.chain;
+    public chain: IPlatformTools | undefined = this.app.chain;
 
     constructor (public app: App) {
 
@@ -59,7 +59,8 @@ export class HardhatService {
         let withProxy = Boolean(params.proxy);
 
 
-        let deployments = new Deployments(this.chain.client, account, {
+        let chain = $require.notNull(this.chain, `Chain not initialized`);
+        let deployments = new Deployments(chain.client, account, {
             directory: './0xc/deployments/',
         })
 
@@ -76,21 +77,21 @@ export class HardhatService {
         if (withProxy) {
             return await deployments.ensureWithProxy(ContractCtor, {
                 id,
-                name: source.contractName,
-                initialize: args.length === 0 ? null : args,
+                initialize: args.length === 0 ? undefined : args,
                 verification: params?.verify ?? true
             });
         }
 
         return await deployments.ensure(ContractCtor, {
             id,
-            arguments: args.length === 0 ? null : args,
+            arguments: args,
             verification: params?.verify ?? true
         });
     }
 
     async verify (params: { id?: string, address?: TEth.Address }) {
-        let deployments = new Deployments(this.chain.client, null);
+        let chain = $require.notNull(this.chain, `Chain not initialized`);
+        let deployments = new Deployments(chain.client, null);
         await deployments.verify({
             id: params.id,
             address: params.address,
@@ -188,7 +189,7 @@ export class HardhatService {
             if (files.length === 1) {
                 return {
                     path: files[0].uri.toString(),
-                    contractName: null
+                    contractName: undefined
                 }
             }
         }
@@ -200,7 +201,7 @@ export class HardhatService {
             }
             return {
                 path,
-                contractName: null
+                contractName: undefined
             };
         }
         let dir = new Directory(mix);
@@ -209,7 +210,7 @@ export class HardhatService {
         }
         return {
             path: dir.uri.toString(),
-            contractName: null
+            contractName: undefined
         };
     }
 

@@ -31,7 +31,7 @@ export function CTools ()  {
                         required: true
                     },
                 },
-                async process (args: string[], params: { pin }, app: App) {
+                async process (args: string[], params: { pin: string }, app: App) {
                     let [ privateKey ] = args;
                     if ($is.HexBytes32(privateKey) === false) {
                         throw new Error(`Invalid private key ${privateKey}`);

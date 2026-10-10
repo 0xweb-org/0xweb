@@ -46,10 +46,10 @@ export function CErc4337 () {
                         required: true,
                     }
                 },
-                async process(args: string[], params: { owner, address, name, chain }, app: App) {
+                async process(args: string[], params: { owner: string, address: `0x${string}`, name: string, chain: string }, app: App) {
                     let { owner, address, name, chain } = params;
                     let service = di.resolve(AccountsService, app.config);
-                    let accounts = await service.add(<Erc4337Account>{
+                    let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.add(<Erc4337Account>{
                         type: 'erc4337',
                         name,
                         address,
@@ -68,7 +68,7 @@ export function CErc4337 () {
                 }
             },
 
-            CAccounts().subcommands.find(x => x.command === 'remove'),
+            $require.notNull(CAccounts().subcommands?.find(x => x.command === 'remove'), `Accounts remove command not found`),
 
             {
                 command: 'list',
@@ -107,27 +107,28 @@ export function CErc4337 () {
                     },
                     ...Parameters.pin({ required: true })
                 },
-                async process(args: string[], params: { name, owner, chain, contracts }, app: App) {
+                async process(args: string[], params: { name: string, owner: string, chain: string, contracts?: string }, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
 
                     let contracts = null;
                     if (params.contracts) {
                         contracts = await File.readAsync<any>(params.contracts);
                     }
 
-                    let account = await app.chain.accounts.get(params.owner, params.chain) as EoAccount;
+                    let account = await chainTools.accounts.get(params.owner, { platform: params.chain }) as EoAccount;
                     $require.notNull(account, `Account ${params.owner} not found`);
 
-                    let aa = await GnosisSafeFactory.create(account, app.chain.client, {
+                    let aa = await GnosisSafeFactory.create(account, chainTools.client, {
                         owners,
                         contracts: {
-                            [app.chain.client.chainId]: contracts ?? void 0
+                            [chainTools.client.chainId]: contracts ?? void 0
                         },
                     });
                     $console.table([
                         ['ERC-4337 Address', gnosisSafe.safeAddress]
                     ]);
 
-                    let addCommand = CSafe().subcommands.find(x => x.command === 'add');
+                    let addCommand = $require.notNull(CSafe().subcommands?.find(x => x.command === 'add'), `Safe add command not found`);
                     await addCommand.process(args, {
                         owner: params.owner,
                         address: gnosisSafe.safeAddress,
@@ -150,16 +151,17 @@ export function CErc4337 () {
                 params: {
                     ...Parameters.account(),
                 },
-                async process(args: string[], params: { account }, app: App) {
+                async process(args: string[], params: { account: string }, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let [path] = args;
-                    let client = app.chain.client;
-                    let account = await app.chain.accounts.get(params.account) as EoAccount;
+                    let client = chainTools.client;
+                    let account = await chainTools.accounts.get(params.account) as EoAccount;
 
                     $require.notNull(account, `Account ${params.account} not found`);
                     $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
 
 
-                    let safeWorker = new SafeWorker(path, this.client, account);
+                    let safeWorker = new SafeWorker(path, client, account);
                     await safeWorker.sign();
                 }
             },
@@ -177,16 +179,17 @@ export function CErc4337 () {
                 params: {
                     ...Parameters.account(),
                 },
-                async process(args: string[], params: { account }, app: App) {
+                async process(args: string[], params: { account: string }, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let [path] = args;
-                    let client = app.chain.client;
-                    let account = await app.chain.accounts.get(params.account) as EoAccount;
+                    let client = chainTools.client;
+                    let account = await chainTools.accounts.get(params.account) as EoAccount;
 
                     $require.notNull(account, `Account ${params.account} not found`);
                     $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
 
 
-                    let safeWorker = new SafeWorker(path, this.client, account);
+                    let safeWorker = new SafeWorker(path, client, account);
 
                     $console.toast('Sending transaction');
                     let tx = await safeWorker.send();
@@ -194,7 +197,7 @@ export function CErc4337 () {
                     $console.toast(`Transaction ${hash} sent. Waiting for receipt`);
 
                     let receipt = await tx.onCompleted;
-                    await TxService.printTx(app, receipt.transactionHash, null, receipt);
+                    await TxService.printTx(app, receipt.transactionHash, undefined, receipt);
                 }
             },
         ],
@@ -227,13 +230,14 @@ class SafeWorker {
 
         let { json, gnosis } = await this.load();
 
-        let confirmation = await gnosis.createTxSignature(json.safeTxHash);
+        let confirmation = await gnosis.createTxSignature(json.safeTxHash, account);
         let confirmations = json.confirmations as (typeof confirmation)[];
         if (confirmations == null) {
             confirmations = json.confirmations = [];
         }
 
-        let has = confirmations.find(x => $address.eq(x.signature?.signer, this.account.address));
+        let address = $require.notNull(account.address, `Signer account has no address`);
+        let has = confirmations.find(x => $address.eq(x.signature?.signer, address));
         if (has) {
             throw new Error(`Signature for ${this.account.address} already exists`);
         }

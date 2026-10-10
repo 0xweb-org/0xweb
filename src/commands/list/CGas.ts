@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import { $console } from '@core/utils/$console';
 import { $validate } from '@core/utils/$validate';
 import { $bigint } from '@dequanto/utils/$bigint';
@@ -15,10 +16,11 @@ export function CGas() {
             }
         },
         async process(args, params, app) {
-            let gasData = await app.chain.client.getGasPrice();
+            let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
+            let gasData = await chainTools.client.getGasPrice();
             let gwei = $bigint.toGweiFromWei(gasData.price);
             $console.table([
-                ['Chain', app.chain.client.platform],
+                ['Chain', chainTools.client.platform],
                 ['Price', gwei.toString() + ' gwei']
             ]);
         }

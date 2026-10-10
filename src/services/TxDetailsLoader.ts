@@ -37,7 +37,7 @@ export type TTransactionDetails = {
     calldata?: {
         method?: string
         bytecode?: TEth.Hex
-        args?: TEth.Hex[]
+        args?: string[]
     }
     calldataParsed?: {
         method: string;
@@ -48,9 +48,9 @@ export type TTransactionDetails = {
         value?: string | number | bigint;
     }
 
-    abi: TAbiItem[]
+    abi?: TAbiItem[]
 
-    block: TEth.Block
+    block: TEth.Block | null
     tx: TEth.Tx
     receipt?: TEth.TxReceipt
 
@@ -61,7 +61,7 @@ export type TTransactionDetails = {
             decimals: number;
             address: `0x${string}`;
             platform: string;
-        };
+        } | null;
         usd: string | number;
         event: string;
         from: TAddress;
@@ -84,8 +84,9 @@ export class TxDetailsLoader {
 
     @memd.deco.memoize({
         store: new IndexedDbStore('txDetails'),
-        key: (opts: { this: TxDetailsLoader }, hash: TEth.Hex) => {
-            let KEY = `${opts.this.client.platform}/${hash}`;
+        key: (opts: { this?: TxDetailsLoader }, hash: TEth.Hex) => {
+            let loader = $require.notNull(opts.this, `Transaction loader context missing`);
+            let KEY = `${loader.client.platform}/${hash}`;
             return KEY;
         }
     })
@@ -117,14 +118,14 @@ export class TxDetailsLoader {
         let eventsOther: TTransactionDetails['events'];
         let dataArguments: TTransactionDetails['calldataParsed'];
 
-        let abi: TAbiItem[];
+        let abi: TAbiItem[] | undefined;
         if (calldata.method || calldata.bytecode) {
             let resolver = new ContractAbiProvider(client, explorer);
-            let address = $hex.isEmpty(receipt.contractAddress) === false
-                ? receipt.contractAddress
+            let address = $hex.isEmpty(receipt?.contractAddress ?? '0x') === false
+                ? receipt?.contractAddress
                 : tx.to;
 
-            if (client.network !== 'hardhat') {
+            if (client.network !== 'hardhat' && address != null) {
                 let result = await resolver.getAbi(address);
                 abi = result.abiJson;
             }
@@ -134,7 +135,7 @@ export class TxDetailsLoader {
         if (abi != null) {
             parser.topics.register(abi);
         }
-        let logs = await parser.parse(receipt);
+        let logs = receipt == null ? [] : await parser.parse(receipt);
         let knownLogs = logs.filter(x => x != null);
 
         let transfers = knownLogs.filter(x => x.event === 'Transfer') as any as ITxLogsTransferData[];
@@ -182,12 +183,14 @@ export class TxDetailsLoader {
 
         if (abi) {
             let parsed = decodeInput(tx, abi);
-            dataArguments = {
-                method: parsed.name,
-                args: parsed.args,
-                params: parsed.params,
-                value: 'value' in parsed ? parsed.value : 0
-            };
+            if (parsed != null && parsed.name != null) {
+                dataArguments = {
+                    method: parsed.name,
+                    args: parsed.args,
+                    params: parsed.params,
+                    value: 'value' in parsed ? parsed.value : 0
+                };
+            }
         }
 
 
@@ -211,15 +214,15 @@ export class TxDetailsLoader {
 function splitInput(tx: TEth.Tx): {
     method?: string
     bytecode?: TEth.Hex
-    args?: TEth.Hex[]
+    args?: string[]
 } {
-    let inputHex = tx.input ?? tx.data;
+    let inputHex = tx.input ?? tx.data ?? '0x';
     if ($hex.isEmpty(inputHex)) {
         return {};
     }
-    if ($hex.isEmpty(tx.to)) {
+    if ($hex.isEmpty(tx.to ?? '0x')) {
         let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(inputHex);
-        let argsArr = [];
+        let argsArr: string[] = [];
         if ($hex.isEmpty(argsHex) === false) {
             let hex = `0x00000000` + $hex.raw(argsHex);
             let split = InputDataUtils.split(hex);
@@ -230,19 +233,16 @@ function splitInput(tx: TEth.Tx): {
             args: argsArr
         };
     }
-    return InputDataUtils.split(inputHex) as {
-        method: string
-        args: TEth.Hex[]
-    };
+    return InputDataUtils.split(inputHex);
 }
 
 function decodeInput(tx: TEth.Tx, abi: TAbiItem[]) {
-    if ($hex.isEmpty(tx.to)) {
-        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(tx.input);
+    if ($hex.isEmpty(tx.to ?? '0x')) {
+        let { arguments: argsHex, bytecode } = $contract.parseDeploymentBytecode(tx.input ?? tx.data ?? '0x');
         let ctorAbi = abi.find(x => x.type === 'constructor');
         if (ctorAbi) {
             return {
-                ...$abiUtils.decode(ctorAbi.inputs, argsHex),
+                ...$abiUtils.decode(ctorAbi.inputs ?? [], argsHex),
                 name: 'constructor',
             };
         }

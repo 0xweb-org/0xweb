@@ -15,7 +15,7 @@ import { platform } from 'process';
 
 type TDeploymentEntry = {
     platform: string;
-    name: string;
+    name?: string;
     deployments: IDeployment[];
 };
 
@@ -41,7 +41,8 @@ export class PackageService {
         if (pkg != null && pkg.address == null) {
             // if the package was installed via local compilation/deployment
             let deploymentsList = await this.getDeploymentsList();
-            let platformDeployments = deploymentsList.filter(d => d.platform === this.chain.platform);
+            let chain = $require.notNull(this.chain, `Chain not initialized`);
+            let platformDeployments = deploymentsList.filter(d => d.platform === chain.platform);
             let deployment = platformDeployments.find(d => d.name === pkg.name);
 
             pkg.address = deployment?.address;
@@ -113,8 +114,8 @@ export class PackageService {
         await File.writeAsync(packagePath, json);
     }
     private async getBuiltIn (name: string): Promise<IPackageItem> {
-        let file: InstanceType<typeof File>;
-        let fromLocal: string;
+        let file: InstanceType<typeof File> | undefined;
+        let fromLocal: string | undefined;
         const DEQUANTO_PATH = 'dequanto/src/prebuilt/openzeppelin/';
         const LOCAL_GIT = `./${DEQUANTO_PATH}`;
         const LOCAL_NPM = `./node_modules/${DEQUANTO_PATH}`;
@@ -167,7 +168,7 @@ export class PackageService {
         if (await this.ensureChain(name, list) === false) {
             return;
         }
-        let platform = this.chain.client.platform;
+        let platform = $require.notNull(this.chain, `Chain not initialized`).client.platform;
         let item = list.find(x => x.platform === platform && x.name === name);
         return item;
     }

@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import di from 'a-di';
 import { ICommand } from '../ICommand';
 import { $validate } from '@core/utils/$validate';
@@ -36,15 +37,16 @@ export function CToken() {
                     }
                 },
                 async process(args: string[], params: any, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let [tokenMix] = args;
 
                     $console.toast(`Loading token ${tokenMix}`);
-                    let token = await app.chain.tokens.getToken(tokenMix, true);
+                    let token = await chainTools.tokens.getToken(tokenMix, true);
                     if (token == null && $is.Address(tokenMix)) {
                         token = <IToken>{
                             address: tokenMix,
                             decimals: 18,
-                            platform: app.chain.client.platform,
+                            platform: chainTools.client.platform,
                         };
                     }
                     if (token == null) {
@@ -52,15 +54,15 @@ export function CToken() {
                     }
 
                     $console.toast(`Loading price`);
-                    let service = di.resolve(TokenPriceService, app.chain.client, app.chain.explorer);
+                    let service = di.resolve(TokenPriceService, chainTools.client, chainTools.explorer);
                     let priceData = await service.getPrice(token, {
                         block: params.block,
                     });
 
                     $console.table([
-                        ['Symbol', token.symbol],
+                        ['Symbol', token.symbol ?? ''],
                         ['Address', token.address],
-                        ['Decimals', token.decimals.toString()],
+                        ['Decimals', token.decimals?.toString() ?? ''],
                         ['Price', `green<${priceData.price}>`]
                     ]);
                 }

@@ -35,7 +35,7 @@ export function CNs() {
                 },
                 async process(args: string[], params: any, app: App) {
                     let [uri] = args;
-                    let client = params.chain ? app.chain.client : void 0;
+                    let client = params.chain ? $require.notNull(app.chain, `Chain not initialized`).client : void 0;
                     let { address, content } = await Resolver.get(uri, client);
 
                     $logger.table([
@@ -60,7 +60,7 @@ export function CNs() {
                 },
                 async process(args: string[], params: any, app: App) {
                     let [uri] = args;
-                    let client = params.chain ? app.chain.client : void 0;
+                    let client = params.chain ? $require.notNull(app.chain, `Chain not initialized`).client : void 0;
                     let { address, content } = await Resolver.get(uri, client);
 
                     $logger.table([
@@ -106,6 +106,6 @@ namespace Resolver {
         $logger.toast(`Loading content`);
         let content = await ns.getContent(uri);
 
-        return { address, content }
+        return { address: address?.address ?? '', content: content?.value ?? '' }
     }
 }

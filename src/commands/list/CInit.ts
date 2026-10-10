@@ -179,7 +179,7 @@ class InitWorker {
             await file.writeAsync(pkg);
         }
 
-        function extendWithDefaultValues(target, source) {
+        function extendWithDefaultValues(target: Record<string, any>, source: Record<string, any>): boolean {
             let modified = false;
             for (let key in source) {
                 let val = source[key];
@@ -242,7 +242,7 @@ class InitWorker {
         if (pkgCurrent.dependencies == null) {
             pkgCurrent.dependencies = {};
         }
-        let pkgDequanto = {
+        let pkgDequanto: { dependencies: Record<string, string> } = {
             dependencies: {}
         };
         if (this.params.source !== 'git') {
@@ -406,7 +406,7 @@ class InitWorker {
                     .split('\n')
                     .map(line => /require\("(?<name>[^"]+)"\)/.exec(line))
                     .filter(x => x != null)
-                    .map(x => x.groups.name)
+                    .map(x => x[1])
                     .filter(name => content.includes(name) === false)
                     .map(name => `require("${name}")`)
                     .join(env.newLine);

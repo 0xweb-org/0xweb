@@ -21,7 +21,7 @@ import { TxService } from '@core/services/TxService';
 type TTxSendParams = {
     to?: TAddress | string
     account?: string | TEth.Hex | TAddress
-    value?: string | TEth.Hex
+    value?: bigint | string
     data?: TEth.Hex
     signature?: TEth.Hex
 }
@@ -57,6 +57,7 @@ export function CTx() {
                     }
                 },
                 async process(args: string[], params: any, app: App) {
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let [path] = args;
 
                     $require.True(await File.existsAsync(path), `File bold<${path}> does not exist`);
@@ -66,7 +67,7 @@ export function CTx() {
                     let account = await app.getAccount<EoAccount>(params.account);
                     $require.notNull(account, `Account ${params.account} not found`);
 
-                    let builder = TxDataBuilder.fromJSON(app.chain.client, account as TAccount, {
+                    let builder = TxDataBuilder.fromJSON(chainTools.client, account as TAccount, {
                         tx: json.tx,
                         config: json.config
                     });
@@ -75,7 +76,7 @@ export function CTx() {
                     await builder.setGas();
 
                     let tx = builder.getTxData();
-                    let rpc = await app.chain.client.getRpc();
+                    let rpc = await chainTools.client.getRpc();
                     let txSignedRaw = await $sig.signTx(tx, account, rpc);
 
                     let { v, r, s } = $sig.TxDeserializer.deserialize(txSignedRaw);
@@ -115,10 +116,11 @@ export function CTx() {
                     ...Parameters.account({ required: false }),
                 },
                 async process(args: string[], params: TTxSendParams, app: App) {
-                    let client = app.chain.client;
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
+                    let client = chainTools.client;
                     let tx: TEth.DataLike<TEth.Tx>;
-                    let config: ITxBuilderOptions;
-                    let signature: TEth.Hex;
+                    let config: ITxBuilderOptions = {};
+                    let signature: TEth.Hex | undefined;
 
                     let [ path ] = args;
                     if (path != null) {
@@ -126,7 +128,7 @@ export function CTx() {
                         let json = await File.readAsync<TTxSendJson>(path);
                         if ('tx' in json) {
                             tx = json.tx;
-                            config = json.config;
+                            config = json.config ?? {};
                             signature = json.signature;
                         } else {
                             tx = json;
@@ -134,7 +136,7 @@ export function CTx() {
                     } else {
                         let to = params.to as TAddress;
                         if ($is.Address(to) === false) {
-                            let packageService = di.resolve(PackageService, app.chain);
+                            let packageService = di.resolve(PackageService, chainTools);
                             let pkg = await packageService.getPackage(to);
                             $require.notNull(pkg, `Package ${to} not found`);
                             to = pkg.address
@@ -142,7 +144,7 @@ export function CTx() {
                         }
                         tx = {
                             to: to,
-                            value: params.value ?? 0n,
+                            value: BigInt(params.value ?? 0n),
                             data: params.data,
                         };
                     }
@@ -174,7 +176,7 @@ export function CTx() {
 
                     let hash = await writer.onSent;
                     let receipt = await writer.onCompleted;
-                    await TxService.printTx(app, hash as TEth.Hex, null, receipt);
+                    await TxService.printTx(app, hash as TEth.Hex, undefined, receipt);
                     return receipt;
                 }
             },

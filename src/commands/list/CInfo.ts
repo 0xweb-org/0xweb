@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import type { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
@@ -21,7 +22,8 @@ export function CInfo() {
                     ...Parameters.chain()
                 },
                 async process(args, params, app: App) {
-                    let client = app.chain.client;
+                    let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
+                    let client = chainTools.client;
                     let info: IWeb3ClientStatus[] = await client.getNodeInfos();
 
                     $console.table([
@@ -52,7 +54,7 @@ export function CInfo() {
                                 diffBlock = highestBlock - currentBlock;
                                 status = 'sync';
 
-                                let stages = info.syncing.stages as {stage_name, block_number}[];
+                                let stages = info.syncing.stages as { stage_name: string, block_number: string | number }[];
 
                                 let chars = alot(stages).max(x => x.stage_name.length);
 

@@ -82,7 +82,7 @@ export function CHardhat() {
 
                 let { contract, contractReceipt } = await service.deploy(mix, params);
                 if (contractReceipt) {
-                    await TxService.printTx(app, contractReceipt.transactionHash, null, contractReceipt);
+                    await TxService.printTx(app, contractReceipt.transactionHash, undefined, contractReceipt);
                 }
 
                 $console.table([
@@ -109,10 +109,11 @@ export function CHardhat() {
                 ...Parameters.chain({ required: true })
             },
             async process(args: [TEth.Address, string], params: any, app: App) {
+                let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
 
 
                 let [ address, name ] = args;
-                let { client } = app.chain;
+                let { client } = chainTools;
                 let explorer = await BlockchainExplorerFactory.getAsync(client.platform, {
                     key: params.key,
                     api: params.api,
@@ -160,7 +161,7 @@ export function CHardhat() {
                             });
                             let acc = await accounts.get(accountMix);
                             $require.notNull(acc, `Account ${accountMix} not found`);
-                            address = acc.address;
+                            address = $require.notNull(acc.address, `Account ${accountMix} has no address`);
                         }
 
                         $require.Address(address, `Invalid address (${address}) for ${accountMix}`);

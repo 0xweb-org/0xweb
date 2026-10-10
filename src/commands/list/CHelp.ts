@@ -4,7 +4,7 @@ import { File, env } from 'atma-io';
 import { ICommand } from '../ICommand';
 
 export function CHelp() {
-    const Help = <ICommand & { printCommand }>{
+    const Help = <ICommand & { printCommand(command: ICommand, paramsDefinition?: ICommand['params'], opts?: { short?: boolean }): void }>{
         command: 'help, -h, --help',
         description: [
             'Show command help'
@@ -37,7 +37,7 @@ export function CHelp() {
 
         },
 
-        printCommand(command: ICommand, paramsDefinition?, opts?) {
+        printCommand(command: ICommand, paramsDefinition?: ICommand['params'], opts?: { short?: boolean }) {
             let str = print.command({
                 ...command,
                 params: paramsDefinition ?? command.params
@@ -48,19 +48,19 @@ export function CHelp() {
     return Help;
 }
 namespace print {
-    export function command(c: ICommand, opts: { short?: boolean }, prefix = '') {
+    export function command(c: ICommand, opts: { short?: boolean } = {}, prefix = ''): string {
         let lines = [];
 
         lines.push(`yellow<bold<${c.command}>>`);
         lines.push(c.description.map(x => `  ${x}`).join('\n'));
 
-        if (opts?.short !== true &&  c.arguments?.length > 0) {
+        if (opts?.short !== true &&  c.arguments != null && c.arguments.length > 0) {
             lines.push(`  italic<Arguments>`);
             c.arguments.forEach((arg, i) => {
                 lines.push(`    bold<${arg.name ?? i}${arg.required ? '*' : ''}>: ${arg.description}`);
             });
         }
-        if (c.subcommands?.length > 0) {
+        if (c.subcommands != null && c.subcommands.length > 0) {
             lines.push(`    gray<Subcommands>`);
             for (let sub of c.subcommands) {
                 lines.push(print.command(sub, opts, prefix + '    '));

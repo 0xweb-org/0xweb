@@ -1,17 +1,18 @@
 import { App } from '@core/app/App';
 import { $bigint } from '@dequanto/utils/$bigint';
+import { $require } from '@dequanto/utils/$require';
 import { BaseService } from './BaseService';
 
 export class RpcService extends BaseService {
-    async process(args: any[], params?, app?: App) {
+    async process(args: any[], params?: Record<string, any>, app?: App) {
 
-        let client = app.chain.client;
+        let client = $require.notNull(app?.chain, `Chain not initialized`).client;
         let [ method, ...methodArgs ] = args as [ string, ...any[]];
 
         for (let key in params) {
             let argMatch = /^arg(?<index>\d+)$/.exec(key);
             if (argMatch) {
-                let index = Number(argMatch.groups.index);
+                let index = Number(argMatch[1]);
                 methodArgs[index] = params[key];
             }
         }
@@ -24,7 +25,7 @@ export class RpcService extends BaseService {
             }
 
             /** @TODO add type support*/
-            let type = typeMatch.groups.type;
+            let type = typeMatch[1];
             let value = arg.replace(typeMatch[0], '');
             return this.toValue(type, value);
         });
@@ -50,7 +51,7 @@ export class RpcService extends BaseService {
         return result;
     }
 
-    private toValue(type: 'boolean' | string, str: string) {
+    private toValue(type: string | null, str: string) {
         if (type === 'boolean') {
             str = str.toLowerCase();
             if ('true' === str || '1' === str) {
