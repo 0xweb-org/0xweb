@@ -70,11 +70,16 @@ export class App {
             $cli.setParams(argv);
         }
 
-        if ($cli.getParamValue('--color') === 'none') {
+        const jsonOnly = $cli.getParamValue('--json');
+
+        if ($cli.getParamValue('--color') === 'none' || jsonOnly) {
             $color_options({ type: 'none' });
         }
-        if ($cli.getParamValue('--silent')) {
+        if ($cli.getParamValue('--silent') || jsonOnly) {
             $logger.config({ level: ELogLevel.ERROR })
+        }
+        if (jsonOnly) {
+            $console.setJsonOnly(true);
         }
 
         let { params: cliParams, args: cliArgs } = $cli.parse();
@@ -143,6 +148,9 @@ export class App {
         $console.toast(`Process command gray<${ command.command }>`);
 
         let result = await command.process(args, params, this);
+        if (jsonOnly) {
+            $console.json(result);
+        }
 
         // flush all caches on exit
         //- await memd.Cache.flushAllAsync();

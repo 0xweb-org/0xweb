@@ -49,10 +49,25 @@ export function CInstall() {
             '-o, --output': {
                 description: 'Output root directory. Default: ./0xc/'
             },
+            '--save': {
+                description: 'Write generated files to disk. Set to false to return file contents without saving files or package metadata. Default: true',
+                type: 'boolean',
+                default: true
+            },
             '--save-sources': {
                 description: 'Save Solidity source code to the output directory. Default: true',
                 type: 'boolean',
                 default: true
+            },
+            '--save-abi': {
+                description: 'Save the ABI as a JSON file in the output directory. Default: true',
+                type: 'boolean',
+                default: true
+            },
+            '--include-content': {
+                description: 'Include file contents in the result. Automatically enabled when --save is false. Default: false',
+                type: 'boolean',
+                default: false
             },
             '--target': {
                 description: 'Output target: js, mjs, or ts. Default: settings.generate.target',
@@ -95,28 +110,56 @@ export function CInstall() {
                 defaultAddress: address ?? undefined,
                 implementation: params.implementation,
                 output,
-                saveAbi: true,
+                save: params.save ?? true,
+                saveAbi: params.saveAbi ?? true,
                 saveSources: params.saveSources ?? true,
             });
-            let { main, implementation, contractName } = await generator.generate();
+            let result = await generator.generate();
+            let {
+                main,
+                implementation,
+                contractName,
+            } = result;
 
-            let packageService = di.resolve(PackageService, app?.chain);
             let implementationAddress = $is.Address(implementation) && $address.eq(addressOrPath, implementation) === false ? implementation : void 0;
-            await packageService.savePackage({
-                platform,
+            if (params.save !== false) {
+                let packageService = di.resolve(PackageService, app?.chain);
+                await packageService.savePackage({
+                    platform,
+                    address: address ?? '0x',
+                    implementation: implementationAddress,
+                    name: params.name,
+                    contractName: contractName,
+                    main,
+                    source: address != null ? {
+                        platform: platform,
+                        address: implementationAddress ?? address,
+                    } : {
+                        path: sourcePath
+                    }
+                }, { global: params.global != null });
+            }
+
+
+            let files = result.files?.map(file => {
+                return {
+                    kind: file.kind,
+                    path: file.path,
+                    content: (params.save === false || params.includeContent)
+                        ? file.content
+                        : void 0
+                };
+            });
+
+            return {
+                platform: platform,
                 address: address,
                 implementation: implementationAddress,
                 name: params.name,
-                contractName: contractName,
-                main,
-                source: address != null ? {
-                    platform: platform,
-                    address: implementationAddress ?? address,
-                } : {
-                    path: sourcePath
-                }
-            }, { global: params.global != null });
-            return { main };
+                contractName: result.contractName,
+                main: main,
+                files: files
+            };
         }
     };
 }
@@ -130,6 +173,12 @@ interface IInstallParams {
     output: string
     source: string
     global: boolean
+
+    // By default, file entries contain paths. Content is included automatically when "save" is false.
+    // Set includeContent to include content even when files are saved.
+    includeContent: boolean
+    save: boolean
+    saveAbi: boolean
     saveSources: boolean
 }
 

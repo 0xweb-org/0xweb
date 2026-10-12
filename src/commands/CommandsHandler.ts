@@ -29,7 +29,7 @@ export class CommandsHandler  {
     }
 
     async findCommand (cliArgs: string[], cliParams): Promise<{
-        command?: ICommand,
+        command: ICommand,
         args?: any[],
         params?
         paramsDefinition?
