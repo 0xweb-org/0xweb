@@ -102,7 +102,10 @@ export namespace $validate {
     export function params (command: ICommand, paramsDef: ICommand['params'], params) {
         for (let key in paramsDef) {
             let def = paramsDef[key];
-            let val = params[key];
+            let val = params[def.key ?? key];
+            if (val == null && !def.required) {
+                continue;
+            }
 
             if (Array.isArray(def.oneOf)) {
                 $require.oneOf(val, def.oneOf);

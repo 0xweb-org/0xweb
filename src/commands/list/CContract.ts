@@ -4,8 +4,6 @@ import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { $require } from '@dequanto/utils/$require';
-import { $cli } from '@core/utils/$cli';
-
 
 export function CContract() {
     return <ICommand>{
@@ -21,7 +19,10 @@ export function CContract() {
                 description: ['List installed contracts'],
                 arguments: [],
                 params: {
-                    ...Parameters.chain({ required: false })
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the array of installed contracts as JSON to stdout'
+                    },
                 },
                 api: {},
                 async process(args, params, app) {
@@ -36,13 +37,16 @@ export function CContract() {
                 description: ['List the read and write methods available on a contract'],
                 arguments: [
                     {
-                        name: 'Name or Address',
+                        name: 'NameOrAddress',
                         description: 'Name of an installed contract',
                         required: true
                     }
                 ],
                 params: {
-                    ...Parameters.chain({ required: false })
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the ABI items as a JSON array to stdout'
+                    },
                 },
                 api: {},
                 async process(args, params, app) {
@@ -63,20 +67,25 @@ export function CContract() {
                 description: ['Read from a contract. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
-                        description: 'Method name',
+                        name: 'MethodOrAbi',
+                        description: 'Method name or ABI signature',
                         required: true
                     },
                 ],
                 params: {
-                    '-b, --block': {
-                        description: 'Block number to read from. Historical reads require an archive node. Default: latest'
-                    },
                     '-c, --chain': {
                         description: `Chain to use. Default: the installed contract's chain`
+                    },
+                    '--json': {
+                        description: 'Print the contract read result as JSON to stdout'
+                    },
+                    '-b, --block': {
+                        description: 'Block number to read from. Historical reads require an archive node. Default: latest'
                     },
                     '--address': {
                         type: 'address',
@@ -101,10 +110,12 @@ export function CContract() {
                 description: ['Send a contract transaction. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of an installed contract',
                         required: true
                     },
                     {
+                        name: 'MethodOrAbi',
                         description: 'Method name or ABI, e.g. "approve(address spender, uint256 amount)"',
                         required: true
                     },
@@ -112,6 +123,9 @@ export function CContract() {
                 params: {
                     '-c, --chain': {
                         description: `Chain to use. Default: the installed contract's chain`
+                    },
+                    '--json': {
+                        description: 'Print the transaction receipt as JSON to stdout'
                     },
                     ...Parameters.account(),
                     ...Parameters.pin(),
@@ -125,9 +139,6 @@ export function CContract() {
                     '--abi': {
                         description: `ABI string to parse`
                     },
-                    '--json': {
-                        description: 'Print the transaction receipt as JSON to stdout'
-                    }
                 },
                 async process(args, params, app) {
                     let [name, method] = args;
@@ -159,6 +170,10 @@ export function CContract() {
                     }
                 ],
                 params: {
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the transaction data object as JSON to stdout'
+                    },
                     '--abi': {
                         description: 'ABI string (useful for API requests)',
                     }
@@ -183,13 +198,18 @@ export function CContract() {
                     {
                         name: 'calldata',
                         query: true,
+                        fallback: 'calldata',
                         description: 'Calldata as a hex string',
                         required: true
                     },
                 ],
                 params: {
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the decoded method and arguments as JSON to stdout'
+                    },
                     '--calldata': {
-                        description: 'Calldata to decode. In the CLI, this can also be a positional argument'
+                        description: 'Calldata to decode. Can also be supplied directly after the contract name'
                     }
                 },
                 api: {},
@@ -209,11 +229,13 @@ export function CContract() {
                 description: [ 'Fetch event logs for a contract' ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of an installed contract',
                         required: true
                     },
                     {
-                        description: 'Event name, or "*" for all events',
+                        name: 'EventName',
+                        description: 'Event name from the contract ABI',
                         required: true
                     }
                 ],
@@ -221,19 +243,21 @@ export function CContract() {
                     '-c, --chain': {
                         description: `Chain to use. Default: the installed contract's chain`
                     },
+                    '--json': {
+                        description: 'Print the full logs array as JSON to stdout; CSV format is returned as a JSON string'
+                    },
                     '-o, --output': {
-                        description: `Output file for event logs. Default: terminal output`
+                        description: `Output file for event logs, or "std" for stdout. Default: std`
                     },
                     '--format': {
                         description: `Output format: csv or json`,
                         oneOf: [ 'csv', 'json' ]
                     },
-
                 },
                 async process(args, params, app) {
                     let [ name, eventName ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.logs(name, eventName, params);
+                    return await service.logs(name, eventName, params);
                 }
             },
             {
@@ -247,27 +271,31 @@ export function CContract() {
                     }
                 ],
                 params: {
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the storage model or generated file paths as JSON to stdout'
+                    },
                     '--output': {
                         description: 'Output path without an extension; creates .csv and .json files. Use "std" for terminal output only'
                     },
                     '--sources': {
-                        description: `Solidity file or local source directory. If omitted, sources are fetched from the blockchain explorer`
+                        description: 'Solidity file or source directory. Defaults to installed sources or the blockchain explorer'
                     },
                     '--contract-name': {
-                        description: 'Contract name to select when the source is a directory'
+                        description: 'Contract to select from the Solidity sources'
                     },
                     '--imp, --implementation': {
-                        description: 'Implementation address'
+                        description: 'Implementation address',
+                        type: 'address'
                     },
                     '--fields': {
-                        description: 'Comma-separated names of the state variables to include'
+                        description: 'Comma-separated state variables to include'
                     },
-                    ...Parameters.chain({ required: false })
                 },
                 async process(args, params, app) {
                     let [ name ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.dump(name, params);
+                    return await service.dump(name, params);
                 }
             },
             {
@@ -281,27 +309,33 @@ export function CContract() {
                     }
                 ],
                 params: {
+                    ...Parameters.chain({ required: false }),
+                    '--json': {
+                        description: 'Print the restore success result as JSON to stdout'
+                    },
                     '-f, --file': {
-                        description: 'Input .csv or .json file'
+                        description: 'Input .csv or .json file',
+                        required: true,
+                        validate: value => $require.True(/\.(csv|json)$/i.test(value ?? ''), 'Provide --file with a .csv or .json extension')
                     },
                     '--sources': {
-                        description: `Solidity file or local source directory. If omitted, sources are fetched from the blockchain explorer`
+                        description: 'Solidity file or source directory. Defaults to installed sources or the blockchain explorer'
                     },
                     '--contract-name': {
-                        description: 'Contract name to select when the source is a directory'
+                        description: 'Contract to select from the Solidity sources'
                     },
                     '--imp, --implementation': {
-                        description: 'Implementation address'
+                        description: 'Implementation address',
+                        type: 'address'
                     },
                     '--fields': {
-                        description: 'Comma-separated names of the state variables to include'
+                        description: 'Comma-separated state variables to include'
                     },
-                    ...Parameters.chain({ required: false })
                 },
                 async process(args, params, app) {
                     let [ name ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.dumpRestore(name, params);
+                    return await service.dumpRestore(name, params);
                 }
             },
             {
@@ -320,7 +354,10 @@ export function CContract() {
                     }
                 ],
                 params: {
-                    ...Parameters.chain()
+                    ...Parameters.chain(),
+                    '--json': {
+                        description: 'Print the slot value or array of slot values as JSON to stdout'
+                    },
                 },
                 api: {},
                 async process(args, params, app) {
@@ -343,22 +380,20 @@ export function CContract() {
                         description: 'State variable path, e.g. users[5].balance',
                         required: true
                     },
-
                 ],
                 params: {
                     ...Parameters.chain({ required: false }),
-                    slot: {
-                        description: 'Override the storage slot for this variable',
-                        type: 'number'
+                    '--json': {
+                        description: 'Print the state variable value as JSON to stdout'
                     },
-                    type: {
+                    '--slot': {
+                        description: 'Override the storage slot for this variable',
+                        type: 'string'
+                    },
+                    '--type': {
                         description: 'Override the type of this variable',
                         type: 'string'
                     },
-                    offset: {
-                        description: 'Storage offset to use when reading',
-                        type: 'string'
-                    }
                 },
                 api: {},
                 async process(args, params, app) {
@@ -377,29 +412,31 @@ export function CContract() {
                 description: [ `Set a contract state variable. Hardhat networks only` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Contract address or name of an installed contract',
                         required: true
                     },
                     {
+                        name: 'Accessor',
                         description: 'State variable path, e.g. users[5].balance',
                         required: true
                     },
                     {
+                        name: 'Value',
                         description: 'Value',
                         required: true
                     },
                 ],
                 params: {
                     ...Parameters.chain({ required: false }),
-                    type: {
-                        description: 'Override the type of this variable',
-                        type: 'string'
-                    }
+                    '--json': {
+                        description: 'Print the updated state variable value as JSON to stdout'
+                    },
                 },
                 async process(args, params, app) {
                     let [ nameOrAddress, selector, value ] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.varSet(nameOrAddress, selector, value, {
+                    return await service.varSet(nameOrAddress, selector, value, {
                         type: params.type,
                     });
                 }
@@ -409,12 +446,16 @@ export function CContract() {
                 description: [ `List contract state variables` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Contract address or name of an installed contract',
                         required: true
                     },
                 ],
                 params: {
-                    ...Parameters.chain()
+                    ...Parameters.chain(),
+                    '--json': {
+                        description: 'Print the storage variable layout as a JSON array to stdout'
+                    },
                 },
                 api: {},
                 async process(args, params, app) {
@@ -428,11 +469,13 @@ export function CContract() {
                 description: [ `Monitor contract logs` ],
                 arguments: [
                     {
+                        name: 'NameOrAddress',
                         description: 'Name of an installed contract',
                         required: true
                     },
                 ],
                 params: {
+                    ...Parameters.chain(),
                     '-e, --event': {
                         description: 'Event name, or "*" for all events',
                         required: false
@@ -440,7 +483,6 @@ export function CContract() {
                     '-t, --tx': {
                         description: 'Method name, or "*" for all methods',
                     },
-                    ...Parameters.chain()
                 },
                 async process(args, params, app) {
                     let [ nameOrAddress ] = args;

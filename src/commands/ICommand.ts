@@ -10,7 +10,9 @@ export interface ICommand {
         name?: string
         type?: 'number' | 'string' | 'boolean'
         required?: boolean
-        // If true, the argument is optional and will be treated as a query parameter in the API request
+        /** Named parameter used when this positional argument is omitted. */
+        fallback?: string
+        // Use a query parameter instead of a URL path segment in API requests.
         query?: boolean
     }[]
     params?: {

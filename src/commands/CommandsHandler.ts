@@ -63,15 +63,20 @@ export class CommandsHandler  {
         if (isHelp) {
             let params;
             if (/help/.test(command.command) === false) {
-                params = { command };
+                params = { command: { ...command, params: paramsDefinition } };
                 command = this.commands['help'];
             }
             return { command, paramsDefinition, params: params ?? {} };
         }
 
         let params = await $command.getParams(cliParams, paramsDefinition);
+        command.arguments?.forEach((argument, index) => {
+            if (args[index] == null && argument.fallback != null) {
+                args[index] = params[argument.fallback];
+            }
+        });
         $validate.args(command, args);
-        $validate.params(command, params, paramsDefinition);
+        $validate.params(command, paramsDefinition, params);
         return { command, args, params };
     }
 

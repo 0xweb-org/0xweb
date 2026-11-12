@@ -112,6 +112,9 @@ export class ContractService extends BaseService {
     }
 
     async call(nameOrAddress: string, method: string, params: ICallParams, action: 'read' | 'write') {
+        if ($is.Address(nameOrAddress)) {
+            $require.notNull(params.chain ?? this.app.chain?.client.platform, 'Provide --chain when using a contract address');
+        }
         let pkg = $is.Address(nameOrAddress)
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
@@ -129,7 +132,7 @@ export class ContractService extends BaseService {
             ? action === 'read'
             : $abiUtils.isReadMethod(abiItem);
 
-        let platform = params.chain ?? pkg.platform;
+        let platform = params.chain ?? pkg.platform ?? this.app.chain?.client.platform;
         if (platform !== this.app?.chain?.client.platform) {
             this.app.chain = await di
                 .resolve(PlatformFactory)
@@ -171,6 +174,9 @@ export class ContractService extends BaseService {
     }
 
     async getContractInstance(nameOrAddress: string, method: string | null, params?: { chain?: TPlatform, abi?: string }) {
+        if ($is.Address(nameOrAddress)) {
+            $require.notNull(params?.chain ?? this.app.chain?.client.platform, 'Provide --chain when using a contract address');
+        }
         let pkg = $is.Address(nameOrAddress)
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
@@ -196,7 +202,7 @@ export class ContractService extends BaseService {
             }
         }
 
-        let platform = params?.chain ?? pkg.platform;
+        let platform = params?.chain ?? pkg.platform ?? this.app.chain?.client.platform;
         if (platform !== this.app?.chain?.client.platform) {
             this.app.chain = await di
                 .resolve(PlatformFactory)
@@ -222,7 +228,10 @@ export class ContractService extends BaseService {
         };
     }
 
-    async logs(name: string, eventName: string, params: { output?: string, format?: 'csv' | 'json', [key: string]: unknown }) {
+    async logs(name: string, eventName: string, params: {
+        output?: string | 'std',
+        format?: 'csv' | 'json', [key: string]: unknown
+    }) {
         let pkg = await this.getPackage(name);
         let abi = await this.getAbi(pkg);
         let event = $require.notNull(
@@ -241,7 +250,8 @@ export class ContractService extends BaseService {
         let reader = await this.getContractReader({});
         let logs = await reader.getLogsParsed(event, {
             address: pkg.address,
-            fromBlock: 'deployment',
+            // Local Hardhat contracts have no explorer deployment metadata.
+            fromBlock: this.chain.client.platform === 'hardhat' ? 0 : 'deployment',
             params: args
         });
         this.printLog(`Loaded bold<${logs.length}> ${eventName} Events`);
@@ -249,7 +259,7 @@ export class ContractService extends BaseService {
         let blockDates = await BlockDateLoader.load(this.chain.client, logs, message => this.printLog(message));
 
         function formatFromOutput(path?: string): string | null {
-            if (path == null) {
+            if (path == null || path === 'std') {
                 return null;
             }
             return /\.(?<ext>\w+)$/.exec(path)?.groups?.ext ?? null;
@@ -285,12 +295,18 @@ export class ContractService extends BaseService {
             });
             str = `${headers}\n${rows.join('\n')}`;
         }
-        let output = params.output ?? `./cache/${eventName}_${pkg.address}.${format}`;
-        let file = new File(output);
 
         this.printLog(`Loaded bold<green<${logs.length}>> Logs`);
-        await file.writeAsync(str, { skipHooks: true });
-        this.printLog(`File cyan<${file.uri.toString()}>`);
+
+        let output = params.output ?? 'std';
+        if (output !== 'std') {
+            let file = new File(output);
+            await file.writeAsync(str, { skipHooks: true });
+            this.printLog(`File cyan<${file.uri.toString()}>`);
+        } else {
+            this.printLog(str);
+        }
+        return format === 'json' ? JSON.parse(str) : str;
     }
     async dump(nameOrAddress: string | TAddress, params: {
         output?: string
@@ -306,35 +322,46 @@ export class ContractService extends BaseService {
                 ['Slots', files.csv],
                 ['JSON', files.json],
             ]);
-            return;
+            return { files };
         }
 
-        console.dir(json, { depth: null, colors: true });
+        this.printLog(json);
+        return json;
     }
 
     async dumpRestore(nameOrAddress: string | TAddress, params: {
         file: string
     }) {
+        $require.True(/\.(csv|json)$/i.test(params.file ?? ''), 'Provide --file with a .csv or .json extension');
         $require.True(await File.existsAsync(params.file), `${params.file} does not exist`);
 
         let dumpService = new ContractDumpService(this.app)
-        let result = await dumpService.dumpRestore(nameOrAddress, params);
+        await dumpService.dumpRestore(nameOrAddress, params);
+        return { success: true };
     }
 
     async slot(nameOrAddress: string | TAddress, slotOrRange: string) {
+        let match = /^(0x[\da-f]+|\d+)(?:-(0x[\da-f]+|\d+))?$/i.exec(slotOrRange);
+        $require.notNull(match, 'Provide a nonnegative storage slot or an ascending range, e.g. 0-50');
+        let start = BigInt(match![1]);
+        let end = match![2] == null ? start : BigInt(match![2]);
+        $require.True(end >= start, 'Storage range must be ascending');
+        $require.True(end < (1n << 256n), 'Storage slots must fit in 256 bits');
         let address = await this.getAddress(nameOrAddress);
-        if (slotOrRange.includes('-')) {
-            let [start, end] = slotOrRange.split('-').map(Number);
-            let slots = alot.fromRange(start, end + 1).toArray();
+        if (match![2] != null) {
+            let slots: TEth.Hex[] = [];
+            for (let slot = start; slot <= end; slot++) {
+                slots.push(`0x${slot.toString(16)}`);
+            }
             let values: TEth.Hex[] = await this.chain.client.getStorageAtBatched(address, slots);
             values.forEach((value, index) => {
                 this.printLogTable([
                     [slots[index], value],
                 ]);
             });
-            return;
+            return values;
         }
-        let slot = slotOrRange as TEth.Hex;
+        let slot = `0x${start.toString(16)}` as TEth.Hex;
         let slotValue = await this.chain.client.getStorageAt(address, slot);
         this.printLog(slotValue);
         return slotValue;
@@ -357,17 +384,23 @@ export class ContractService extends BaseService {
         return slots;
     }
     async varLoad(nameOrAddress: string | TAddress, path: string, info?: {
-        slot?: number
+        slot?: number | string
         type?: string
         offset?: string
     }) {
+        $require.True(info?.offset == null, '--offset is not supported');
+        $require.True((info?.slot != null) === (info?.type != null), 'Provide --slot and --type together');
         let storage: SlotsStorage;
-        if ($is.Address(nameOrAddress) && info?.slot != null && info?.type != null) {
+        if (info?.slot != null && info?.type != null) {
+            $require.True(/^(0x[\da-f]+|\d+)$/i.test(String(info.slot)), '--slot must be a nonnegative integer');
+            let slot = BigInt(info.slot);
+            $require.True(slot < (1n << 256n), 'Storage slots must fit in 256 bits');
+            let address = await this.getAddress(nameOrAddress);
             let name = $require.notNull(/^[\w_]+/.exec(path), `Invalid storage path: ${path}`)[0];
             let slots = [
-                { name, type: info.type, slot: Number(info.slot), position: 0, size: null },
+                { name, type: info.type, slot, position: 0, size: null },
             ];
-            storage = SlotsStorage.createWithClient(this.chain.client, nameOrAddress, slots);
+            storage = SlotsStorage.createWithClient(this.chain.client, address, slots);
         } else {
             let pkg = await this.getPackage(nameOrAddress);
             let slots = await this.getSlots(pkg);
@@ -386,6 +419,7 @@ export class ContractService extends BaseService {
     async varSet(name: string, path: string, value: string, info?: {
         type?: string
     }) {
+        $require.True(info?.type == null, '--type is not supported for var-set; the installed storage layout determines the type');
         let pkg = await this.getPackage(name);
         let slots = await this.getSlots(pkg);
         let storage = SlotsStorage.createWithClient(this.chain.client, pkg.address, slots);
@@ -397,9 +431,10 @@ export class ContractService extends BaseService {
         let result = await storage.get(path);
         if (result != null && typeof result === 'object') {
             this.printLog(JSON.stringify(result, null, '  '));
-            return;
+        } else {
+            this.printLog(result);
         }
-        this.printLog(result);
+        return result;
     }
 
     async watchLog(nameOrAddress: string | TAddress, params: { event?: string, tx?: string, filters?: Record<string, unknown> }) {
@@ -447,7 +482,7 @@ export class ContractService extends BaseService {
         return result;
     }
     private get chain() {
-        return $require.notNull(this.app.chain, `Chain not initialized`);
+        return $require.notNull(this.app.chain, 'Provide --chain when the contract chain cannot be inferred');
     }
 
     private async getContractReader(params: Pick<ICallParams, 'block' | 'account'>) {
@@ -516,12 +551,16 @@ export class ContractService extends BaseService {
     }
     private async getAddress(nameOrAddress: string): Promise<TAddress> {
         if ($is.Address(nameOrAddress)) {
+            $require.notNull(this.app.chain, 'Provide --chain when using a contract address');
             return nameOrAddress;
         }
         let pkg = await this.getPackage(nameOrAddress);
         return pkg.address;
     }
     private async getPackage(name: string) {
+        if ($is.Address(name)) {
+            $require.notNull(this.app.chain, 'Provide --chain when using a contract address');
+        }
         let packageService = di.resolve(PackageService, this.app.chain);
         let pkg = await packageService.getPackage(name);
         if (pkg == null) {

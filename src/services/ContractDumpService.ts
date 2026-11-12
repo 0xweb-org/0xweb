@@ -74,19 +74,21 @@ export class ContractDumpService {
     }
 
     async dumpRestore(nameOrAddress: string, params: IContractDumpServiceParams) {
-        let { _address, _output, _implementation, _sources } = await this.getContractData(nameOrAddress, params);
+        $require.True(/\.(csv|json)$/i.test(params.file ?? ''), 'Provide --file with a .csv or .json extension');
+        let { _address, _output, _implementation, _sources, _contractName } = await this.getContractData(nameOrAddress, params);
         let chain = $require.notNull(this.app.chain, `--chain not specified`);
         let file = $require.notNull(params.file, `Restore file not specified`);
         let dump = new SlotsDump({
             address: _address,
             implementation: _implementation,
+            contractName: _contractName,
             client: chain.client,
             explorer: chain.explorer,
             fields: params.fields?.split(',').map(x => x.trim()),
             sources: _sources
         });
 
-        if (/\.json$/.test(file)) {
+        if (/\.json$/i.test(file)) {
             let json = await File.readAsync<any>(file);
             if (Array.isArray(json) && Array.isArray(json[0])) {
                 let table = json;
@@ -96,7 +98,7 @@ export class ContractDumpService {
             await dump.restoreStorageFromJSON(json);
             return;
         }
-        if (/.csv$/.test(file)) {
+        if (/\.csv$/i.test(file)) {
             let csv = await File.readAsync<string>(file);
             let table = csv.split('\n').map(x => x.trim()).filter(Boolean).map((row): [string, TEth.Hex] => {
                 let [slot, value] = row.split(',').map(x => x.trim()).filter(Boolean);

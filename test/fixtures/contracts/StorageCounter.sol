@@ -1,6 +1,8 @@
 contract StorageCounter {
     uint256 public counter = 1;
 
+    event Incremented(uint256 value);
+
     struct User {
         address owner;
         uint256 amount;
@@ -17,5 +19,6 @@ contract StorageCounter {
 
     function increment () external {
         counter++;
+        emit Incremented(counter);
     }
 }
