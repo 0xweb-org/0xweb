@@ -42,7 +42,7 @@ export class PackageService {
         if (pkg == null) {
             pkg = await this.getBuiltIn(name);
         }
-        if (pkg != null && pkg.address == null) {
+        if (pkg != null && $is.Address(pkg.address) === false) {
             // if the package was installed via local compilation/deployment
             let deploymentsList = await this.getDeploymentsList();
             let chain = $require.notNull(this.chain, `Chain not initialized`);
@@ -73,7 +73,7 @@ export class PackageService {
         if (await File.existsAsync(packagePath)) {
             json = await File.readAsync(packagePath);
         }
-        let asContract = pkg.address != null;
+        let asContract = $is.Address(pkg.address);
         if (asContract) {
             if (json.contracts == null) {
                 json.contracts = {};
