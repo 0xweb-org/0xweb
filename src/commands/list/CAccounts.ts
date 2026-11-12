@@ -63,8 +63,8 @@ export function CAccounts() {
                     } as EoAccount;
 
                     if (key) {
-                        const secret = params.pin ?? app.config.$get('pin') as string;
-                        $require.notEmpty(secret, `Secret not resolve`);
+                        const secret = app.config.$get('pin') as string ?? params.pin;
+                        $require.notEmpty(secret, `Secret not resolved`);
                         const encryptedKey = /^p\d:/.test(key)
                             ? key
                             : await $sig.$key.encrypt(key, secret);
@@ -73,15 +73,19 @@ export function CAccounts() {
                     }
 
                     if (params.login) {
-                        await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
+                        await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
                     }
 
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.add(account);
                     let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
 
                     $console.log(`Accounts:`);
                     $console.result(str);
+
+                    return accounts.map(x => {
+                        return { name: x.name, address: x.address };
+                    });
                 }
             },
             {
@@ -97,7 +101,7 @@ export function CAccounts() {
                 },
                 async process(args: string[], params: any, app: App) {
                     let { name } = params;
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.remove(name);
 
                     let str = accounts.length > 0
@@ -113,7 +117,7 @@ export function CAccounts() {
                     'List account names'
                 ],
                 async process(args: string[], params, app: App) {
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let accounts = await service.list();
                     if (accounts.length === 0) {
                         console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);
@@ -140,13 +144,13 @@ export function CAccounts() {
                     }
                 },
                 async process(args: string[], params, app: App) {
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.create(params.name);
                     if (account == null) {
                         return;
                     }
                     if (params.login) {
-                        await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
+                        await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
                     }
                     $console.log(`yellow<You must backup the key bold<!!!>>`)
                     $console.table([
@@ -168,11 +172,11 @@ export function CAccounts() {
                 ],
                 async process(args: string[], params, app: App) {
                     let [ name ] = args;
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.get(name);
                     $require.notNull(account, `${name} not found`)
 
-                    await AccountsService.saveAsDefaults($require.notNull(account.name, `Account name is missing`), params, app.config);
+                    await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
                     $console.table([
                         ['Name', account.name ?? ''],
                         ['Address', account.address ?? ''],
@@ -200,7 +204,7 @@ export function CAccounts() {
                     'Back up accounts to an encrypted file. Uses AES-GCM with sha256(secret) as the key and a prefixed 16-byte IV'
                 ],
                 async process(args: string[], params, app: App) {
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let accounts = await service.list();
                     if (accounts.length === 0) {
                         console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);

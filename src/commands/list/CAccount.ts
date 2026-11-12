@@ -49,7 +49,7 @@ export function CAccount ()  {
                     if ($address.isValid(accountName)) {
                         address = accountName;
                     } else {
-                        let accounts = di.resolve(AccountsService, app.config);
+                        let accounts = di.resolve(AccountsService, app.config, params);
                         let account = await accounts.get(accountName);
                         address = $require.notNull(account?.address, `Account ${accountName} has no address`);
                     }
@@ -97,7 +97,7 @@ export function CAccount ()  {
                 async process (args: string[], params: { encryptedKey?: boolean, pin: string }, app: App) {
                     let [ accountName ] = args;
 
-                    let accounts = di.resolve(AccountsService, app.config);
+                    let accounts = di.resolve(AccountsService, app.config, params);
                     let account = await accounts.get(accountName);
                     $require.notNull(account, `Account ${accountName} not found`);
                     let tableData = [
@@ -128,7 +128,7 @@ export function CAccount ()  {
                 },
                 async process(args: string[], params, app: App) {
                     $require.notEmpty(params.account, `No default account is loaded`);
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.get(params.account);
                     $require.notNull(account, `${params.account} not found`)
                     $console.table([
@@ -160,7 +160,7 @@ export function CAccount ()  {
                 async process(args: string[], params, app: App) {
                     let [oldName, newName ] = args;
                     $require.notEmpty(oldName, `No default account is loaded`);
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.get(oldName);
                     $require.notNull(account, `${oldName} not found`);
 

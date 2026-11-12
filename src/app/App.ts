@@ -46,6 +46,7 @@ import { IConfigData } from '@dequanto/config/interface/IConfigData';
 import { TAppProcessResult } from './types';
 import { CAbi } from '@core/commands/list/CAbi';
 import { CDeployment } from '@core/commands/list/CDeployment';
+import { CAuth } from '@core/commands/list/CAuth';
 
 
 declare const global;
@@ -85,8 +86,8 @@ export class App {
         let { params: cliParams, args: cliArgs } = $cli.parse();
 
         $console.toast('Loading config');
-        let defaults = await AccountsService.getDefaults(cliParams);
-        if (defaults) {
+        let defaults = await AccountsService.getSession(cliParams);
+        if (defaults != null) {
             for (let key in defaults) {
                 if (key in cliParams === false) {
                     cliParams[key] = defaults[key];
@@ -96,6 +97,7 @@ export class App {
         if ($cli.isLocal(cliParams)) {
             cliParams['isLocal'] = true;
         }
+
         this.config = await Config.fetch(cliParams);
 
         this
@@ -106,6 +108,7 @@ export class App {
             .register(CContract())
             .register(CAccounts())
             .register(CAccount())
+            .register(CAuth())
             .register(CSafe())
             .register(CToken())
             .register(CTokens())

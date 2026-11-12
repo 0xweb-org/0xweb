@@ -76,7 +76,7 @@ export function CErc4337 () {
                     'List ERC-4337 account names'
                 ],
                 async process(args: string[], params, app: App) {
-                    let service = di.resolve(AccountsService, app.config);
+                    let service = di.resolve(AccountsService, app.config, params);
                     let accounts = await service.list();
 
                     accounts = accounts.filter(x => x.type === 'erc4337')

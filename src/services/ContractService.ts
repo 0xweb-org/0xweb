@@ -35,6 +35,7 @@ import { ITxBuilderOptions } from '@dequanto/txs/ITxBuilderOptions';
 import { ContractFactory } from '@core/factories/ContractFactory';
 import { $abiInput } from '@core/utils/$abiInput';
 import { BaseService } from './BaseService';
+import { $cli } from '@core/utils/$cli';
 
 
 interface ICallParams {
@@ -74,7 +75,6 @@ export class ContractService extends BaseService {
     }
 
     async formatAbi(pkg: IPackageItem, abi: TAbiItem[]): Promise<string> {
-
         let methods = await abi.filter(x => x.type === 'function');
         let reads = methods.filter(x => $abiUtils.isReadMethod(x));
         let writes = methods.filter(x => $abiUtils.isReadMethod(x) === false);
@@ -431,7 +431,7 @@ export class ContractService extends BaseService {
 
         let args = await this.getArguments(abi, params);
         if (params.account != null && $is.Address(params.account) === false) {
-            let accounts = di.resolve(AccountsService, this.app.config);
+            let accounts = di.resolve(AccountsService, this.app.config, params);
             let account = await accounts.get(params.account);
             params.account = account?.address ?? void 0;
         }
@@ -473,7 +473,7 @@ export class ContractService extends BaseService {
         let args = await this.getArguments(abi, params);
         let writer = await this.getContractWriter(pkg, abi, params);
 
-        let accounts = di.resolve(AccountsService, this.app.config);
+        let accounts = di.resolve(AccountsService, this.app.config, params);
         let account = await accounts.get(params.account!);
         let writerConfig = <ITxWriterOptions>{
 
@@ -499,6 +499,7 @@ export class ContractService extends BaseService {
         // In CLI wait for the Transaction to be mined
         let receipt = await tx.onCompleted;
         this.printLog(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
+        return receipt;
     }
     private async getContractWriter(pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
 
@@ -532,6 +533,10 @@ export class ContractService extends BaseService {
         return pkg;
     }
     private async getAbi(pkg: IPackageItem) {
+        if (pkg.abi != null && Array.isArray(pkg.abi)) {
+            return pkg.abi;
+        }
+        $require.notNull(pkg.main, `Main file not defined for the package: ${pkg.name}`);
         let paths = [
             pkg.main.replace(/\.[a-z]+$/, '.json'),
             pkg.main.replace(/\.[a-z]+$/, 'Abi.json'),

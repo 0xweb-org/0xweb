@@ -28,6 +28,8 @@ export interface ICommand {
 
             // alias
             fallback?: string
+
+            requiredUnless?: string[]
         }
     }
     subcommands?: ICommand[]

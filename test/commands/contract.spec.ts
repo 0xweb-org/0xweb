@@ -81,10 +81,10 @@ UTest({
                 eq_(resp, 1n);
             },
             async 'check var' () {
-                let str = await TestUtils.cli(`contract var Counter count --chain hardhat`);
+                let str = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
                 has_(str, /^1n$/m);
 
-                let resp = await TestUtils.api(`/api/c/var/Counter/count`);
+                let resp = await TestUtils.api(`/api/c/var/Counter/counter`);
                 eq_(resp, 1n);
             },
             async 'check complex var' () {
@@ -104,7 +104,7 @@ UTest({
 
                 let resp = await TestUtils.api(`/api/c/vars/Counter`);
                 deepEq_(resp, [
-                    { slot: 0, position: 0, name: 'count', size: 256, type: 'uint256' },
+                    { slot: 0, position: 0, name: 'counter', size: 256, type: 'uint256' },
                     { slot: 1, position: 0, name: 'user', size: 512, type: '(address owner, uint256 amount)' },
                 ])
             },
@@ -128,7 +128,7 @@ UTest({
                         let json = await File.readAsync<any>(jsonPath);
 
                         eq_(json.user.amount, '5');
-                        eq_(json.count, '1');
+                        eq_(json.counter, '1');
                     },
                     async 'dump by address and sources dir' () {
                         await cleanJson();
@@ -139,7 +139,7 @@ UTest({
                         let json = await File.readAsync<any>(jsonPath);
 
                         eq_(json.user.amount, '5');
-                        eq_(json.count, '1');
+                        eq_(json.counter, '1');
                     },
                     async 'dump by address and source file' () {
                         await cleanJson();
@@ -150,18 +150,18 @@ UTest({
                         let json = await File.readAsync<any>(jsonPath);
 
                         eq_(json.user.amount, '5');
-                        eq_(json.count, '1');
+                        eq_(json.counter, '1');
                     },
                     async 'restore dump by name from json' () {
                         let path = `test/bin/dump/counter.json`;
                         await File.writeAsync(path, {
-                            count: 31,
+                            counter: 31,
                             user: {
                                 amount: 12
                             }
                         });
                         let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
-                        let countOutput = await TestUtils.cli(`contract var Counter count --chain hardhat`);
+                        let countOutput = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
                         has_(countOutput, '31n');
                     },
                     async 'restore dump by name from CSV' () {
@@ -170,7 +170,7 @@ UTest({
                         0x0000000000000000000000000000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000000000000000000000000008
                         `);
                         let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
-                        let countOutput = await TestUtils.cli(`contract var Counter count --chain hardhat`);
+                        let countOutput = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
                         has_(countOutput, '8n');
                     }
                 })

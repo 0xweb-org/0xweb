@@ -116,7 +116,7 @@ export namespace $cli {
         return { params, args };
     }
 
-    export function ask(question: string, type?: string) {
+    export function ask<T = string>(question: string, type?: string): Promise<T> {
         return new Promise(resolve => {
             rl.question($color(question), (answer) => {
 

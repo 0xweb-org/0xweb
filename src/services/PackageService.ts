@@ -12,6 +12,10 @@ import { DeploymentsStorage, IDeployment } from '@dequanto/contracts/deploy/stor
 import { $logger } from '@dequanto/utils/$logger';
 import { $require } from '@dequanto/utils/$require';
 import { platform } from 'process';
+import { IBlockchainExplorer } from '@dequanto/explorer/IBlockchainExplorer';
+import { Generator } from '@dequanto/gen/Generator';
+import { TEth } from '@dequanto/models/TEth';
+import { $is } from '@dequanto/utils/$is';
 
 type TDeploymentEntry = {
     platform: string;
@@ -46,6 +50,9 @@ export class PackageService {
             let deployment = platformDeployments.find(d => d.name === pkg.name);
 
             pkg.address = deployment?.address;
+        }
+        if (pkg == null && $is.Address(name) && this.chain?.explorer != null) {
+            return this.fromExplorer(name as any)
         }
         return pkg;
     }
@@ -149,6 +156,29 @@ export class PackageService {
             main: file.uri.toString(),
             abi
         };
+    }
+
+    private async fromExplorer(address: TEth.Address) {
+        let platform = this.chain?.platform!;
+        let generator = new Generator({
+            name: 'Tmp',
+            platform,
+            output: `./0xc/${platform}/`,
+            source: {
+                abi: address,
+            },
+            save: false,
+        });
+        let result = await generator.generate();
+        let abi = result.files?.find(x => x.kind === 'abi');
+        return <IPackageItem> {
+            platform: platform,
+            address: result.address,
+            name: result.contractName,
+            contractName: result.contractName,
+            abi: JSON.parse(abi?.content ?? '[]'),
+            implementation: result.implementation,
+        }
     }
 
     private async ensureChain (packageName: string, list: IPackageItem[]) {

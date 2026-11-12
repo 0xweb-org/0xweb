@@ -43,6 +43,14 @@ export const TestUtils = {
         let response = await server.execute(url, 'get') as HttpResponse;
         return JSON.parse(response.content);
     },
+    async cliJson(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
+        let str = await TestUtils.cli(command, params, opts);
+        try {
+            return JSON.parse(str.trim());
+        } catch (error) {
+            throw new Error(`"${str}" is not a valid JSON`);
+        }
+    },
     async cli(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
         params = {
             ...PARAMS_DEF,

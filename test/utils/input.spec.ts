@@ -107,7 +107,7 @@ UTest({
         let params = { name: 'John Doe', age: 30n };
         let provider = {
             get (abi: TAbiItem) {
-                return params[abi.name]
+                return String(params[abi.name]);
             }
         };
         let abi = $abiParser.parseMethod('foo(string name, uint age)');

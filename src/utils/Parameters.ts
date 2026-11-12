@@ -14,7 +14,13 @@ export const Parameters = {
         return {
             '-p, --pin': {
                 description: 'PIN for account storage encryption. The encryption key is derived from the PIN and the local machine key',
-                required: opts?.required ?? true
+                required: opts?.required ?? true,
+                requiredUnless: ['totp', '2fa'],
+            },
+            '--totp, --2fa': {
+                description: '2FA code',
+                required: opts?.required ?? true,
+                requiredUnless: ['pin'],
             },
         }
     },

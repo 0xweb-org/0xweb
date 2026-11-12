@@ -1,17 +1,21 @@
 contract StorageCounter {
-    uint256 count = 1;
+    uint256 public counter = 1;
 
     struct User {
         address owner;
         uint256 amount;
     }
-    User user = User(address(this), 5);
+    User public user = User(address(this), 5);
 
     function getCountMethod () public view returns (uint256) {
-        return count;
+        return counter;
     }
 
     function updateUser (User calldata user_) external {
         user = user_;
+    }
+
+    function increment () external {
+        counter++;
     }
 }

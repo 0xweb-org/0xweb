@@ -1,5 +1,6 @@
 import { config } from '@dequanto/config/Config';
 import { l } from '@dequanto/utils/$logger';
+import { $secret } from '@dequanto/utils/$secret';
 import { $sig } from '@dequanto/utils/$sig';
 import { File } from 'atma-io';
 import { run } from 'shellbee';
@@ -47,7 +48,7 @@ UTest({
         l`> Decrypt key`
         let key = /p1:0x[a-f\d]+/.exec(str)[0];
 
-        config.pin = '12345';
+        config.pin = await $secret.getPin({ pin: '12345' });
 
         let address = await $sig.$account.getAddressFromKey(key as any);
         eq_(address, account.address);

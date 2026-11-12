@@ -4,6 +4,7 @@ import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { $require } from '@dequanto/utils/$require';
+import { $cli } from '@core/utils/$cli';
 
 
 export function CContract() {
@@ -35,20 +36,25 @@ export function CContract() {
                 description: ['List the read and write methods available on a contract'],
                 arguments: [
                     {
-                        name: 'Name',
+                        name: 'Name or Address',
                         description: 'Name of an installed contract',
                         required: true
                     }
                 ],
-                params: {},
+                params: {
+                    ...Parameters.chain({ required: false })
+                },
                 api: {},
                 async process(args, params, app) {
                     let [ name ] = args;
 
                     let service = di.resolve(ContractService, app);
                     let { abi, pkg } = await service.abi(name);
-                    let str = await service.formatAbi(pkg, abi);
-                    $console.result(str);
+
+                    if (!$console.isJsonOnly()) {
+                        let mix = await service.formatAbi(pkg, abi);
+                        $console.result(mix);
+                    }
                     return abi;
                 }
             },
@@ -119,11 +125,14 @@ export function CContract() {
                     '--abi': {
                         description: `ABI string to parse`
                     },
+                    '--json': {
+                        description: 'Print the transaction receipt as JSON to stdout'
+                    }
                 },
                 async process(args, params, app) {
                     let [name, method] = args;
                     let service = di.resolve(ContractService, app);
-                    await service.call(name, method, params, 'write');
+                    return await service.call(name, method, params, 'write');
                 },
                 api: {
                     method: 'post',

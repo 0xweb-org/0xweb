@@ -6,12 +6,15 @@ export namespace $console {
     export function setJsonOnly(jsonOnly_: boolean) {
         jsonOnly = jsonOnly_;
     }
+    export function isJsonOnly() {
+        return jsonOnly;
+    }
 
-    export function log(str: string | any) {
+    export function log(...args: any[]) {
         if (jsonOnly) {
             return;
         }
-        $logger.log(str)
+        $logger.log(...args)
     }
     export function result(str: string | any) {
         if (jsonOnly) {

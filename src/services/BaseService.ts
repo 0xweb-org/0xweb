@@ -1,4 +1,5 @@
 import { App } from '@core/app/App';
+import { $console } from '@core/utils/$console';
 import { $logger } from '@dequanto/utils/$logger';
 
 export class BaseService {
@@ -13,7 +14,7 @@ export class BaseService {
         if (this.opts?.logger === false) {
             return;
         }
-        $logger.log(...args);
+        $console.log(...args as any[]);
     }
     /** @deprecated printLog instead */
     protected printResult (...args: Parameters<typeof $logger.result>) {
@@ -26,12 +27,12 @@ export class BaseService {
         if (this.opts?.logger === false) {
             return;
         }
-        $logger.table(...args);
+        $console.table(...args);
     }
     protected printLogToast (str: string) {
         if (this.opts?.logger === false) {
             return;
         }
-        $logger.toast(str);
+        $console.toast(str);
     }
 }
