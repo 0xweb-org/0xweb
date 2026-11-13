@@ -69,6 +69,7 @@ export class CommandsHandler  {
             return { command, paramsDefinition, params: params ?? {} };
         }
 
+        await command.prepare?.(args, cliParams);
         let params = await $command.getParams(cliParams, paramsDefinition);
         command.arguments?.forEach((argument, index) => {
             if (args[index] == null && argument.fallback != null) {

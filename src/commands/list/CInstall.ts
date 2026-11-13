@@ -1,5 +1,5 @@
 ﻿import di from 'a-di';
-import { env } from 'atma-io';
+import { env, File } from 'atma-io';
 import { Generator } from '@dequanto/gen/Generator';
 import { ICommand } from '../ICommand';
 import { TPlatform } from '@dequanto/models/TPlatform';
@@ -12,6 +12,7 @@ import { $require } from '@dequanto/utils/$require';
 import { $validate } from '@core/utils/$validate';
 import { $platform } from '@dequanto/utils/$platform';
 import { TEth } from '@dequanto/models/TEth';
+import { $config } from '@dequanto/utils/$config';
 
 export function CInstall() {
     return <ICommand>{
@@ -20,10 +21,13 @@ export function CInstall() {
         description: [
             `Download a contract ABI and generate a JavaScript or TypeScript class`,
             `Supported chains: ${$validate.platforms().join(', ')}`,
+            'For unattended use, supply --name and --chain (or chain:address), and use --json. Missing required input fails when stdin is not interactive.',
+            'Example: 0xweb install ./Contract.sol --name Contract --chain hardhat --save false --json',
         ],
         arguments: [
             {
-                description: 'Contract address or source path',
+                name: 'AddressOrPath',
+                description: 'Contract address, chain:address (including eth:sepolia:0x...), or local Solidity, ABI JSON, or artifact JSON file',
                 required: true
             }
         ],
@@ -36,21 +40,21 @@ export function CInstall() {
                 description: 'Implementation address. Standard proxy implementations are detected automatically'
             },
             '--source': {
-                description: 'Optional path to Solidity source code'
+                description: 'Local Solidity, ABI JSON, or artifact JSON file to use with a contract address'
             },
             '--contract-name': {
                 description: 'Contract name to extract from the source. If omitted, the default is used'
             },
             '-g, --global': {
-                description: 'Install the contract globally for use with 0xweb from any working directory',
+                description: 'Write files and package metadata under the appdata .dequanto directory. Overrides --output. Default: false',
                 type: 'boolean',
             },
             ...Parameters.chain(),
             '-o, --output': {
-                description: 'Output root directory. Default: ./0xc/'
+                description: 'Output root directory; files are placed under <root>/<chain>/<name>/. Existing generated files are overwritten. Default: ./0xc/'
             },
             '--save': {
-                description: 'Write generated files to disk. Set to false to return file contents without saving files or package metadata. Default: true',
+                description: 'Write generated files and update 0xweb.json. Use --save false --json to return contents without installing files or package metadata. Default: true',
                 type: 'boolean',
                 default: true
             },
@@ -70,29 +74,54 @@ export function CInstall() {
                 default: false
             },
             '--target': {
-                description: 'Output target: js, mjs, or ts. Default: settings.generate.target',
-                type:'string'
+                description: 'Output target: ts (TypeScript), js/mjs (ES modules), or cjs (CommonJS .js). JavaScript targets include .d.ts files. Default: settings.generate.target, then ts',
+                type: 'string',
+                oneOf: ['js', 'mjs', 'ts', 'cjs'],
+            },
+            '--json': {
+                description: 'Print installation metadata and generated file descriptors as JSON to stdout. Each file includes written; content is included with --include-content or --save false',
             }
         },
-
+        prepare(args, params) {
+            let input = args[0];
+            $require.notEmpty(input, 'Provide AddressOrPath: a contract address or local Solidity/JSON file');
+            let prefix = /^([a-z][\w:-]*):(0x.*)$/i.exec(input);
+            if (prefix != null) {
+                let [, chain, address] = prefix;
+                for (let explicit of [params.chain, params.c]) {
+                    $require.True(explicit == null || explicit === chain, 'The address chain prefix conflicts with --chain');
+                }
+                params.chain = chain;
+                args[0] = address;
+            }
+            if (/^0x/i.test(args[0]) && !/\.(sol|json)$/i.test(args[0])) {
+                $require.True(/^0x[\da-f]{40}$/i.test(args[0]), 'Invalid contract address: expected 0x followed by 40 hexadecimal characters');
+            }
+            if (!process.stdin.isTTY) {
+                $require.notEmpty(params.name ?? params.n, 'Provide --name for non-interactive installation');
+                $require.notEmpty(params.chain ?? params.c, 'Provide --chain or chain:address for non-interactive installation');
+            }
+        },
         async process(args: string[], params: IInstallParams, app) {
             let platform: TPlatform = params.chain as TPlatform;
             let [ addressOrPath ] = args;
-            if (/^\w+:0x/.test(addressOrPath)) {
-                // eth:0x...
-                let i = addressOrPath.indexOf(':');
-                platform = addressOrPath.substring(0, i) as any;
-                addressOrPath = addressOrPath.substring(i + 1);
-            }
-            let isByAddress = /0x[\da-f]+/i.test(addressOrPath);
+            let isByAddress = $is.Address(addressOrPath);
             let address = isByAddress ? addressOrPath as TEth.Address : null;
             let sourcePath = isByAddress ? params.source : addressOrPath;
 
             $require.notNull(params.name, `--name should be set`);
             $validate.platform(platform, `Chain not set. Use as prefix "eth:0x.." or flag "--chain eth"`);
-            $validate.config.blockchainExplorer(platform);
+            if (sourcePath != null) {
+                $require.True(/\.(sol|json)$/.test(sourcePath), 'Source must use the .sol or .json extension (Solidity, ABI JSON, or artifact JSON)');
+                $require.True(await File.existsAsync(sourcePath), `Source file not found: ${sourcePath}`);
+            } else {
+                $require.Address(address, 'Invalid contract address');
+                $validate.config.blockchainExplorer(platform);
+            }
+            let target = params.target ?? $config.get('settings.generate.target') ?? 'ts';
+            $require.oneOf(target, ['js', 'mjs', 'ts', 'cjs'], 'Invalid generation target');
 
-            if (params.global) {
+            if (params.global === true) {
                 params.output = env.appdataDir.combine('.dequanto/0xc/').toDir();
             }
 
@@ -101,7 +130,7 @@ export function CInstall() {
             let generator = new Generator({
                 name: params.name,
                 contractName: params.contractName,
-                target: params.target as any,
+                target,
                 platform,
                 source: {
                     abi: address ?? undefined,
@@ -137,7 +166,7 @@ export function CInstall() {
                     } : {
                         path: sourcePath
                     }
-                }, { global: params.global != null });
+                }, { global: params.global === true });
             }
 
 
@@ -145,6 +174,9 @@ export function CInstall() {
                 return {
                     kind: file.kind,
                     path: file.path,
+                    written: params.save !== false
+                        && (file.kind !== 'abi' || params.saveAbi !== false)
+                        && (file.kind !== 'source' || params.saveSources !== false),
                     content: (params.save === false || params.includeContent)
                         ? file.content
                         : void 0
@@ -168,7 +200,7 @@ interface IInstallParams {
     name: string
     contractName: string
     implementation: string
-    target: 'js' |'mjs' | 'ts'
+    target: 'js' | 'mjs' | 'ts' | 'cjs'
     chain: string
     output: string
     source: string

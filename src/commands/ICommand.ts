@@ -35,6 +35,8 @@ export interface ICommand {
         }
     }
     subcommands?: ICommand[]
+    /** Normalize raw CLI input before required parameters and chain initialization. */
+    prepare?: (args: string[], params: Record<string, any>) => void | Promise<void>
     process: (args: any[], params?, app?: App, command?: ICommand) => Promise<void | any>
 
     api?: {

@@ -4,6 +4,7 @@ import { ContractService } from '@core/services/ContractService';
 import { $console } from '@core/utils/$console';
 import { Parameters } from '@core/utils/Parameters';
 import { $require } from '@dequanto/utils/$require';
+import { CInstall } from './CInstall';
 
 export function CContract() {
     return <ICommand>{
@@ -14,6 +15,61 @@ export function CContract() {
         ],
 
         subcommands: [
+            {
+                command: 'info',
+                description: [
+                    'Return contract metadata, ABI, sources, and generated binding contents without installing files or package metadata',
+                    'Accepts the same address or local file inputs as install. Explorer dependencies may still use caches.',
+                    'Example: 0xweb contract info ./Contract.sol --chain hardhat --json',
+                ],
+                arguments: [
+                    {
+                        name: 'AddressOrPath',
+                        description: 'Contract address, chain:address, or local Solidity, ABI JSON, or artifact JSON file',
+                        required: true,
+                    }
+                ],
+                params: {
+                    ...Parameters.chain(),
+                    '-n, --name': {
+                        description: 'Name for the generated binding in the result. Default: Contract',
+                        default: 'Contract',
+                    },
+                    '--source': {
+                        description: 'Local Solidity, ABI JSON, or artifact JSON file to use with a contract address',
+                    },
+                    '--contract-name': {
+                        description: 'Contract name to extract from a Solidity source containing multiple contracts',
+                    },
+                    '--imp, --implementation': {
+                        description: 'Implementation address. Standard proxy implementations are detected automatically',
+                    },
+                    '--target': {
+                        description: 'Binding target: ts, js, mjs, or cjs. Default: settings.generate.target, then ts',
+                        oneOf: ['ts', 'js', 'mjs', 'cjs'],
+                    },
+                    '--json': {
+                        description: 'Print contract metadata and generated file descriptors with contents as JSON. All files have written: false',
+                    },
+                },
+                async prepare(args, params) {
+                    params.name ??= params.n ?? 'Contract';
+                    await CInstall().prepare(args, params);
+                },
+                async process(args, params, app) {
+                    let result = await CInstall().process(args, {
+                        ...params,
+                        save: false,
+                        includeContent: true,
+                        global: false,
+                    }, app);
+
+                    if (!$console.isJsonOnly()) {
+                        $console.json(result);
+                    }
+                    return result;
+                },
+            },
             {
                 command: 'list',
                 description: ['List installed contracts'],

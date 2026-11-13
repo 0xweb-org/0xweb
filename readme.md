@@ -39,10 +39,89 @@ $ npm i 0xweb -g
 $ 0xweb init
 
 # Download sources/ABI and generate TS classes
-$ 0xweb install 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth
+$ 0xweb install 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --chain eth
 ```
 
 > Use the `--hardhat` flag, if you want to develop|compile|deploy|test contracts: `0xweb init --hardhat`
+
+#### Install from scripts and AI agents
+
+To inspect a contract without installing it, use `contract info`:
+
+```bash
+0xweb contract info ./Contract.sol --chain hardhat --json
+0xweb contract info 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --chain eth --json
+```
+
+It returns the same metadata and file descriptors as `install --save false`,
+always includes contents, and never writes generated files or package metadata.
+Explorer dependencies may still use caches. `--name` is optional (default:
+`Contract`) and only names the generated binding. Inputs are addresses or local
+files, not installed package names. ABI and available source contents are in
+`files` entries with kinds `abi` and `source`; unverified contracts may not have
+sources. Every entry has `written: false`. The `--source`, `--contract-name`,
+`--implementation`, and `--target` options work as with install. Saving cannot
+be enabled on this command.
+
+Provide `--name` and `--chain`, or use a chain-prefixed address such as
+`eth:sepolia:0x...`. The prefix and an explicit `--chain` must agree. There is no
+default chain. Missing required input fails without prompting when stdin is not
+interactive. Use `--json` to receive one JSON result on stdout; failures exit
+with a nonzero status and diagnostics on stderr.
+
+```bash
+# Generate from a local Solidity file without installing generated files or metadata
+0xweb install ./Contract.sol --name Contract --chain hardhat --save false --json
+
+# Install from an ABI array or compiler artifact JSON
+0xweb install ./artifacts/Contract.json --name Contract --chain eth --json
+
+# Use local source for an existing deployed address
+0xweb install 0x0000000000000000000000000000000000000001 --source ./Contract.sol --name Contract --chain hardhat --json
+```
+
+`--source` accepts a Solidity or JSON file when the positional input is an
+address. For Solidity files containing several contracts, select one explicitly
+with `--contract-name`. Remote addresses require explorer configuration and may
+require API keys; local files do not require explorer requests to load the ABI.
+
+By default, installation writes under `./0xc/<chain>/<name>/` and updates the
+working directory's `0xweb.json`. A chain containing `:` uses `_` in its directory
+name. `--output` changes the root. `--global` overrides that root and writes files
+and the registry under the appdata `.dequanto` directory. `--global false` keeps
+installation local. Existing generated files and the matching package entry can
+be overwritten; no overwrite confirmation is requested.
+
+Targets are `ts`, `js` (ES modules in `.js`), `mjs` (ES modules in `.mjs`), and
+`cjs` (CommonJS in `.js`). JavaScript targets also produce `.d.ts` declarations.
+The default is `settings.generate.target`, falling back to `ts`. Choose a target
+compatible with the consuming project's module configuration.
+
+The JSON result contains `platform`, `address` (`null` for file inputs), `name`,
+`main`, and `files`. `implementation` is present for a distinct resolved proxy
+implementation; `contractName` can be omitted when unavailable, such as with a
+bare ABI array. For example, a no-save ABI input returns:
+
+```json
+{
+  "platform": "hardhat",
+  "address": null,
+  "name": "Contract",
+  "main": "./0xc/hardhat/Contract/Contract.ts",
+  "files": [
+    { "kind": "binding", "path": "./0xc/hardhat/Contract/Contract.ts", "written": false, "content": "...generated TypeScript..." },
+    { "kind": "abi", "path": "./0xc/hardhat/Contract/ContractAbi.json", "written": false, "content": "[]" }
+  ]
+}
+```
+
+File kinds are `binding`, `declaration`, `abi`, and `source`. `written` describes
+whether this invocation wrote the file, not whether that path already exists.
+`--save-abi false` and `--save-sources false` suppress those writes but retain
+their generated descriptors. `--include-content` includes contents even when
+saving; `--save false` includes contents automatically and skips generated-file
+and package-registry writes. Use it with `--json` to retrieve those contents in
+the CLI. It is not a guarantee against dependency caches or compilation artifacts.
 
 #### API Usage
 
