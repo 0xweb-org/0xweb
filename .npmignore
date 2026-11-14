@@ -36,6 +36,7 @@ dequanto/readme.md
 readme.md
 0xweb.json
 0xweb/
+!/skills/0xweb/
 de_**.bat
 /hardhat.config.js
 /tsconfig-typedoc.json

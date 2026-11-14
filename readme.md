@@ -46,6 +46,10 @@ $ 0xweb install 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/orac
 
 #### Install from scripts and AI agents
 
+The portable [0xweb skill](skills/0xweb/SKILL.md) provides CLI workflows and
+examples for coding agents. Keep the complete `skills/0xweb` directory together;
+its [task index](skills/0xweb/INDEX.md) links to the relevant references.
+
 To inspect a contract without installing it, use `contract info`:
 
 ```bash
