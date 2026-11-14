@@ -14,6 +14,24 @@ For installed contracts, a method name can resolve from the registered ABI. Use 
 
 ## Calldata without sending
 
+To decode calldata locally with a supplied function signature, use:
+
+```sh
+0xweb abi decode-calldata 0x70a082310000000000000000000000000000000000000000000000000000000000000000 --abi "balanceOf(address account)" --json
+```
+
+`--abi` accepts a function signature, JSON ABI item/array, file path (any
+extension), or contract address. Files may contain an ABI array or compiler
+artifact with an `abi` array. For explorer lookup, supply
+`--abi <contract-address> --chain <chain>`. The chain is required in address
+mode, which uses the configured explorer and its proxy-resolution behavior.
+Short hex address sources such as `0x1` are left-padded to 20 bytes before explorer lookup.
+Calldata can be
+positional or passed through `--calldata`. Supplied signatures and files need no
+chain or network lookup. It returns `name`, positional `args`, and named `params`, using the
+same decoder as `contract calldata-parse`. Unknown selectors, malformed hex,
+and invalid ABI inputs fail rather than returning a successful null result.
+
 The following examples assume an installed `Counter` with `increment()`:
 
 ```sh
