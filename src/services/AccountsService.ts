@@ -98,7 +98,7 @@ export class AccountsService {
     async add (params: EoAccount | SafeAccount | Erc4337Account) {
         let accounts = this.getAccounts();
         if (accounts.find(account => account.name === params.name)) {
-            console.warn(`Account ${params.name} already exists`);
+            throw new Error(`Account ${params.name} already exists`);
         } else {
             accounts.push(params);
             await this.save(accounts);
@@ -110,7 +110,7 @@ export class AccountsService {
         let accounts = this.getAccounts();
         let accountIndex = accounts.findIndex(account => account.name === name);
         if (accountIndex === -1) {
-            console.warn(`Account ${name} not found`);
+            throw new Error(`Account ${name} not found`);
         } else {
             accounts.splice(accountIndex, 1);
             await this.save(accounts);
@@ -144,11 +144,10 @@ export class AccountsService {
         }
         return account;
     }
-    async create (name: string): Promise<EoAccount | null> {
+    async create (name: string): Promise<EoAccount> {
         let existingAccount = await this.getAccount(name);
         if (existingAccount != null) {
-            $console.log(`Account green<bold<${name}>> already exists`);
-            return null;
+            throw new Error(`Account ${name} already exists`);
         }
         let account = $sig.$account.generate({ name, platform: 'eth' });
         await this.add(account);

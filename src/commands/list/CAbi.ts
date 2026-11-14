@@ -23,7 +23,7 @@ export function CAbi() {
                 command: 'decode-calldata',
                 description: [
                     'Decode function calldata using a supplied ABI or an ABI loaded from a blockchain explorer',
-                    'Supply --abi with a signature, JSON ABI, file path, or contract address. Addresses require --chain',
+                    'Supply --abi with a signature, JSON ABI, .json file path, or contract address. Addresses require --chain',
                     'Example: 0xweb abi decode-calldata 0x70a082310000000000000000000000000000000000000000000000000000000000000000 --abi "balanceOf(address account)" --json',
                 ],
                 arguments: [
@@ -44,7 +44,7 @@ export function CAbi() {
                         description: 'Calldata to decode, as an alternative to the positional argument',
                     },
                     '--abi': {
-                        description: 'Function signature, JSON ABI item/array, file path, or contract address (requires --chain). Quote as one shell argument',
+                        description: 'Function signature, JSON ABI item/array, .json file path, or contract address (requires --chain). Quote as one shell argument',
                     },
                     '--json': {
                         description: 'Print the decoded function name, positional args, and named params as JSON to stdout',
@@ -71,7 +71,7 @@ export function CAbi() {
                 command: 'decode-error',
                 description: [
                     'Decode custom errors or built-in Error(string) and Panic(uint256) revert data. Built-in errors need no ABI source',
-                    'Use --abi with a signature, JSON ABI, file path, or contract address. Addresses require --chain',
+                    'Use --abi with a signature, JSON ABI, .json file path, or contract address. Addresses require --chain',
                 ],
                 arguments: [
                     { name: 'RevertData', description: 'Hex-encoded data', required: true, query: true, fallback: 'data' },
@@ -82,7 +82,7 @@ export function CAbi() {
                         oneOf: $validate.platforms(),
                     },
                     '--abi': {
-                        description: 'Signature (include error/event keyword), JSON ABI item/array, file path, or contract address (requires --chain)',
+                        description: 'Signature (include error/event keyword), JSON ABI item/array, .json file path, or contract address (requires --chain)',
                     },
                     '--data': {
                         description: 'Hex data as an alternative to the positional argument',
@@ -105,7 +105,7 @@ export function CAbi() {
                 command: 'decode-result',
                 description: [
                     'Decode return data using function outputs. Use --method when the ABI contains multiple functions; return data has no selector',
-                    'Use --abi with a signature, JSON ABI, file path, or contract address. Addresses require --chain',
+                    'Use --abi with a signature, JSON ABI, .json file path, or contract address. Addresses require --chain',
                 ],
                 arguments: [
                     { name: 'ReturnData', description: 'Hex-encoded data', required: true, query: true, fallback: 'data' },
@@ -116,7 +116,7 @@ export function CAbi() {
                         oneOf: $validate.platforms(),
                     },
                     '--abi': {
-                        description: 'Signature (include error/event keyword), JSON ABI item/array, file path, or contract address (requires --chain)',
+                        description: 'Signature (include error/event keyword), JSON ABI item/array, .json file path, or contract address (requires --chain)',
                     },
                     '--data': {
                         description: 'Hex data as an alternative to the positional argument',
@@ -142,7 +142,7 @@ export function CAbi() {
                 command: 'decode-log',
                 description: [
                     'Decode event data and topics. Indexed strings, bytes, arrays, and tuples remain hashes. Anonymous events use topics without topic0',
-                    'Use --abi with a signature, JSON ABI, file path, or contract address. Addresses require --chain',
+                    'Use --abi with a signature, JSON ABI, .json file path, or contract address. Addresses require --chain',
                 ],
                 arguments: [
                     { name: 'EventData', description: 'Hex-encoded data', required: true, query: true, fallback: 'data' },
@@ -153,7 +153,7 @@ export function CAbi() {
                         oneOf: $validate.platforms(),
                     },
                     '--abi': {
-                        description: 'Signature (include error/event keyword), JSON ABI item/array, file path, or contract address (requires --chain)',
+                        description: 'Signature (include error/event keyword), JSON ABI item/array, .json file path, or contract address (requires --chain)',
                     },
                     '--data': {
                         description: 'Hex data as an alternative to the positional argument',

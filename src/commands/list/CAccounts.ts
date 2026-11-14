@@ -12,6 +12,12 @@ import { EoAccount } from '@dequanto/models/TAccount';
 import { $hex } from '@dequanto/utils/$hex';
 import { File } from 'atma-io';
 import { $crypto } from '@dequanto/utils/$crypto';
+import { TEth } from '@dequanto/models/TEth';
+
+type TAccount = Partial<TEth.EoAccount>
+    & Partial<TEth.SafeAccount>
+    & Partial<TEth.ZodiacAccount>
+;
 
 export function CAccounts() {
     return <ICommand>{
@@ -27,6 +33,9 @@ export function CAccounts() {
                     'Add an existing account'
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the updated account list and public metadata as JSON',
+                    },
                     '-k, --key': {
                         description: 'Private key (plain or encrypted). Optional for reads; required for writes',
                     },
@@ -37,14 +46,30 @@ export function CAccounts() {
                         description: 'Name of the account',
                         required: true,
                     },
+                    '-t, --type': {
+                        description: 'Type of the account',
+                        oneOf: ['eoa', 'safe', 'timelock', 'erc4337', 'zodiac'],
+                        default: 'eoa'
+                    },
                     '--login': {
                         description: 'Set the account as the default',
                         type: 'boolean',
                         default: false,
+                    },
+                    '--operator': {
+                        description: 'NameOrAddress of the operator account. Required for non-EOA accounts'
+                    },
+                    '--role-key': {
+                        description: 'For Zodiac account roleKey. Required for Zodiac account'
                     }
                 },
                 async process(args: string[], params: any, app: App) {
+                    let service = di.resolve(AccountsService, app.config, params);
                     let { key, address, name } = params;
+                    $require.True(!key || (params.type ?? 'eoa') === 'eoa', '--key is only supported for EOA accounts');
+                    if (address != null) {
+                        address = $address.toChecksum($require.Address(address, 'Provide a valid account address'));
+                    }
                     if (key == null && address == null) {
                         throw new Error(`Provide key("-k 0xabcd") or address ("-a 0x1234")`)
                     }
@@ -58,9 +83,9 @@ export function CAccounts() {
 
                     const account = {
                         name,
-                        address,
-                        type: 'eoa'
-                    } as EoAccount;
+                        address: $address.toChecksum($require.Address(address)),
+                        type: params.type ?? 'eoa'
+                    } as TAccount;
 
                     if (key) {
                         const secret = app.config.$get('pin') as string ?? params.pin;
@@ -71,21 +96,28 @@ export function CAccounts() {
                         // will store only encrypted key
                         account.key = encryptedKey;
                     }
-
-                    if (params.login) {
-                        await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
+                    if (account.type !== 'eoa') {
+                        const operator = $require.notEmpty(params.operator, `Operator is required`);
+                        const operatorAcc = (await service.list()).find(x => x.name === operator || $address.eq(x.address, operator));
+                        $require.notNull(operatorAcc, `Operator not found, please add the account before`);
+                        account.operator = operator;
+                    }
+                    if (account.type === 'zodiac') {
+                        const roleKey = $require.notNull(params.roleKey, `RoleKey is required for Zodiac`);
+                        account.roleKey = roleKey;
                     }
 
-                    let service = di.resolve(AccountsService, app.config, params);
-                    let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.add(account);
-                    let str = accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n');
+                    let accounts = await service.add(account);
+                    if (params.login) {
+                        await AccountsService.saveLogin(
+                            $require.notNull(account.name, `Account name is missing`),
+                            params
+                        );
+                    }
 
-                    $console.log(`Accounts:`);
-                    $console.result(str);
+                    $console.result(formatAccounts(accounts));
 
-                    return accounts.map(x => {
-                        return { name: x.name, address: x.address };
-                    });
+                    return accounts.map(toAccountJson);
                 }
             },
             {
@@ -94,6 +126,9 @@ export function CAccounts() {
                     'Remove an account'
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the remaining account list and public metadata as JSON',
+                    },
                     '-n, --name': {
                         description: 'Name of the account to remove',
                         required: true,
@@ -104,11 +139,8 @@ export function CAccounts() {
                     let service = di.resolve(AccountsService, app.config, params);
                     let accounts: Awaited<ReturnType<AccountsService['list']>> = await service.remove(name);
 
-                    let str = accounts.length > 0
-                        ? accounts.map(x => ` * ${x.name} [${x.address}]`).join('\n')
-                        : `   No account added`;
-                    $console.log(`Accounts:`);
-                    $console.result(str);
+                    $console.result(formatAccounts(accounts));
+                    return accounts.map(toAccountJson);
                 }
             },
             {
@@ -116,15 +148,16 @@ export function CAccounts() {
                 description: [
                     'List account names'
                 ],
+                params: {
+                    '--json': {
+                        description: 'Print account names, addresses, types, operators, and role keys as JSON',
+                    },
+                },
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config, params);
                     let accounts = await service.list();
-                    if (accounts.length === 0) {
-                        console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);
-                        return;
-                    }
-                    let str = accounts.map(x => ` - ${x.name} [${x.address}]`).join('\n');
-                    $console.result(str);
+                    $console.result(formatAccounts(accounts));
+                    return accounts.map(toAccountJson);
                 }
             },
             {
@@ -133,6 +166,9 @@ export function CAccounts() {
                     'Create a new account'
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the created account public metadata as JSON, excluding its private key',
+                    },
                     '-n, --name': {
                         description: 'Name of the account to create',
                         required: true,
@@ -146,11 +182,8 @@ export function CAccounts() {
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.create(params.name);
-                    if (account == null) {
-                        return;
-                    }
                     if (params.login) {
-                        await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
+                        await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params);
                     }
                     $console.log(`yellow<You must backup the key bold<!!!>>`)
                     $console.table([
@@ -158,6 +191,7 @@ export function CAccounts() {
                         ['Address', account.address ?? ''],
                         ['Key', account.key ?? ''],
                     ]);
+                    return toAccountJson(account);
                 }
             },
             {
@@ -167,30 +201,43 @@ export function CAccounts() {
                 ],
                 arguments: [
                     {
-                        description: 'Name of the account to set as default'
+                        name: 'Account',
+                        description: 'Name of the account to set as default',
+                        required: true
                     }
                 ],
+                params: {
+                    '--json': {
+                        description: 'Print the selected default account public metadata as JSON',
+                    },
+                },
                 async process(args: string[], params, app: App) {
                     let [ name ] = args;
                     let service = di.resolve(AccountsService, app.config, params);
                     let account = await service.get(name);
                     $require.notNull(account, `${name} not found`)
 
-                    await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params, app.config);
+                    await AccountsService.saveLogin($require.notNull(account.name, `Account name is missing`), params);
                     $console.table([
                         ['Name', account.name ?? ''],
                         ['Address', account.address ?? ''],
                     ]);
+                    return toAccountJson(account);
                 }
             },
             {
                 command: 'backup',
                 arguments: [
                     {
-                        description: 'Output file for the encrypted account backup'
+                        name: 'Path',
+                        description: 'Output file for the encrypted account backup',
+                        required: true
                     }
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the backup path and account count as JSON',
+                    },
                     '-s, --secret': {
                         description: 'Strong password to encrypt the backup',
                         required: true,
@@ -201,50 +248,36 @@ export function CAccounts() {
                     }
                 },
                 description: [
-                    'Back up accounts to an encrypted file. Uses AES-GCM with sha256(secret) as the key and a prefixed 16-byte IV'
+                    'Back up accounts to an encrypted file. Uses AES-GCM with sha256(secret) as the key and a prefixed 16-byte IV',
+                    'The decrypted payload is { version: 1, accounts: [...] }, preserving public metadata and private keys when available'
                 ],
                 async process(args: string[], params, app: App) {
                     let service = di.resolve(AccountsService, app.config, params);
                     let accounts = await service.list();
-                    if (accounts.length === 0) {
-                        console.warn(`No accounts added. Add with "0xweb accounts add -n <name> -a <address> -k <key> -p <pin>"`);
-                        return;
-                    }
-
+                    $require.True(accounts.length > 0, 'No accounts to back up');
                     let [ path ] = args;
-
-                    let arr = await alot(accounts).mapAsync(async x => {
-                        let address = $require.notNull(x.address, `Account ${x.name} has no address`);
-                        return new Promise(resolve => {
-                            if (x.key == null) {
-                                resolve([
-                                    x.name,
-                                    x.type,
-                                    $hex.raw(address),
-                                ]);
-                                return;
-                            }
-                            KeyUtils.withKey(x as EoAccount, account => {
-                                resolve([
-                                    x.name,
-                                    x.type,
-                                    $hex.raw(address),
-                                    $hex.raw($require.notNull(account.key, `Account ${x.name} has no private key`))
-                                ]);
-                            })
-
-                        });
-                    }).toArrayAsync({ threads: 1 });
-
                     $require.True(await File.existsAsync(path) === false, `File ${path} already exists`);
 
-                    let str = JSON.stringify(arr);
+                    let entries = await alot(accounts).mapAsync(async account => {
+                        let metadata = toAccountJson(account);
+                        if (account.key == null) {
+                            return metadata;
+                        }
+                        return await KeyUtils.withKey(account as EoAccount, decrypted => ({
+                            ...metadata,
+                            key: $require.notNull(decrypted.key, `Account ${account.name} has no private key`),
+                        }));
+                    }).toArrayAsync({ threads: 1 });
+
+                    let str = JSON.stringify({ version: 1, accounts: entries });
                     let encrypted = await $crypto.encrypt(str, {
                         secret:  params.secret
                     });
                     let hex = $hex.ensure(encrypted);
 
                     await File.writeAsync(path, hex, { skipHooks: true });
+                    $console.result(`Backed up ${accounts.length} accounts to ${path}`);
+                    return { path, count: accounts.length };
                 }
             },
         ],
@@ -253,7 +286,41 @@ export function CAccounts() {
         },
 
         async process(args: string[], params, app: App) {
-            console.warn(`Command for an "accounts" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
+            throw new Error(`Unknown accounts subcommand: ${args[0] ?? '(missing)'}. Call "0xweb accounts --help" to view the list of commands`);
         }
     }
+}
+
+
+
+function formatAccounts(accounts: TAccount[]): string {
+    if (accounts.length === 0) {
+        return 'No accounts added. Use "0xweb accounts add --help" to get started.';
+    }
+
+    let entries = accounts.map(account => {
+        let type = account.type && account.type !== 'eoa' ? ` (${account.type})` : '';
+        let entry = `  ${account.name ?? 'Unnamed account'}${type}\n    ${account.address ?? 'No address'}`;
+        if (type) {
+            let operator = typeof account.operator === 'string'
+                ? account.operator
+                : account.operator?.name ?? account.operator?.address;
+            entry += `\n    Operator: ${operator ?? 'Not configured'}`;
+        }
+        return entry;
+    });
+    return `Accounts:\n\n${entries.join('\n\n')}`;
+}
+
+function toAccountJson(account: TAccount) {
+    let operator = typeof account.operator === 'string'
+        ? account.operator
+        : account.operator?.name ?? account.operator?.address;
+    return {
+        name: account.name,
+        address: account.address,
+        type: account.type ?? 'eoa',
+        ...(operator != null ? { operator } : {}),
+        ...(account.roleKey != null ? { roleKey: account.roleKey } : {}),
+    };
 }

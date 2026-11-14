@@ -20,8 +20,7 @@ To decode calldata locally with a supplied function signature, use:
 0xweb abi decode-calldata 0x70a082310000000000000000000000000000000000000000000000000000000000000000 --abi "balanceOf(address account)" --json
 ```
 
-`--abi` accepts a function signature, JSON ABI item/array, file path (any
-extension), or contract address. Files may contain an ABI array or compiler
+`--abi` accepts a function signature, JSON ABI item/array, `.json` file path, or contract address. Files may contain an ABI array or compiler
 artifact with an `abi` array. For explorer lookup, supply
 `--abi <contract-address> --chain <chain>`. The chain is required in address
 mode, which uses the configured explorer and its proxy-resolution behavior.

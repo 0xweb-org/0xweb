@@ -55,7 +55,7 @@ UTest.create({
         let abi = [$abiParser.parseMethod(signature)];
         let fixtures = [abi, { contractName: 'Token', abi }];
         for (let [index, fixture] of fixtures.entries()) {
-            let file = resolve(directory, `abi ${index}`);
+            let file = resolve(directory, `abi ${index}.json`);
             writeFileSync(file, JSON.stringify(fixture));
 
             let result = await CliUtils.cliJson(
@@ -87,7 +87,8 @@ UTest.create({
             [calldata.slice(0, 10), '--abi', signature],
             [calldata, '--abi', $address.ZERO],
             [calldata, '--abi', ''],
-            [calldata, '--abi', './test/bin/missing-abi'],
+            [calldata, '--abi', './test/bin/missing-abi.json'],
+            [calldata, '--abi', './test/bin/unsupported.abi'],
         ];
         for (let args of cases) {
             let result = spawnSync(process.execPath, ['index.js', 'abi', 'decode-calldata', ...args, '--json'], {

@@ -35,8 +35,9 @@ export class AbiService {
         } else if (/^(?:(?:function|event|error)\s+)?[\w$]+\s*\(/.test(input)) {
             abi = this.parseSignature(input);
         } else {
+            $require.True(input.endsWith('.json'), 'ABI files must have a .json extension');
             $require.True(await File.existsAsync(input), `ABI file not found: ${input}`);
-            abi = JSON.parse(await File.readAsync<string>(input, { skipHooks: true }));
+            abi = await File.readAsync<TAbiItem[] | { abi: TAbiItem[] }>(input);
             abi = abi?.abi ?? abi;
             $require.True(Array.isArray(abi), 'ABI file must contain an ABI array or an artifact with an abi array');
         }

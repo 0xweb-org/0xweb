@@ -4,7 +4,7 @@ Use `abi decode-calldata`, `abi decode-error`, `abi decode-result`, and
 `abi decode-log` for local decoding of encoded bytes. These commands do not send
 transactions. Supply `--abi` with a quoted signature/JSON item or array, a file path to an
 ABI array/compiler artifact, or a contract address with `--chain` for
-explorer ABI lookup. File paths need no particular extension.
+explorer ABI lookup. ABI files must have a `.json` extension.
 Address lookup needs explorer configuration and may use RPC for proxy
 resolution; the other sources decode offline.
 Short hex address sources such as `0x1` are left-padded to 20 bytes before explorer lookup.
