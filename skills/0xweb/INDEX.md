@@ -9,6 +9,7 @@ Read only the reference relevant to the task. Examples containing `Counter` assu
 | Generate and register a contract binding | `install` | [Inspection and installation](./references/inspection.md) |
 | List installed contracts or inspect their ABI | `contract list`, `contract abi` | [Inspection and installation](./references/inspection.md) |
 | Read a method, including at a historical block | `contract read` | [Calls and transactions](./references/calls.md) |
+| Find a block near a date or fetch a numbered/latest block | `block get` | [Blocks by number or date](./references/blocks.md) |
 | Encode or decode calldata | `contract calldata`, `contract calldata-parse` | [Calls and transactions](./references/calls.md) |
 | Decode calldata with an explicit ABI or function signature | `abi decode-calldata` | [Calls and transactions](./references/calls.md) |
 | Decode revert errors, return values, or event data/topics | `abi decode-error`, `abi decode-result`, `abi decode-log` | [ABI data decoding](./references/abi-decoding.md) |

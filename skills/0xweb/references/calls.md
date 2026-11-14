@@ -10,7 +10,7 @@ For an uninstalled address, supply an ABI signature including return types and a
 
 For installed contracts, a method name can resolve from the registered ABI. Use `--arg0`, `--arg1`, etc. to supply inputs; named ABI inputs are also supported. Inspect the ABI before selecting an overload. Quote tuple/array JSON as one shell argument. Supply every required input: missing values can trigger prompts.
 
-`--block` accepts a decimal block number or a date string; use an ISO timestamp for dates. Historical calls require an RPC endpoint that serves the requested state. `--account` on a read sets the caller for `eth_call`; it does not turn the read into a transaction. `--address` overrides the destination of an installed contract binding.
+`--block` accepts a decimal block number or a date string; use an ISO timestamp for dates. To resolve a date to a reusable block number, see [Blocks by number or date](./blocks.md). Historical calls require an RPC endpoint that serves the requested state. `--account` on a read sets the caller for `eth_call`; it does not turn the read into a transaction. `--address` overrides the destination of an installed contract binding.
 
 ## Calldata without sending
 

@@ -14,24 +14,27 @@ export function CBlock() {
             {
                 command: 'get',
                 description: [
-                    'Get block information'
+                    'Get block information by date or number. Date lookup is approximate and may return a block before or after the requested time'
                 ],
                 arguments: [
                     {
                         name: 'NumberOrDate',
-                        description: `Block number, "latest", or a date, e.g. "20.01.2024 14:00:00"`,
+                        description: `Nonnegative block number, "latest", or a date. Prefer ISO with a timezone, e.g. "2024-01-20T14:00:37Z". "20.01.2024 14:00:37" uses local time`,
                         required: true
                     }
                 ],
                 params: {
                     ...Parameters.chain(),
+                    '--json': {
+                        description: 'Print the block object as JSON, including number, hash, timestamp (Unix seconds), and transactions',
+                    },
                 },
                 api: {},
                 async process(args: string[], params: any, app: App) {
 
                     let service = new BlockService(app);
                     let [ blockNr ] = args;
-                    return service.getBlock(blockNr)
+                    return service.getBlock(blockNr);
                 }
             },
         ],
@@ -40,7 +43,7 @@ export function CBlock() {
         },
 
         async process(args: string[], params, app: App) {
-            console.warn(`A sub-command for "block" not found: ${args[0]}. Call "0xweb block ?" to view the list of commands`);
+            throw new Error(`Unknown block subcommand: ${args[0] ?? '(missing)'}. Call "0xweb block --help" to view the list of commands`);
         }
     };
 }

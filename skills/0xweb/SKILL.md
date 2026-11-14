@@ -1,6 +1,6 @@
 ---
 name: 0xweb
-description: Use the 0xweb CLI to inspect EVM contract ABI and sources, generate bindings, read contracts, encode or decode calldata, retrieve logs and storage, and execute user-requested contract transactions. Use when working with 0xweb commands or automating contract tasks through its CLI; TypeScript library integration belongs to the dequanto skill when available.
+description: Use the 0xweb CLI to inspect EVM contract ABI and sources, generate bindings, read contracts, encode or decode calldata, retrieve logs and storage, find blocks by date, and execute user-requested contract transactions. Use when working with 0xweb commands or automating contract tasks through its CLI; TypeScript library integration belongs to the dequanto skill when available.
 ---
 
 # 0xweb

@@ -9,6 +9,8 @@ export class BlockService extends BaseService {
 
     async getBlock(blockNr: string) {
         let { client } = $require.notNull(this.app.chain, `Chain not initialized`);
+        $require.True(typeof blockNr === 'string' && blockNr.trim().length > 0, 'Provide a block number, latest, or a date');
+        blockNr = blockNr.trim();
 
         if (blockNr === 'latest') {
             this.printLogToast('Getting latest block number...');
@@ -17,7 +19,6 @@ export class BlockService extends BaseService {
         }
 
         if (/[\.\-]\d+[\.\-]/.test(blockNr)) {
-            // Date 'xx.01.xxxx'
             let date = $date.parse(blockNr);
             if (date == null || isNaN(date.getTime())) {
                 throw new Error(`Could not parse date ${blockNr}`);
@@ -30,10 +31,11 @@ export class BlockService extends BaseService {
 
         let nr = Number(blockNr);
 
-        $require.Number(nr, 'BlockNumber is not a number');
+        $require.True(Number.isSafeInteger(nr) && nr >= 0, 'Block number must be a nonnegative safe integer');
         this.printLogToast(`Loading block bold<${nr}>`);
 
         let block = await client.getBlock(nr);
+        $require.notNull(block, `Block ${nr} was not found`);
         this.printLogTable([
             ['Block', nr],
             ['Hash', block.hash],
