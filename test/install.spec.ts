@@ -136,7 +136,7 @@ UTest({
                 has_(json.dependencies['ContractBySource'].main, 'ContractBySource.ts');
             },
             async 'check abi'() {
-                let { stdout } = await run(`node index.js c abi ContractBySource --color none`);
+                let { stdout } = await run(`node index.js c abi ContractBySource --color none --chain eth`);
                 has_(stdout.join(''), `fooBySource()`);
             }
         });
@@ -149,7 +149,9 @@ UTest({
                 if (await Directory.existsAsync(_basePath)) {
                     await Directory.removeAsync(_basePath);
                 }
-                let { stdout, stderr } = await run(`node index.js i 0x1234 --source ./test/fixtures/install/ContractBySource.sol --name ContractBySource --chain eth:goerli`);
+                let { stdout, stderr } = await run(
+                    `node index.js i 0x1234 --source ./test/fixtures/install/ContractBySource.sol --name ContractBySource --chain eth:goerli`
+                );
             },
             async 'check paths'() {
                 let content = await File.readAsync<string>(`${_basePath}/ContractBySource.ts`, { skipHooks: true });
@@ -158,10 +160,10 @@ UTest({
                 let packagePath = '0xweb.json';
                 let json = await File.readAsync<any>(packagePath);
 
-                has_(json.dependencies['ContractBySource'].main, 'ContractBySource.ts');
+                has_(json.contracts['eth:goerli']['0x1234'].main, 'ContractBySource.ts');
             },
             async 'check abi'() {
-                let { stdout } = await run(`node index.js c abi ContractBySource --color none`);
+                let { stdout } = await run(`node index.js c abi ContractBySource --color none --chain eth:goerli`);
                 has_(stdout.join(''), `fooBySource()`);
             }
         });

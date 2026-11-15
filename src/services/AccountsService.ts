@@ -97,12 +97,16 @@ export class AccountsService {
 
     async add (params: EoAccount | SafeAccount | Erc4337Account) {
         let accounts = this.getAccounts();
-        if (accounts.find(account => account.name === params.name)) {
+        let acc = accounts.find(account => account.name === params.name);
+        if (acc != null) {
+            if ($address.eq(acc.address!, params.address!)) {
+                return accounts;
+            }
             throw new Error(`Account ${params.name} already exists`);
-        } else {
-            accounts.push(params);
-            await this.save(accounts);
         }
+
+        accounts.push(params);
+        await this.save(accounts);
         return accounts;
     }
 

@@ -95,7 +95,7 @@ export function CInstall() {
                 args[0] = address;
             }
             if (/^0x/i.test(args[0]) && !/\.(sol|json)$/i.test(args[0])) {
-                $require.True(/^0x[\da-f]{40}$/i.test(args[0]), 'Invalid contract address: expected 0x followed by 40 hexadecimal characters');
+                $require.Address(args[0], 'Invalid contract address: expected 0x followed by 40 hexadecimal characters');
             }
             if (!process.stdin.isTTY) {
                 $require.notEmpty(params.name ?? params.n, 'Provide --name for non-interactive installation');
