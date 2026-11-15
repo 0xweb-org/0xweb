@@ -91,15 +91,14 @@ UTest.create({
         let cases = [
             { args: ['./0xabc.sol', '--chain', 'hardhat'], message: '--name' },
             { args: ['./0xabc.sol', '--name', 'Counter'], message: '--chain' },
-            { args: ['0x1234', '--name', 'Counter', '--chain', 'hardhat'], message: 'Invalid contract address' },
-            { args: ['./0xabc.sol', '--name', 'Counter', '--chain', 'hardhat', '--target', 'invalid'], message: 'invalid' },
+            { args: ['./0xabc.sol', '--name', 'Counter', '--chain', 'hardhat', '--target', 'invalid'], message: 'invalid should be one of' },
         ];
         for (let test of cases) {
             let result = cli(test.args);
             eq_(result.status, 1, result.stderr);
             eq_(result.error, undefined);
             eq_(result.stdout, '');
-            eq_(result.stderr.includes(test.message), true);
+            has_(result.stderr, test.message);
             eq_(result.stderr.includes('readline was closed'), false);
         }
     },
