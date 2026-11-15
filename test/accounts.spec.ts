@@ -11,7 +11,10 @@ const ACCOUNT_PATH = './0xc/config/account.json';
 const COMMAND_RAW = (params) => `node ./index.js ${params}`;
 const COMMAND = (params) => COMMAND_RAW(`${params} --config-accounts ${ACCOUNTS_PATH} -p 12345`);
 const cli = async (params: string) => {
-    let { stdout, stderr } = await run(COMMAND(params));
+    let { stdout, stderr } = await run({
+        command: COMMAND(params),
+        silent: true
+    });
     return stdout.join('\n');
 };
 const cliRaw = async (params: string) => {

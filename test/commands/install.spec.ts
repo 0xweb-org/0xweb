@@ -23,12 +23,12 @@ UTest.create({
 
             let invalid = [
                 { input: `eth:${address}`, params: { name: 'Counter', c: 'hardhat' } },
-                { input: '0x1234', params: { name: 'Counter', chain: 'hardhat' } },
+                { input: '0x1invalid234', params: { name: 'Counter', chain: 'hardhat' } },
                 { input: './Counter.sol', params: { name: 'Counter', chain: 'hardhat', target: 'invalid' } },
             ];
             for (let test of invalid) {
                 let { error } = await $promise.caught(handler.findCommand(['install', test.input], test.params));
-                notEq_(error, null);
+                notEq_(error, null, test.input);
             }
 
             let path = await handler.findCommand(['i', './0xabc.sol'], { name: 'Counter', chain: 'hardhat', target: 'cjs' });
