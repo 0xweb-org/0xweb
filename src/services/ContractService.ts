@@ -36,6 +36,9 @@ import { ContractFactory } from '@core/factories/ContractFactory';
 import { $abiInput } from '@core/utils/$abiInput';
 import { BaseService } from './BaseService';
 import { $cli } from '@core/utils/$cli';
+import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
+import { TxLogParser } from '@dequanto/txs/receipt/TxLogParser';
+import { $promise } from '@dequanto/utils/$promise';
 
 
 interface ICallParams {
@@ -152,6 +155,74 @@ export class ContractService extends BaseService {
             return await this.$read(pkg, abiItem, params);
         }
         return await this.$write(pkg, abiItem, params);
+    }
+    async simulate(nameOrAddress: string, method: string, params: ICallParams) {
+        if ($is.Address(nameOrAddress)) {
+            $require.notNull(params.chain ?? this.app.chain?.client.platform, 'Provide --chain when using a contract address');
+        }
+        let pkg = $is.Address(nameOrAddress)
+            ? { address: nameOrAddress } as IPackageItem
+            : await this.getPackage(nameOrAddress);
+        let abiItem = await this.getAbiItem(method, pkg, params);
+        if (abiItem == null) {
+            let str = [
+                `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
+                `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
+            ].join(' ');
+            throw new Error(str);
+        }
+
+        let methodSignature = this.stringifyAbi(abiItem);
+
+        let platform = params.chain ?? pkg.platform ?? this.app.chain?.client.platform;
+        let hh = new HardhatProvider();
+        let client = await hh.forked({
+            platform
+        });
+
+        this.printLog('')
+        this.printLogTable([
+            ['Contract', params.address ?? pkg.address],
+            ['Platform', platform],
+            ['Action', 'Simulate' ],
+            ['Method', methodSignature.trim()],
+        ]);
+        this.printLog('')
+
+        let args = await this.getArguments(abiItem, params);
+        let writer = await this.getContractWriter(pkg, abiItem, params, client);
+
+        let accounts = di.resolve(AccountsService, this.app.config, params);
+        let fromAddress = $is.Address(params.account!)
+            ? params.account
+            : (await accounts.get(params.account!)).address;
+
+        let account = {
+            address: fromAddress,
+            type: 'impersonated'
+        } as TEth.IAccount;
+
+        try {
+            let tx = await writer.writeAsync(account, abiItem, args, {
+                builderConfig: {},
+                writerConfig: {},
+            });
+            // In CLI wait for the Transaction to be mined
+            let receipt = await tx.onCompleted;
+            let { result: logs } = await $promise.caught(TxLogParser.parseWithAbiLookup(receipt, { platform }));
+            this.printLog(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
+            return {
+                success: true,
+                receipt,
+                logs,
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: error.message,
+                traces: error.traces,
+            }
+        }
     }
     async calldata(nameOrAddress: string, method: string, params: ICallParams) {
         let { pkg, abi, abiItem, contract, args } = await this.getContractInstance(nameOrAddress, method, params);
@@ -536,12 +607,12 @@ export class ContractService extends BaseService {
         this.printLog(!receipt.status ? `red<bold<Failed>>` : `green<bold<OK>> ${receipt.transactionHash}`);
         return receipt;
     }
-    private async getContractWriter(pkg: IPackageItem, abi: TAbiItem, params: ICallParams) {
+    private async getContractWriter(pkg: IPackageItem, abi: TAbiItem, params: ICallParams, client?: Web3Client) {
 
         let logParser = di.resolve(TxTopicInMemoryProvider);
         logParser.register(abi);
 
-        let writer = di.resolve(ContractWriter, params.address ?? pkg.address, this.chain.client);
+        let writer = di.resolve(ContractWriter, params.address ?? pkg.address, client ?? this.chain.client);
         return writer;
     }
     private async getArguments(abi: TAbiItem, params: Record<string, any>) {

@@ -6,6 +6,7 @@ import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
 import { TotpService } from '@core/services/TotpService';
 import { File } from 'atma-io';
 import { $require } from '@dequanto/utils/$require';
+import { $address } from '@dequanto/utils/$address';
 
 const usdc = `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`;
 
@@ -357,5 +358,39 @@ UTest.create({
                 }
             },
         });
+    },
+    'simulate': {
+        async 'should fail with traces in error' () {
+            let from = $address.ZERO;
+            let to = "0x1";
+            let amount = 10e6
+            let r1 = await CliUtils.cliJson(
+                `c simulate ${usdc} "transfer(address to, uint256 amount)" --chain eth --arg0 ${to} --arg1 ${amount} --account ${from} --json`
+            );
+            eq_(r1.success, false);
+            has_(r1.error, 'ERC20: transfer from the zero address');
+            has_(r1.error, '.transfer(to: ', `Should include formatted traces`);
+            has_(r1.traces?.method, 'transfer', `Should include trace JSON`);
+        },
+
+        async '!should transfer from Sky' () {
+            let from = '0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341';
+            let to = "0x1";
+            let amount = 10e6
+            let r1 = await CliUtils.cliJson(
+                `c simulate ${usdc} "transfer(address to, uint256 amount)" --chain eth --arg0 ${to} --arg1 ${amount} --account ${from} --json`
+            );
+            eq_(r1.success, true);
+
+            eq_(r1.logs.length, r1.receipt.logs.length);
+            deepEq_(r1.logs.map(log => log.raw), r1.receipt.logs);
+
+            let transfer = r1.logs.find(log => log.decoded && log.event === 'Transfer');
+            notEq_(transfer, null);
+            eq_(transfer.address.toLowerCase(), usdc.toLowerCase());
+            eq_(transfer.params.from.toLowerCase(), from.toLowerCase());
+            eq_(transfer.params.to.toLowerCase(), '0x0000000000000000000000000000000000000001');
+            eq_(transfer.params.value, amount.toString());
+        },
     }
 });

@@ -42,6 +42,18 @@ Encoding returns a transaction-data object, including `data`, rather than a bare
 
 Encoding is not broadcasting or proof that execution would succeed. Keep raw token amounts in base units when passing ABI integers.
 
+## Simulate on a fork
+
+`contract simulate` executes a write on a local Hardhat fork without broadcasting to the source chain. Supply the sender to impersonate and the source chain:
+
+```sh
+0xweb contract simulate <contract-address> "transfer(address to, uint256 amount)" --chain eth --account <sender-address> --arg0 <recipient-address> --arg1 1000000 --json
+```
+
+A successful simulation returns `{ success: true, receipt, logs }`. The additional `logs` array preserves receipt order and repeated events. Each entry includes `raw` and `decoded`. Decoded entries include the emitter `address`, `event`, ordered `arguments`, and named `params`; ABI integers serialize as decimal strings.
+
+ABIs are resolved per emitter using the source chain's explorer and its proxy resolution. An unavailable ABI, unknown event, ambiguous anonymous event, or decoding failure preserves the raw log with `decoded: false` and a `reason`. Inspect these entries too; decoded events alone may be incomplete. Explorer ABIs describe the current implementation and may not match historical proxy events. A failed simulation returns `{ success: false, error, traces }` when traces are available.
+
 ## Authorized writes
 
 Use `contract write` only for a requested transaction. Confirm unresolved chain, sender, method, destination, and values before sending; existing authorization need not be requested again. Inspect the ABI and encode calldata first when that helps make the operation reviewable.

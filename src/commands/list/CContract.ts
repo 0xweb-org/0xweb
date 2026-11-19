@@ -211,6 +211,40 @@ export function CContract() {
                 }
             },
             {
+                command: 'simulate',
+                description: [''],
+                arguments: [
+                    {
+                        name: 'NameOrAddress',
+                        description: 'Name of an installed contract',
+                        required: true
+                    },
+                    {
+                        name: 'MethodOrAbi',
+                        description: 'Method name or ABI, e.g. "approve(address spender, uint256 amount)"',
+                        required: true
+                    },
+                ],
+                params: {
+                    '-c, --chain': {
+                        description: `Chain to fork`
+                    },
+                    '--json': {
+                        description: 'Print the transaction receipt as JSON to stdout'
+                    },
+                    ...Parameters.account(),
+                    '--abi': {
+                        description: `ABI string to parse`
+                    },
+                },
+                api: {},
+                async process(args, params, app) {
+                    let [name, method] = args;
+                    let service = di.resolve(ContractService, app);
+                    return await service.simulate(name, method, params);
+                },
+            },
+            {
                 command: 'calldata',
                 description: ['Encode transaction calldata. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [

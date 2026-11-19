@@ -1,4 +1,3 @@
-import di from 'a-di';
 import alot from 'alot';
 import { TEth } from '@dequanto/models/TEth';
 import { BaseService } from './BaseService';
@@ -9,10 +8,10 @@ import { $contract } from '@dequanto/utils/$contract';
 import { TAbiItem } from '@dequanto/types/TAbi';
 import { InputDataUtils } from '@dequanto/contracts/utils/InputDataUtils';
 import { ContractAbiProvider } from '@dequanto/contracts/ContractAbiProvider';
-import { TxLogParser } from '@dequanto/txs/receipt/TxLogParser';
+import { TxLogParser, TDecodedReceiptLog } from '@dequanto/txs/receipt/TxLogParser';
 import { InternalTokenService } from './InternalTokenService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
-import { ITxLogsTransferData } from '@dequanto/txs/receipt/TxLogsTransfer';
+import { TxLogsTransfer } from '@dequanto/txs/receipt/TxLogsTransfer';
 import { ERC20 } from '@dequanto/prebuilt/openzeppelin/ERC20';
 import { $number } from '@dequanto/utils/$number';
 import { $bigint } from '@dequanto/utils/$bigint';
@@ -63,8 +62,7 @@ type TTransactionDetails = {
         amount: bigint;
     }[]
 
-    // Other events
-    events?: ITxLogItem<Record<string, any>, string>[]
+    logs: TDecodedReceiptLog[]
 }
 
 export class TxService extends BaseService {
@@ -113,7 +111,6 @@ export class TxService extends BaseService {
             : await client.getBlock(receipt.blockNumber);
 
         let eventsTransfer: TTransactionDetails['transfers'];
-        let eventsOther: TTransactionDetails['events'];
         let dataArguments: TTransactionDetails['calldataParsed'];
 
         let abi: TAbiItem[] | undefined;
@@ -129,14 +126,9 @@ export class TxService extends BaseService {
             }
         }
 
-        let parser = di.resolve(TxLogParser);
-        if (abi != null) {
-            parser.topics.register(abi);
-        }
-        let logs = receipt == null ? [] : await parser.parse(receipt);
-        let knownLogs = logs.filter(x => x != null);
-
-        let transfers = knownLogs.filter(x => x.event === 'Transfer') as any as ITxLogsTransferData[];
+        let logs = receipt == null ? [] : await TxLogParser.parseWithAbiLookup(receipt, { platform: client.platform });
+        let knownLogs = logs.filter((log): log is ITxLogItem & { decoded: true; raw: TEth.Log } => log.decoded === true);
+        let transfers = await new TxLogsTransfer().extractFromParsed(knownLogs, client.platform);
         if (transfers.length > 0) {
             let tokenService = new InternalTokenService();
             let tokenPriceService = new TokenPriceService(client, explorer);
@@ -175,10 +167,6 @@ export class TxService extends BaseService {
                 })
                 .toArrayAsync({ });
         }
-
-
-        eventsOther = knownLogs.filter(x => x.event !== 'Transfer');
-
         if (abi) {
             let parsed = decodeInput(tx, abi);
             if (parsed != null && parsed.name != null) {
@@ -199,14 +187,15 @@ export class TxService extends BaseService {
             receipt,
             abi,
             transfers: eventsTransfer,
-            events: eventsOther,
+            logs,
             calldata: calldata,
             calldataParsed: dataArguments,
         };
     }
 
     async printTx (details: TTransactionDetails) {
-        let { tx, receipt, block, calldata, calldataParsed, abi, transfers, events } = details;
+        let { tx, receipt, block, calldata, calldataParsed, abi, transfers, logs } = details;
+        let events = logs.filter((log): log is ITxLogItem & { decoded: true; raw: TEth.Log } => log.decoded === true && log.event !== 'Transfer');
         let hash = tx.hash;
 
 
