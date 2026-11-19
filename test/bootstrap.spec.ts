@@ -1,6 +1,7 @@
 import alot from 'alot';
 import { run } from 'shellbee'
 import { Directory, File } from 'atma-io'
+import { CliUtils } from './CliUtils';
 
 
 
@@ -18,7 +19,7 @@ UTest({
             }
         },
         async 'initialize' () {
-            let { stdout } = await run(`node index.js init -d ${path_ROOT} --atma`);
+            await CliUtils.fork(`init -d ${path_ROOT} --atma`);
 
             let paths = [
                 'tsconfig.json',
@@ -50,7 +51,7 @@ UTest({
         },
     },
     async 'install contract' () {
-        let { stdout } = await run(`node index.js i 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}0xc/ --chain eth`);
+        await CliUtils.fork(`i 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 --name chainlink/oracle-eth --output ${path_ROOT}0xc/ --chain eth`);
 
         let content = await File.readAsync<string>(`${path_ROOT}/0xc/eth/chainlink/oracle-eth/oracle-eth.ts`, { skipHooks: true });
         has_(content, 'class ChainlinkOracleEth extends ContractBase');
@@ -90,8 +91,7 @@ UTest({
         eq_(isNaN(val), false, stdout.join(''));
     },
     async 'execute via cli' () {
-        let { stdout } = await run(`node index.js contract read chainlink/oracle-eth latestAnswer --config-global dev/null --chain eth`);
-        let str = stdout.join('');
+        let str = await CliUtils.fork(`contract read chainlink/oracle-eth latestAnswer --config-global dev/null --chain eth`);
         has_(str, /\d{10,}n/, `"${str}" - Should contain BigInt as the ETH price`);
     }
 })

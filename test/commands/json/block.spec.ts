@@ -14,7 +14,7 @@ UTest.create({
     $config: { timeout: 120_000 },
 
     async 'returns a numbered Ethereum block as JSON'() {
-        let block = await CliUtils.cliJson<BlockJson>('block get 1 --chain eth --json');
+        let block = await CliUtils.forkJson<BlockJson>('block get 1 --chain eth --json');
         eq_(block.number, 1);
         eq_(Number.isInteger(block.timestamp), true);
         gt_(block.timestamp, 0);
@@ -22,13 +22,13 @@ UTest.create({
         eq_(/^0x[\da-f]{64}$/i.test(block.parentHash), true);
         deepEq_(block.transactions, []);
 
-        let rpc = await CliUtils.cliJson<BlockJson>('rpc eth_getBlockByNumber 0x1 false --chain eth --json');
+        let rpc = await CliUtils.forkJson<BlockJson>('rpc eth_getBlockByNumber 0x1 false --chain eth --json');
         eq_(block.hash, rpc.hash);
         eq_(block.timestamp, rpc.timestamp);
     },
 
     async 'returns latest without progress or table output in JSON stdout'() {
-        let block = await CliUtils.cliJson<BlockJson>('block get latest --chain eth --json');
+        let block = await CliUtils.forkJson<BlockJson>('block get latest --chain eth --json');
         eq_(Number.isInteger(block.number), true);
         gt_(block.number, 1);
         eq_(Number.isInteger(block.timestamp), true);
@@ -39,7 +39,7 @@ UTest.create({
     async 'resolves ISO dates with UTC and explicit offsets to nearby blocks'() {
         let dates = ['2024-01-20T14:00:37Z', '2024-01-20T16:00:37+02:00'];
         for (let date of dates) {
-            let block = await CliUtils.cliJson<BlockJson>(`block get "${date}" --chain eth --json`);
+            let block = await CliUtils.forkJson<BlockJson>(`block get "${date}" --chain eth --json`);
             eq_(Number.isInteger(block.number), true);
             gt_(block.number, 1);
 
@@ -47,7 +47,7 @@ UTest.create({
             let distance = Math.abs(block.timestamp - Date.parse(date) / 1_000);
             lt_(distance, 60);
 
-            let numbered = await CliUtils.cliJson<BlockJson>(`block get ${block.number} --chain eth --json`);
+            let numbered = await CliUtils.forkJson<BlockJson>(`block get ${block.number} --chain eth --json`);
             eq_(numbered.hash, block.hash);
             eq_(numbered.timestamp, block.timestamp);
         }

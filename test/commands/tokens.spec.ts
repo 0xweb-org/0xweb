@@ -1,9 +1,8 @@
+import alot from 'alot';
 import { l } from '@dequanto/utils/$logger';
 import { File } from 'atma-io';
-import { run } from 'shellbee';
-import alot from 'alot';
-import { $bigint } from '@dequanto/utils/$bigint';
 import { $address } from '@dequanto/utils/$address';
+import { CliUtils } from '../CliUtils';
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const CONFIG_PATH = './test/bin/config.json';
@@ -18,12 +17,9 @@ const cliEx = async (command: string, params: any) => {
         ...params
     };
     let paramsStr = alot.fromObject(params).map(x => `${x.key} ${x.value}`).toArray().join(' ');
-    let cmdStr = `node ./index.js ${command} ${paramsStr}`;
-    let { stdout } = await run({
-        command: cmdStr,
-        silent: true,
-    })
-    return stdout.join('\n');
+    let cmdStr = `${command} ${paramsStr}`;
+    let str = await CliUtils.fork(cmdStr)
+    return str;
 };
 
 

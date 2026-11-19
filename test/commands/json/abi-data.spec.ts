@@ -15,18 +15,18 @@ UTest.create({
     async 'decodes custom and built-in revert errors'() {
         let signature = 'error InsufficientBalance(address account, uint256 amount)';
         let data = $abi.encodeCall(JSON.parse(Fragment.from(signature).format('json')), [$address.ZERO, 123n]);
-        let result = await CliUtils.cliJson(`abi decode-error ${data} --abi "${signature}" --json`);
+        let result = await CliUtils.forkJson(`abi decode-error ${data} --abi "${signature}" --json`);
         eq_(result.name, 'InsufficientBalance');
         deepEq_(result.args, [$address.ZERO, '123']);
         deepEq_(result.params, { account: $address.ZERO, amount: '123' });
 
         let reason = $abi.encodeCall('Error(string message)', ['Not allowed']);
-        let error = await CliUtils.cliJson(`abi decode-error --data ${reason} --json`);
+        let error = await CliUtils.forkJson(`abi decode-error --data ${reason} --json`);
         eq_(error.name, 'Error');
         deepEq_(error.params, { message: 'Not allowed' });
 
         let panic = $abi.encodeCall('Panic(uint256 code)', [17n]);
-        let decoded = await CliUtils.cliJson(`abi decode-error ${panic} --json`);
+        let decoded = await CliUtils.forkJson(`abi decode-error ${panic} --json`);
         eq_(decoded.name, 'Panic');
         deepEq_(decoded.args, ['17']);
     },
@@ -37,16 +37,16 @@ UTest.create({
             $abiParser.parseMethod('balanceOf() view returns (uint256 balance)'),
         ];
         let data = $abi.encode(['uint256'], [9_007_199_254_740_993n]);
-        let result = await CliUtils.cliJson(`abi decode-result ${data} --abi '${JSON.stringify(abi)}' --method "balanceOf(address)" --json`);
+        let result = await CliUtils.forkJson(`abi decode-result ${data} --abi '${JSON.stringify(abi)}' --method "balanceOf(address)" --json`);
         eq_(result.name, 'balanceOf');
         deepEq_(result.args, ['9007199254740993']);
         deepEq_(result.params, { balance: '9007199254740993' });
 
         let values = $abi.encode(['uint256[]', 'string'], [[1n, 2n], 'hello']);
-        let dynamic = await CliUtils.cliJson(`abi decode-result ${values} --abi "read() view returns (uint256[] values, string label)" --json`);
+        let dynamic = await CliUtils.forkJson(`abi decode-result ${values} --abi "read() view returns (uint256[] values, string label)" --json`);
         deepEq_(dynamic.params, { values: ['1', '2'], label: 'hello' });
 
-        let empty = await CliUtils.cliJson('abi decode-result 0x --abi "ping()" --json');
+        let empty = await CliUtils.forkJson('abi decode-result 0x --abi "ping()" --json');
         deepEq_(empty.args, []);
     },
 
@@ -55,7 +55,7 @@ UTest.create({
         let event = JSON.parse(Fragment.from(signature).format('json'));
         let topics = [$abiUtils.getTopicSignature(event), $abi.encode(['address'], [$address.ZERO])];
         let data = $abi.encode(['uint256', 'string'], [123n, 'hello']);
-        let result = await CliUtils.cliJson(`abi decode-log ${data} --topics '${JSON.stringify(topics)}' --abi "${signature}" --json`);
+        let result = await CliUtils.forkJson(`abi decode-log ${data} --topics '${JSON.stringify(topics)}' --abi "${signature}" --json`);
         eq_(result.name, 'Changed');
         deepEq_(result.args, ['123', $address.ZERO, 'hello']);
         deepEq_(result.params, { amount: '123', owner: $address.ZERO, label: 'hello' });
@@ -67,17 +67,17 @@ UTest.create({
         let tagHash = '0x' + '11'.repeat(32);
         let valuesHash = '0x' + '22'.repeat(32);
         let topics = [$abiUtils.getTopicSignature(event), tagHash, valuesHash];
-        let result = await CliUtils.cliJson(`abi decode-log 0x --topics '${JSON.stringify(topics)}' --abi "${signature}" --json`);
+        let result = await CliUtils.forkJson(`abi decode-log 0x --topics '${JSON.stringify(topics)}' --abi "${signature}" --json`);
         deepEq_(result.args, [tagHash, valuesHash]);
 
         let anonymous = { ...JSON.parse(Fragment.from('event Hidden(address indexed owner, uint256 amount)').format('json')), anonymous: true };
         let anonymousTopics = [$abi.encode(['address'], [$address.ZERO])];
         let data = $abi.encode(['uint256'], [7n]);
-        let hidden = await CliUtils.cliJson(`abi decode-log ${data} --topics '${JSON.stringify(anonymousTopics)}' --abi '${JSON.stringify(anonymous)}' --event Hidden --json`);
+        let hidden = await CliUtils.forkJson(`abi decode-log ${data} --topics '${JSON.stringify(anonymousTopics)}' --abi '${JSON.stringify(anonymous)}' --event Hidden --json`);
         deepEq_(hidden.params, { owner: $address.ZERO, amount: '7' });
 
         let noTopics = { ...$abiParser.parseMethod('event Plain(uint256 amount)'), anonymous: true };
-        let plain = await CliUtils.cliJson(`abi decode-log ${data} --topics '[]' --abi '${JSON.stringify(noTopics)}' --json`);
+        let plain = await CliUtils.forkJson(`abi decode-log ${data} --topics '[]' --abi '${JSON.stringify(noTopics)}' --json`);
         deepEq_(plain.args, ['7']);
     },
 
@@ -123,16 +123,16 @@ UTest.create({
         let path = resolve(directory, 'artifact.json');
         writeFileSync(path, JSON.stringify({ abi }));
 
-        let error = await CliUtils.cliJson(`abi decode-error ${$abi.encodeCall(abi[0], [])} --abi "${path}" --json`);
+        let error = await CliUtils.forkJson(`abi decode-error ${$abi.encodeCall(abi[0], [])} --abi "${path}" --json`);
         eq_(error.name, 'Denied');
         deepEq_(error.args, []);
 
         let data = $abi.encode(['uint256'], [5n]);
-        let result = await CliUtils.cliJson(`abi decode-result ${data} --abi "${path}" --method read --json`);
+        let result = await CliUtils.forkJson(`abi decode-result ${data} --abi "${path}" --method read --json`);
         deepEq_(result.params, { value: '5' });
 
         let topics = JSON.stringify([$abiUtils.getTopicSignature(abi[2])]);
-        let log = await CliUtils.cliJson(`abi decode-log ${data} --topics '${topics}' --abi "${path}" --json`);
+        let log = await CliUtils.forkJson(`abi decode-log ${data} --topics '${topics}' --abi "${path}" --json`);
         deepEq_(log.params, { value: '5' });
     },
 });

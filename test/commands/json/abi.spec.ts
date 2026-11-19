@@ -15,7 +15,7 @@ UTest.create({
     $config: { timeout: 60_000 },
 
     async 'decodes a function signature without a chain'() {
-        let result = await CliUtils.cliJson(
+        let result = await CliUtils.forkJson(
             `abi decode-calldata ${calldata} --abi "${signature}" --json`
         );
         eq_(result.name, 'transfer');
@@ -24,7 +24,7 @@ UTest.create({
     },
 
     async 'loads the USDC ABI from the Ethereum explorer'() {
-        let result = await CliUtils.cliJson(
+        let result = await CliUtils.forkJson(
             `abi decode-calldata ${calldata} --abi 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --chain eth --json`
         );
         eq_(result.name, 'transfer');
@@ -36,12 +36,12 @@ UTest.create({
             $abiParser.parseMethod('transfer(address to)'),
             $abiParser.parseMethod(signature),
         ];
-        let result = await CliUtils.cliJson(
+        let result = await CliUtils.forkJson(
             `abi decode-calldata --calldata ${calldata} --abi '${JSON.stringify(abi)}' --json`
         );
         deepEq_(result.args, [$address.ZERO, amount.toString()]);
 
-        let item = await CliUtils.cliJson(
+        let item = await CliUtils.forkJson(
             `abi decode-calldata ${calldata} --abi '${JSON.stringify(abi[1])}' --json`
         );
         deepEq_(item, result);
@@ -58,7 +58,7 @@ UTest.create({
             let file = resolve(directory, `abi ${index}.json`);
             writeFileSync(file, JSON.stringify(fixture));
 
-            let result = await CliUtils.cliJson(
+            let result = await CliUtils.forkJson(
                 `abi decode-calldata ${calldata} --abi "${file}" --json`
             );
             eq_(result.name, 'transfer');
@@ -69,11 +69,11 @@ UTest.create({
     async 'decodes dynamic arrays and functions without arguments'() {
         let method = 'setValues(uint256[] values)';
         let input = $abi.encodeCall(method, [[1n, amount]]);
-        let result = await CliUtils.cliJson(`abi decode-calldata ${input} --abi "${method}" --json`);
+        let result = await CliUtils.forkJson(`abi decode-calldata ${input} --abi "${method}" --json`);
         deepEq_(result.args, [['1', amount.toString()]]);
 
         let emptyCall = $abi.encodeCall('ping()', []);
-        let empty = await CliUtils.cliJson(`abi decode-calldata ${emptyCall} --abi "ping()" --json`);
+        let empty = await CliUtils.forkJson(`abi decode-calldata ${emptyCall} --abi "ping()" --json`);
         eq_(empty.name, 'ping');
         deepEq_(empty.args, []);
     },

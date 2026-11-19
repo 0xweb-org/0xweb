@@ -3,23 +3,18 @@ import { l } from '@dequanto/utils/$logger';
 import { $secret } from '@dequanto/utils/$secret';
 import { $sig } from '@dequanto/utils/$sig';
 import { File } from 'atma-io';
-import { run } from 'shellbee';
+import { CliUtils } from './CliUtils';
 
 
 const ACCOUNTS_PATH = './test/bin/accounts.json';
 const ACCOUNT_PATH = './0xc/config/account.json';
-const COMMAND_RAW = (params) => `node ./index.js ${params}`;
+const COMMAND_RAW = (params) => `${params}`;
 const COMMAND = (params) => COMMAND_RAW(`${params} --config-accounts ${ACCOUNTS_PATH} -p 12345`);
 const cli = async (params: string) => {
-    let { stdout, stderr } = await run({
-        command: COMMAND(params),
-        silent: true
-    });
-    return stdout.join('\n');
+    return CliUtils.fork(COMMAND(params))
 };
 const cliRaw = async (params: string) => {
-    let { stdout, stderr } = await run(COMMAND_RAW(params));
-    return stdout.join('\n');
+    return CliUtils.fork(COMMAND_RAW(params));
 };
 
 UTest({

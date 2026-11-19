@@ -1,8 +1,8 @@
-import { run } from 'shellbee'
+import { CliUtils } from './CliUtils';
 
 UTest({
     async 'check gas' () {
-        let { stdout } = await run(`node ./index.js gas --chain polygon`);
-        has_(stdout.join(''), /[\d\.]+\s*gwei/i);
+        let str = await CliUtils.fork(`gas --chain polygon`);
+        has_(str, /[\d\.]+\s*gwei/i);
     }
 })

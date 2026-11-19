@@ -17,7 +17,7 @@ UTest.create({
     },
 
     async 'returns the Ethereum chain ID as a JSON number'() {
-        let chainId = await CliUtils.cliJson<number>('rpc eth_chainId --chain eth --json');
+        let chainId = await CliUtils.forkJson<number>('rpc eth_chainId --chain eth --json');
         eq_(chainId, 1);
     },
 
@@ -26,7 +26,7 @@ UTest.create({
             to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
             data: $abi.encodeCall('balanceOf(address)', [$address.ZERO]),
         };
-        let result = await CliUtils.cliJson<string>(
+        let result = await CliUtils.forkJson<string>(
             `rpc eth_call '${JSON.stringify(transaction)}' latest --chain eth --json`
         );
         eq_(typeof result, 'string');
@@ -39,7 +39,7 @@ UTest.create({
     },
 
     async 'resolves latest to an Ethereum block with a numeric block number'() {
-        let block = await CliUtils.cliJson<RpcBlockJson>(
+        let block = await CliUtils.forkJson<RpcBlockJson>(
             'rpc eth_getBlockByNumber latest false --chain eth --json'
         );
         notEq_(block, null);
@@ -57,7 +57,7 @@ UTest.create({
     async 'returns block information for a specific Ethereum block number'() {
         let blockNumber = 1;
         let blockHex = `0x${blockNumber.toString(16)}`;
-        let block = await CliUtils.cliJson<RpcBlockJson>(
+        let block = await CliUtils.forkJson<RpcBlockJson>(
             `rpc eth_getBlockByNumber ${blockHex} false --chain eth --json`
         );
         notEq_(block, null);
@@ -76,7 +76,7 @@ UTest.create({
             `--arg0 uint256:${blockNumber} --arg1 boolean:0`,
         ];
         for (let args of argumentsToTest) {
-            let sameBlock = await CliUtils.cliJson<RpcBlockJson>(
+            let sameBlock = await CliUtils.forkJson<RpcBlockJson>(
                 `rpc eth_getBlockByNumber ${args} --chain eth --json`
             );
             eq_(sameBlock.number, blockNumber);

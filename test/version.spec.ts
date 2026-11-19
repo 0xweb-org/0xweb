@@ -1,8 +1,8 @@
-import { run } from 'shellbee'
+import { CliUtils } from './CliUtils';
 
 UTest({
     async 'check version' () {
-        let { stdout } = await run(`node ./index.js -v`);
-        has_(stdout.join(''), /0xweb@\d{1,2}\.\d{1,2}.\d{1,2}/);
+        let str = await CliUtils.fork(`-v`);
+        has_(str, /0xweb@\d{1,2}\.\d{1,2}.\d{1,2}/);
     }
 })

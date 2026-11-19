@@ -51,14 +51,14 @@ UTest.create({
     },
 
     async 'lists an empty account store as a JSON array'() {
-        let result = await CliUtils.cliJson<AccountJson[]>(`accounts list ${flags}`);
+        let result = await CliUtils.forkJson<AccountJson[]>(`accounts list ${flags}`);
         deepEq_(result, []);
     },
 
     async 'adds EOA, Safe, and timelock accounts as JSON'() {
         for (let [index, account] of accounts.entries()) {
             let operator = account.type === 'eoa' ? '' : '--operator operator';
-            let result = await CliUtils.cliJson<AccountJson[]>(
+            let result = await CliUtils.forkJson<AccountJson[]>(
                 `accounts add --name ${account.name} --address ${account.address} --type ${account.type} ${operator} --login false ${flags}`
             );
             deepEq_(result, accounts.slice(0, index + 1));
@@ -66,36 +66,36 @@ UTest.create({
     },
 
     async 'lists all persisted account names, addresses, and types as JSON'() {
-        let result = await CliUtils.cliJson<AccountJson[]>(`accounts list ${flags}`);
+        let result = await CliUtils.forkJson<AccountJson[]>(`accounts list ${flags}`);
         deepEq_(result, accounts);
     },
 
     async 'creates an account without exposing its key and can log in'() {
-        created = await CliUtils.cliJson<AccountJson>(`accounts new --name generated --login true ${flags}`);
+        created = await CliUtils.forkJson<AccountJson>(`accounts new --name generated --login true ${flags}`);
         eq_(created.name, 'generated');
         eq_(created.type, 'eoa');
         eq_(/^0x[\da-f]{40}$/i.test(created.address), true);
         deepEq_(Object.keys(created).sort(), ['address', 'name', 'type']);
 
-        let status = await CliUtils.cliJson(`auth status ${flags}`);
+        let status = await CliUtils.forkJson(`auth status ${flags}`);
         eq_(status.account, 'generated');
 
-        let selected = await CliUtils.cliJson(`accounts login treasury ${flags}`);
+        let selected = await CliUtils.forkJson(`accounts login treasury ${flags}`);
         deepEq_(selected, accounts[1]);
 
-        let loggedIn = await CliUtils.cliJson(`auth status ${flags}`);
+        let loggedIn = await CliUtils.forkJson(`auth status ${flags}`);
         eq_(loggedIn.account, 'treasury');
     },
 
     async 'adds a key-backed EOA and a Zodiac account with public metadata'() {
-        let result = await CliUtils.cliJson<AccountJson[]>(`accounts add --name signer --key ${testKey} --login true ${flags}`);
+        let result = await CliUtils.forkJson<AccountJson[]>(`accounts add --name signer --key ${testKey} --login true ${flags}`);
         let signer = result.find(account => account.name === 'signer');
         deepEq_(signer, { name: 'signer', address: await $sig.$account.getAddressFromKey(testKey as any), type: 'eoa' });
 
-        let status = await CliUtils.cliJson(`auth status ${flags}`);
+        let status = await CliUtils.forkJson(`auth status ${flags}`);
         eq_(status.account, 'signer');
 
-        let zodiac = await CliUtils.cliJson<AccountJson[]>(`accounts add --name roles --type zodiac --address 0x4 --operator operator --role-key 0x${'11'.repeat(32)} ${flags}`);
+        let zodiac = await CliUtils.forkJson<AccountJson[]>(`accounts add --name roles --type zodiac --address 0x4 --operator operator --role-key 0x${'11'.repeat(32)} ${flags}`);
         deepEq_(zodiac.find(account => account.name === 'roles'), {
             name: 'roles', address: '0x' + '0'.repeat(39) + '4', type: 'zodiac',
             operator: 'operator', roleKey: '0x' + '11'.repeat(32),
@@ -103,7 +103,7 @@ UTest.create({
     },
 
     async 'backs up keys and contract metadata to an encrypted file'() {
-        let result = await CliUtils.cliJson(`accounts backup ${backupPath} --secret backup-test-secret ${flags}`);
+        let result = await CliUtils.forkJson(`accounts backup ${backupPath} --secret backup-test-secret ${flags}`);
         deepEq_(result, { path: backupPath, count: 6 });
 
         let encrypted = await File.readAsync<string>(backupPath, { skipHooks: true });
@@ -159,15 +159,15 @@ UTest.create({
     },
 
     async 'removes accounts and lists the empty store again'() {
-        let remaining = await CliUtils.cliJson<AccountJson[]>(`accounts list ${flags}`);
+        let remaining = await CliUtils.forkJson<AccountJson[]>(`accounts list ${flags}`);
         for (let account of [...remaining].reverse()) {
             remaining = remaining.filter(item => item.name !== account.name);
 
-            let result = await CliUtils.cliJson<AccountJson[]>(`accounts remove --name ${account.name} ${flags}`);
+            let result = await CliUtils.forkJson<AccountJson[]>(`accounts remove --name ${account.name} ${flags}`);
             deepEq_(result, remaining);
         }
 
-        let result = await CliUtils.cliJson<AccountJson[]>(`accounts list ${flags}`);
+        let result = await CliUtils.forkJson<AccountJson[]>(`accounts list ${flags}`);
         deepEq_(result, []);
     },
 });

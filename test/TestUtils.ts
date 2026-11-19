@@ -57,10 +57,11 @@ export const TestUtils = {
             ...params
         };
         let paramsStr = alot.fromObject(params).map(x => `${x.key} ${x.value}`).toArray().join(' ');
-        let cmdStr = `node ./index.js ${command} ${paramsStr}`;
+        let cmdStr = `./index.js ${command} ${paramsStr}`;
         let { stdout, stderr, lastCode } = await run({
             command: cmdStr,
             silent: opts?.silent ?? true,
+            fork: true,
         });
         if (lastCode !== 0) {
             console.error(stdout.join('\n'), stderr.join('\n'));

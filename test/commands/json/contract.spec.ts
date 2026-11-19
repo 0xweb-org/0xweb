@@ -17,20 +17,19 @@ UTest.create({
     async $before() {
         const fixtures = ['./0xc/config/account.json', './0xc/config/accounts.json'];
         for (let path of fixtures) {
-            if (await File.existsAsync(path)) {
-                await File.removeAsync(path);
-            }
+            await File.removeAsync(path);
         }
     },
     async 'returns installed contracts as a JSON array'() {
-        let contracts = await CliUtils.cliJson<unknown[]>(
+        let contracts = await CliUtils.forkJson<unknown[]>(
             `c list --local --json`
         );
         let isArray = Array.isArray(contracts);
         eq_(isArray, true, 'Expected a JSON array of installed contracts');
+        console.timeEnd('r')
     },
     async 'returns the contract ABI as a JSON array'() {
-        let abi = await CliUtils.cliJson<TEth.Abi.Item[]>(
+        let abi = await CliUtils.forkJson<TEth.Abi.Item[]>(
             `c abi ${usdc} --chain eth --local --json`
         );
         let isArray = Array.isArray(abi);
@@ -40,7 +39,7 @@ UTest.create({
         eq_(decimals?.type, 'function');
     },
     async 'returns a contract read result as a JSON scalar'() {
-        let decimals = await CliUtils.cliJson<number>(
+        let decimals = await CliUtils.forkJson<number>(
             `c read ${usdc} "decimals() view returns (uint256)" --chain eth --local --json`
         );
         eq_(decimals, 6);
@@ -56,46 +55,46 @@ UTest.create({
 
         let totp = new TotpService();
         let seed = await totp.generateSeed();
-        await CliUtils.cliJson(
+        await CliUtils.forkJson(
             `auth 2fa setup -p 123 --seed ${seed} --local --json`,
         );
 
-        let status = await CliUtils.cliJson<{ enabled: boolean }>(
+        let status = await CliUtils.forkJson<{ enabled: boolean }>(
             `auth 2fa status --local --json`,
         );
         eq_(status.enabled, true);
 
         let { code } = await totp.generateTotpCode(seed);
-        await CliUtils.cliJson(
+        await CliUtils.forkJson(
             `accounts add --name deployer --k ${deployer.key} --2fa ${code} --local --json`,
         );
 
-        let receiptWithPin = await CliUtils.cliJson(
+        let receiptWithPin = await CliUtils.forkJson(
             `c write ${contract.address} "increment()" --chain hardhat --local --json --account ${deployer.address} -p 123`,
         );
         $require.TxHash(receiptWithPin.transactionHash);
         eq_(receiptWithPin.status, 1);
 
         ({ code } = await totp.generateTotpCode(seed));
-        let receiptWithTotp = await CliUtils.cliJson(
+        let receiptWithTotp = await CliUtils.forkJson(
             `c write ${contract.address} "increment()" --chain hardhat --local --json --account ${deployer.address} --2fa ${code}`,
         );
         $require.TxHash(receiptWithTotp.transactionHash);
         eq_(receiptWithTotp.status, 1);
 
-        let counter = await CliUtils.cliJson(
+        let counter = await CliUtils.forkJson(
             `c read ${contract.address} "counter():uint256" --chain hardhat --local --json`,
         );
         eq_(counter, 3);
 
         ({ code } = await totp.generateTotpCode(seed));
-        let authLogin = await CliUtils.cliJson(
+        let authLogin = await CliUtils.forkJson(
             `auth login deployer --2fa ${code} --local --json`,
         );
         eq_(authLogin.name, 'deployer');
         eq_(authLogin.address, deployer.address);
 
-        let authStatus = await CliUtils.cliJson(
+        let authStatus = await CliUtils.forkJson(
             `auth status --local --json`,
         );
         eq_(authStatus['2fa'], true);
@@ -108,13 +107,13 @@ UTest.create({
 
         // Omit --account to use the account selected by auth login.
         ({ code } = await totp.generateTotpCode(seed));
-        let updateReceipt = await CliUtils.cliJson(
+        let updateReceipt = await CliUtils.forkJson(
             `c write ${contract.address} "updateUser((address owner, uint256 amount) data)" --chain hardhat --local --json --2fa ${code} --arg0 '${JSON.stringify(data)}'`
         );
         $require.TxHash(updateReceipt.transactionHash);
         eq_(updateReceipt.status, 1);
 
-        let user = await CliUtils.cliJson(
+        let user = await CliUtils.forkJson(
             `c read ${contract.address} "user() view returns (address owner, uint256 amount)" --chain hardhat --local --json`
         );
         eq_(user.owner.toLowerCase(), data.owner.toLowerCase());
@@ -128,7 +127,7 @@ UTest.create({
         let expectedData = '0xa9059cbb'
             + '0000000000000000000000000000000000000000000000000000000000000001'
             + '0000000000000000000000000000000000000000000000000000000000000005';
-        let transaction = await CliUtils.cliJson(
+        let transaction = await CliUtils.forkJson(
             `c calldata ERC20 transfer --arg0 ${recipient} --arg1 5 --chain eth --local --json`
         );
         eq_(transaction.data, expectedData);
@@ -140,13 +139,13 @@ UTest.create({
         let calldata = '0xa9059cbb'
             + '0000000000000000000000000000000000000000000000000000000000000001'
             + '0000000000000000000000000000000000000000000000000000000000000005';
-        let parsed = await CliUtils.cliJson(
+        let parsed = await CliUtils.forkJson(
             `c calldata-parse ERC20 ${calldata} --chain eth --local --json`
         );
         eq_(parsed.name, 'transfer');
         deepEq_(parsed.args, [recipient, '5']);
         deepEq_(parsed.params, { to: recipient, amount: '5' });
-        let parsedByFlag = await CliUtils.cliJson(
+        let parsedByFlag = await CliUtils.forkJson(
             `c calldata-parse ERC20 --calldata ${calldata} --chain eth --local --json`
         );
         deepEq_(parsedByFlag, parsed);
@@ -161,7 +160,7 @@ UTest.create({
         let { contract, abi } = await provider.deploySol(path, { client });
         let receipts = [] as TEth.TxReceipt[];
         for (let i = 0; i < 3; i++) {
-            let receipt = await CliUtils.cliJson(
+            let receipt = await CliUtils.forkJson(
                 `c write ${contract.address} "increment()" --chain hardhat --account ${deployer.key} -p 123 --local --json`,
             );
             eq_(receipt.status, 1);
@@ -207,7 +206,7 @@ UTest.create({
                 await File.writeAsync(configPath, originalConfig, { skipHooks: true });
             },
             async 'load Incremented logs to std as JSON' () {
-                let logs = await CliUtils.cliJson(`${command} --json`);
+                let logs = await CliUtils.forkJson(`${command} --json`);
                 checkLogs(logs);
             },
             async 'save Incremented logs to a JSON file' () {
@@ -215,7 +214,7 @@ UTest.create({
                 if (await File.existsAsync(output)) {
                     await File.removeAsync(output);
                 }
-                await CliUtils.cli(`${command} --output ${output} --format json`);
+                await CliUtils.fork(`${command} --output ${output} --format json`);
                 let logs = await File.readAsync<TEth.EventLog[]>(output);
                 checkLogs(logs);
             },
@@ -224,7 +223,7 @@ UTest.create({
                 if (await File.existsAsync(output)) {
                     await File.removeAsync(output);
                 }
-                await CliUtils.cli(`${command} --output ${output} --format csv`);
+                await CliUtils.fork(`${command} --output ${output} --format csv`);
                 let csv = await File.readAsync<string>(output, { skipHooks: true });
                 let rows = csv.trim().split(/\r?\n/).map(row => row.split(',').map(value => value.trim()));
                 let header = rows.shift();
@@ -274,29 +273,29 @@ UTest.create({
         }
         return UTest.create({
             async $before () {
-                await CliUtils.cli(`i ${contract.address} --name StorageJson --source ${source} --output ${outputDir} --chain hardhat --local`);
+                await CliUtils.fork(`i ${contract.address} --name StorageJson --source ${source} --output ${outputDir} --chain hardhat --local`);
             },
             async $after () {
                 await File.writeAsync(configPath, originalConfig, { skipHooks: true });
             },
             async 'storage slot returns a hex value and an inclusive range' () {
-                let slot = await CliUtils.cliJson(`c slot StorageJson 0 ${flags}`);
+                let slot = await CliUtils.forkJson(`c slot StorageJson 0 ${flags}`);
                 eq_(slot, expectedSlots[0]);
-                let slots = await CliUtils.cliJson(`c slot StorageJson 0-2 ${flags}`);
+                let slots = await CliUtils.forkJson(`c slot StorageJson 0-2 ${flags}`);
                 deepEq_(slots, expectedSlots);
             },
             async 'storage var returns a scalar, struct and nested field' () {
-                let counter = await CliUtils.cliJson(`c var StorageJson counter --local --json`);
+                let counter = await CliUtils.forkJson(`c var StorageJson counter --local --json`);
                 eq_(counter, 1);
-                let user = await CliUtils.cliJson(`c var StorageJson user ${flags}`);
+                let user = await CliUtils.forkJson(`c var StorageJson user ${flags}`);
                 checkModel({ counter, user });
-                let amount = await CliUtils.cliJson(`c var StorageJson user.amount ${flags}`);
+                let amount = await CliUtils.forkJson(`c var StorageJson user.amount ${flags}`);
                 eq_(amount, 5);
-                let bySlot = await CliUtils.cliJson(`c var ${contract.address} counter --slot 0 --type uint256 ${flags}`);
+                let bySlot = await CliUtils.forkJson(`c var ${contract.address} counter --slot 0 --type uint256 ${flags}`);
                 eq_(bySlot, counter);
             },
             async 'storage vars returns the variable layout' () {
-                let slots = await CliUtils.cliJson(`c vars StorageJson ${flags}`);
+                let slots = await CliUtils.forkJson(`c vars StorageJson ${flags}`);
                 deepEq_(slots, [
                     { slot: 0, position: 0, name: 'counter', size: 256, type: 'uint256' },
                     { slot: 1, position: 0, name: 'user', size: 512, type: '(address owner, uint256 amount)' },
@@ -304,21 +303,21 @@ UTest.create({
             },
             async 'storage var-set updates scalar and nested values' () {
                 try {
-                    let result = await CliUtils.cliJson(`c var-set StorageJson counter 31 ${flags}`);
+                    let result = await CliUtils.forkJson(`c var-set StorageJson counter 31 ${flags}`);
                     eq_(result, 31);
-                    let counter = await CliUtils.cliJson(`c read ${contract.address} "counter():uint256" ${flags}`);
+                    let counter = await CliUtils.forkJson(`c read ${contract.address} "counter():uint256" ${flags}`);
                     eq_(counter, 31);
-                    result = await CliUtils.cliJson(`c var-set StorageJson user.amount 12 ${flags}`);
+                    result = await CliUtils.forkJson(`c var-set StorageJson user.amount 12 ${flags}`);
                     eq_(result, 12);
-                    let amount = await CliUtils.cliJson(`c var StorageJson user.amount ${flags}`);
+                    let amount = await CliUtils.forkJson(`c var StorageJson user.amount ${flags}`);
                     eq_(amount, 12);
                 } finally {
-                    await CliUtils.cliJson(`c var-set StorageJson counter 1 ${flags}`);
-                    await CliUtils.cliJson(`c var-set StorageJson user.amount 5 ${flags}`);
+                    await CliUtils.forkJson(`c var-set StorageJson counter 1 ${flags}`);
+                    await CliUtils.forkJson(`c var-set StorageJson user.amount 5 ${flags}`);
                 }
             },
             async 'storage dump returns JSON stdout and writes JSON and CSV files' () {
-                let model = await CliUtils.cliJson(`c dump StorageJson --sources ${source} --output std ${flags}`);
+                let model = await CliUtils.forkJson(`c dump StorageJson --sources ${source} --output std ${flags}`);
                 checkModel(model);
                 let output = `${outputDir}/dump`;
                 let extensions = ['json', 'csv'];
@@ -328,7 +327,7 @@ UTest.create({
                         await File.removeAsync(path);
                     }
                 }
-                let result = await CliUtils.cliJson(`c dump StorageJson --sources ${source} --output ${output} ${flags}`);
+                let result = await CliUtils.forkJson(`c dump StorageJson --sources ${source} --output ${output} ${flags}`);
                 let json = await File.readAsync(`${output}.json`);
                 checkModel(json);
                 let csv = await File.readAsync<string>(`${output}.csv`, { skipHooks: true });
@@ -348,12 +347,12 @@ UTest.create({
                         ? JSON.stringify(expectedModel)
                         : expectedSlots.map((value, index) => `0x${index.toString(16).padStart(64, '0')}, ${value}`).join('\n');
                     await File.writeAsync(path, data, { skipHooks: true });
-                    await CliUtils.cliJson(`c var-set StorageJson counter 99 ${flags}`);
-                    await CliUtils.cliJson(`c var-set StorageJson user.amount 42 ${flags}`);
-                    let result = await CliUtils.cliJson(`c dump-restore StorageJson --sources ${source} --contract-name StorageCounter --file ${path} ${flags}`);
+                    await CliUtils.forkJson(`c var-set StorageJson counter 99 ${flags}`);
+                    await CliUtils.forkJson(`c var-set StorageJson user.amount 42 ${flags}`);
+                    let result = await CliUtils.forkJson(`c dump-restore StorageJson --sources ${source} --contract-name StorageCounter --file ${path} ${flags}`);
                     deepEq_(result, { success: true });
-                    let counter = await CliUtils.cliJson(`c read ${contract.address} "counter():uint256" ${flags}`);
-                    let user = await CliUtils.cliJson(`c read ${contract.address} "user() view returns (address owner, uint256 amount)" ${flags}`);
+                    let counter = await CliUtils.forkJson(`c read ${contract.address} "counter():uint256" ${flags}`);
+                    let user = await CliUtils.forkJson(`c read ${contract.address} "user() view returns (address owner, uint256 amount)" ${flags}`);
                     checkModel({ counter, user });
                 }
             },
@@ -364,7 +363,7 @@ UTest.create({
             let from = $address.ZERO;
             let to = "0x1";
             let amount = 10e6
-            let r1 = await CliUtils.cliJson(
+            let r1 = await CliUtils.forkJson(
                 `c simulate ${usdc} "transfer(address to, uint256 amount)" --chain eth --arg0 ${to} --arg1 ${amount} --account ${from} --json`
             );
             eq_(r1.success, false);
@@ -373,11 +372,11 @@ UTest.create({
             has_(r1.traces?.method, 'transfer', `Should include trace JSON`);
         },
 
-        async '!should transfer from Sky' () {
+        async 'should transfer from Sky' () {
             let from = '0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341';
             let to = "0x1";
             let amount = 10e6
-            let r1 = await CliUtils.cliJson(
+            let r1 = await CliUtils.forkJson(
                 `c simulate ${usdc} "transfer(address to, uint256 amount)" --chain eth --arg0 ${to} --arg1 ${amount} --account ${from} --json`
             );
             eq_(r1.success, true);
