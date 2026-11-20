@@ -44,7 +44,7 @@ UTest({
                 });
             },
             async 'list installation' () {
-                let str = await TestUtils.cli(`contract list`);
+                let str = await TestUtils.fork(`contract list`);
                 has_(str, /^Counter/m);
 
                 let arr = await TestUtils.api('/api/c/list');
@@ -56,7 +56,7 @@ UTest({
                 }]);
             },
             async 'get contract method data' () {
-                let str = await TestUtils.cli(`contract calldata Counter getCountMethod`);
+                let str = await TestUtils.fork(`contract calldata Counter getCountMethod`);
                 has_(str, `to: '${contract.address}'`);
                 has_(str, `data: '0xe3412189'`);
 
@@ -67,28 +67,28 @@ UTest({
                 });
             },
             async 'call method by contract name' () {
-                let str = await TestUtils.cli(`contract read Counter getCountMethod --chain hardhat`);
+                let str = await TestUtils.fork(`contract read Counter getCountMethod --chain hardhat`);
                 has_(str, /^1n$/m);
 
                 let resp = await TestUtils.api('/api/c/read/Counter/getCountMethod');
                 eq_(resp, 1n);
             },
             async 'call method by contract address' () {
-                let str = await TestUtils.cli(`contract read ${ contract.address } "getCountMethod():uint256" --chain hardhat`);
+                let str = await TestUtils.fork(`contract read ${ contract.address } "getCountMethod():uint256" --chain hardhat`);
                 has_(str, /^1n$/m);
 
                 let resp = await TestUtils.api(`/api/c/read/${contract.address}/getCountMethod?abi=getCountMethod():uint256&chain=hardhat`);
                 eq_(resp, 1n);
             },
             async 'check var' () {
-                let str = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
+                let str = await TestUtils.fork(`contract var Counter counter --chain hardhat`);
                 has_(str, /^1n$/m);
 
                 let resp = await TestUtils.api(`/api/c/var/Counter/counter`);
                 eq_(resp, 1n);
             },
             async 'check complex var' () {
-                let str = await TestUtils.cli(`contract var Counter user`);
+                let str = await TestUtils.fork(`contract var Counter user`);
                 has_(str, /"amount": "5"/m);
                 let resp = await TestUtils.api(`/api/c/var/Counter/user`);
                 deepEq_(resp, {
@@ -97,7 +97,7 @@ UTest({
                 });
             },
             async 'list vars' () {
-                let str = await TestUtils.cli(`contract vars Counter`);
+                let str = await TestUtils.fork(`contract vars Counter`);
                 // Slot Offset Name
                 has_(str, /0\s+0\s+count/);
                 has_(str, /1\s+0\s+user/);
@@ -122,7 +122,7 @@ UTest({
                     },
                     async 'dump by name' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump Counter --output cache/counter-dump/dump`);
+                        let str = await TestUtils.fork(`contract dump Counter --output cache/counter-dump/dump`);
 
                         has_(str, jsonPath);
                         let json = await File.readAsync<any>(jsonPath);
@@ -132,7 +132,7 @@ UTest({
                     },
                     async 'dump by address and sources dir' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
+                        let str = await TestUtils.fork(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter --output cache/counter-dump/dump --endpoint http://127.0.0.1:8545`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);
@@ -143,7 +143,7 @@ UTest({
                     },
                     async 'dump by address and source file' () {
                         await cleanJson();
-                        let str = await TestUtils.cli(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter/test/fixtures/contracts/StorageCounter.sol --output cache/counter-dump/dump`);
+                        let str = await TestUtils.fork(`contract dump ${contract.address} --sources 0xc/hardhat/Counter/Counter/test/fixtures/contracts/StorageCounter.sol --output cache/counter-dump/dump`);
                         console.log(`Str: ${str}`);
 
                         has_(str, jsonPath);
@@ -160,8 +160,8 @@ UTest({
                                 amount: 12
                             }
                         });
-                        let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
-                        let countOutput = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
+                        let str = await TestUtils.fork(`contract dump-restore Counter --file ${path}`);
+                        let countOutput = await TestUtils.fork(`contract var Counter counter --chain hardhat`);
                         has_(countOutput, '31n');
                     },
                     async 'restore dump by name from CSV' () {
@@ -169,8 +169,8 @@ UTest({
                         await File.writeAsync(path, `
                         0x0000000000000000000000000000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000000000000000000000000008
                         `);
-                        let str = await TestUtils.cli(`contract dump-restore Counter --file ${path}`);
-                        let countOutput = await TestUtils.cli(`contract var Counter counter --chain hardhat`);
+                        let str = await TestUtils.fork(`contract dump-restore Counter --file ${path}`);
+                        let countOutput = await TestUtils.fork(`contract var Counter counter --chain hardhat`);
                         has_(countOutput, '8n');
                     }
                 })

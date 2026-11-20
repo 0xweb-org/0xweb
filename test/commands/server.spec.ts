@@ -14,10 +14,10 @@ UTest({
         await TestUtils.clean();
         await TestNode.start();
 
-        await TestUtils.cli(`accounts new --name deployerApiFoo`);
-        await TestUtils.cli(`hardhat setBalance deployerApiFoo 1ether`)
+        await TestUtils.fork(`accounts new --name deployerApiFoo`);
+        await TestUtils.fork(`hardhat setBalance deployerApiFoo 1ether`)
 
-        let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --name FooApi --chain hardhat --account deployerApiFoo`, {
+        let stdAddOne = await TestUtils.fork(`deploy ./test/fixtures/hardhat/Foo.sol --name FooApi --chain hardhat --account deployerApiFoo`, {
 
         });
         has_(stdAddOne, /Deployed\s+0x\w+/);

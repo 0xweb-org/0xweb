@@ -316,6 +316,7 @@ export function CContract() {
             },
             {
                 command: 'logs',
+                api: { method: 'get' },
                 description: [ 'Fetch event logs for a contract' ],
                 arguments: [
                     {
@@ -352,6 +353,7 @@ export function CContract() {
             },
             {
                 command: 'dump',
+                api: { method: 'get' },
                 description: [ `Save contract storage as raw slot values in CSV and as a JSON model` ],
                 arguments: [
                     {
@@ -390,6 +392,7 @@ export function CContract() {
             },
             {
                 command: 'dump-restore',
+                api: { method: 'post' },
                 description: [ `Restore contract storage from a JSON or CSV dump on a Hardhat development network` ],
                 arguments: [
                     {
@@ -499,6 +502,7 @@ export function CContract() {
             },
             {
                 command: 'var-set',
+                api: { method: 'post' },
                 description: [ `Set a contract state variable. Hardhat networks only` ],
                 arguments: [
                     {

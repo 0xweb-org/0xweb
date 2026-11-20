@@ -14,13 +14,13 @@ UTest({
     async 'check block' () {
         let client = hh.client('localhost');
         let blockNrBefore = await client.getBlockNumber();
-        await TestUtils.cli('hardhat mine 1');
+        await TestUtils.fork('hardhat mine 1');
         let blockNrAfter = await client.getBlockNumber();
         eq_(blockNrAfter - blockNrBefore, 1);
 
         let blockData = await client.getBlock(blockNrAfter);
 
-        let blockCliResp = await TestUtils.cli('block get latest');
+        let blockCliResp = await TestUtils.fork('block get latest');
         has_(blockCliResp, blockData.hash);
 
         let blockApiResp = await TestUtils.api(`/api/block/get/latest?chain=hardhat`);

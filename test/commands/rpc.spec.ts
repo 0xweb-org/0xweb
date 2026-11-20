@@ -20,7 +20,7 @@ UTest({
     },
     async 'should call simple rpc method' () {
 
-        let result = await TestUtils.cli('rpc eth_chainId --chain hardhat --silent');
+        let result = await TestUtils.fork('rpc eth_chainId --chain hardhat --silent');
         let chainId = Number(result);
         eq_(chainId, 1337);
 

@@ -17,7 +17,7 @@ UTest({
         await Directory.copyTo('./dequanto/src/gen/', './node_modules/0xweb/dequanto/src/gen/', { verbose: true });
     },
     async 'compile contract'() {
-        let stdAddOne = await TestUtils.cli(`compile ./test/fixtures/hardhat/Foo.sol`, {
+        let stdAddOne = await TestUtils.fork(`compile ./test/fixtures/hardhat/Foo.sol`, {
         });
         l`The output should contain the path to the compiled artifact`;
         has_(stdAddOne, `artifacts/test/fixtures/hardhat/Foo.sol/Foo.json`);
@@ -30,16 +30,16 @@ UTest({
 
         return UTest({
             async $before () {
-                let result = await TestUtils.cli(`accounts new --name deployerFoo`);
+                let result = await TestUtils.fork(`accounts new --name deployerFoo`);
                 let address = /Address\s+(?<address>\w+)/.exec(result).groups.address as TEth.Address;
 
-                await TestUtils.cli(`hardhat setBalance deployerFoo 1ether`)
+                await TestUtils.fork(`hardhat setBalance deployerFoo 1ether`)
 
                 let b =  await client.getBalance(address);
                 eq_($bigint.toEther(b), 1);
             },
             async 'single contract' () {
-                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooSingle`, {
+                let stdAddOne = await TestUtils.fork(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooSingle`, {
 
                 });
                 has_(stdAddOne, /Deployed\s+0x\w+/);
@@ -60,17 +60,17 @@ UTest({
                 notEq_(deploymentInfo, undefined, `The deployment info should be found in the deployments file`);
                 eq_(deploymentInfo.name, 'Foo', `The deployment name should be equal the contract name in sol file: 'Foo'`);
 
-                let fooResponse = await TestUtils.cli(`c read FooSingle getFoo`);
+                let fooResponse = await TestUtils.fork(`c read FooSingle getFoo`);
                 has_(fooResponse, `10n`);
             },
             async 'with proxy' () {
-                let stdAddOne = await TestUtils.cli(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooProxy --proxy`, {
+                let stdAddOne = await TestUtils.fork(`deploy ./test/fixtures/hardhat/Foo.sol --account deployerFoo --chain hardhat --name FooProxy --proxy`, {
 
                 });
                 has_(stdAddOne, /Deployed\s+0x\w+/);
 
                 // Deployed as proxy, the value set in constructor should affect the value in FooProxy, so remains 0
-                let fooResponse = await TestUtils.cli(`c read FooProxy getFoo`);
+                let fooResponse = await TestUtils.fork(`c read FooProxy getFoo`);
                 has_(fooResponse, /^0n$/m);
             }
         });

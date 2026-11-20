@@ -17,6 +17,12 @@ const HH_CACHE = './cache/';
 const HH_ASSETS = './assets/';
 const HH_OZ = './contracts/oz/';
 
+export type TApiRequest = string | {
+    url: string;
+    method: 'get' | 'post';
+    body?: Record<string, unknown>;
+};
+
 const PARAMS_DEF = {
     '--config-accounts': ACCOUNTS_PATH,
     '--config-global': CONFIG_PATH,
@@ -36,22 +42,28 @@ export const TestUtils = {
         try { await Directory.removeAsync(HH_OZ); } catch { }
 
     },
-    async api (url: string) {
+    async api (request: TApiRequest) {
+        let { url, method, body } = typeof request === 'string'
+            ? { url: request, method: 'get' as const, body: undefined }
+            : request;
         let app = new App();
         let service = new ServerService(app);
         let server = await service.createServer();
-        let response = await server.execute(url, 'get') as HttpResponse;
+        let response = await server.execute(url, method, body) as HttpResponse;
+        if (response.statusCode >= 400) {
+            throw new Error(`API ${method.toUpperCase()} ${url}: ${response.content}`);
+        }
         return JSON.parse(response.content);
     },
-    async cliJson(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
-        let str = await TestUtils.cli(command, params, opts);
+    async forkJson(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
+        let str = await TestUtils.fork(command, params, opts);
         try {
             return JSON.parse(str.trim());
         } catch (error) {
             throw new Error(`"${str}" is not a valid JSON`);
         }
     },
-    async cli(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
+    async fork(command: string, params: Record<string, string | number> = {}, opts?: { silent?: boolean }) {
         params = {
             ...PARAMS_DEF,
             ...params

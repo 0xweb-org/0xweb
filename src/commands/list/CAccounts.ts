@@ -29,6 +29,7 @@ export function CAccounts() {
         subcommands: [
             {
                 command: 'add',
+                api: { method: 'post' },
                 description: [
                     'Add an existing account'
                 ],

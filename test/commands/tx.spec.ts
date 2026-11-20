@@ -31,7 +31,7 @@ UTest({
         });
 
         l`Signing with ${owner1.address}`;
-        let result = await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
+        let result = await TestUtils.fork(`tx sign ./test/bin/tx.json`, {
             '--account': owner1.key,
             '--chain': 'hardhat'
         }, { silent: STDOUT_SILENT });
@@ -44,7 +44,7 @@ UTest({
         let balanceBefore = await client.getBalance(owner2.address);
         l`Balance for ${owner2.address}: ${balanceBefore}ETH`
 
-        let txSendStdout = await TestUtils.cli(`tx send ./test/bin/tx.json`, {
+        let txSendStdout = await TestUtils.fork(`tx send ./test/bin/tx.json`, {
 
         }, { silent: STDOUT_SILENT });
 
@@ -58,7 +58,7 @@ UTest({
         eq_(balanceAfter - balanceBefore, 1n);
 
 
-        let txViewStdout = await TestUtils.cli(`tx view ${tx}`, {
+        let txViewStdout = await TestUtils.fork(`tx view ${tx}`, {
 
         }, { silent: STDOUT_SILENT });
 

@@ -25,14 +25,14 @@ UTest({
             let owner2 = provider.deployer(1);
 
             l`> Adding account to storage`;
-            let stdAddOne = await TestUtils.cli(`accounts add`, {
+            let stdAddOne = await TestUtils.fork(`accounts add`, {
                 '--name': 'one',
                 '--key': owner1.key
             });
             has_(stdAddOne, owner1.address);
 
             l`> Get balance one`;
-            let stdBalanceOne = await TestUtils.cli(`account balance one ETH`, {});
+            let stdBalanceOne = await TestUtils.fork(`account balance one ETH`, {});
             let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalanceOne)[1];
             let balanceOne = Number(balanceOneStr);
             l`> Balance one ${balanceOne}`;
@@ -40,17 +40,17 @@ UTest({
 
 
             l`> Get balance two`;
-            let stdBalanceTwo = await TestUtils.cli(`account balance ${owner2.address} ETH`, {});
+            let stdBalanceTwo = await TestUtils.fork(`account balance ${owner2.address} ETH`, {});
             let balanceTwoStr = /Balance\s+([\d\.]+)/.exec(stdBalanceTwo)[1];
             let balanceTwo = Number(balanceTwoStr);
             l`> Balance two ${balanceTwo}`;
             eq_(balanceTwo, $bigint.toEther(await client.getBalance(owner2.address)));
 
             l`> Transfer`;
-            await TestUtils.cli(`transfer 5 ETH --from one --to ${owner2.address}`, {});
+            await TestUtils.fork(`transfer 5 ETH --from one --to ${owner2.address}`, {});
 
             l`Get balance one after`;
-            stdBalanceOne = await TestUtils.cli(`account balance one ETH`, {});
+            stdBalanceOne = await TestUtils.fork(`account balance one ETH`, {});
             balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalanceOne)[1];
             let balanceOneAfter = Number(balanceOneStr);
             l`Balance one after ${balanceOne}`;
@@ -59,7 +59,7 @@ UTest({
             gt_(balanceOneAfter, balanceOne - 6);
 
             l`Get balance two after`;
-            stdBalanceTwo = await TestUtils.cli(`account balance ${owner2.address} ETH`, {});
+            stdBalanceTwo = await TestUtils.fork(`account balance ${owner2.address} ETH`, {});
             balanceTwoStr = /Balance\s+([\d\.]+)/.exec(stdBalanceTwo)[1];
             let balanceTwoAfter = Number(balanceTwoStr);
             l`Balance two after ${balanceTwoAfter}`;
@@ -71,7 +71,7 @@ UTest({
             let client = provider.client('localhost');
 
             l`Adding account to storage. (Later the owner of the safe)`;
-            await TestUtils.cli(`accounts add`, {
+            await TestUtils.fork(`accounts add`, {
                 '--name': 'one',
                 '--key': owner1.key
             });
@@ -79,7 +79,7 @@ UTest({
             let safeAddress = await SafeUtils.create(owner1.address, 'safe/test');
 
             l`Transfer ETH to safe`;
-            await TestUtils.cli(`transfer 1.5 ETH --from one --to safe/test`, {
+            await TestUtils.fork(`transfer 1.5 ETH --from one --to safe/test`, {
                 '--from': 'one',
                 '--to': 'safe/test'
             });
@@ -101,7 +101,7 @@ UTest({
 
 
         l`> Add to known tokens`
-        await TestUtils.cli(`tokens add`, {
+        await TestUtils.fork(`tokens add`, {
             '--address': contract.address,
             '--symbol': 'FRT',
             '--decimals': 18,
@@ -109,7 +109,7 @@ UTest({
         });
 
         l`> Adding account to storage`;
-        let stdAddOne = await TestUtils.cli(`accounts add`, {
+        let stdAddOne = await TestUtils.fork(`accounts add`, {
             '--name': 'one',
             '--key': owner1.key
         });
@@ -117,7 +117,7 @@ UTest({
 
 
         l`> Get balance one`;
-        let stdBalanceOne = await TestUtils.cli(`account balance one FRT`, {});
+        let stdBalanceOne = await TestUtils.fork(`account balance one FRT`, {});
         let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalanceOne)?.[1];
 
         let balanceOne = Number(balanceOneStr);
@@ -128,7 +128,7 @@ UTest({
 
 
         l`> Get balance two`;
-        let stdBalanceTwo = await TestUtils.cli(`account balance ${owner2.address} FRT`, {});
+        let stdBalanceTwo = await TestUtils.fork(`account balance ${owner2.address} FRT`, {});
         let balanceTwoStr = /Balance\s+([\d\.]+)/.exec(stdBalanceTwo)?.[1];
         let balanceTwo = Number(balanceTwoStr);
         l`> Balance two ${balanceTwo}`;
@@ -136,17 +136,17 @@ UTest({
         eq_(balanceTwo, $bigint.toEther(await erc20.balanceOf(owner2.address)));
 
         l`> Transfer`;
-        await TestUtils.cli(`transfer 6 FRT --from one --to ${owner2.address}`, {});
+        await TestUtils.fork(`transfer 6 FRT --from one --to ${owner2.address}`, {});
 
         l`> Get balance one after`;
-        stdBalanceOne = await TestUtils.cli(`account balance one FRT`, {});
+        stdBalanceOne = await TestUtils.fork(`account balance one FRT`, {});
         balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalanceOne)?.[1];
         let balanceOneAfter = Number(balanceOneStr);
         l`> Balance one after ${balanceOneAfter}`;
         eq_(balanceOneAfter, 4);
 
         l`> Get balance two after`;
-        stdBalanceTwo = await TestUtils.cli(`account balance ${owner2.address} FRT`, {});
+        stdBalanceTwo = await TestUtils.fork(`account balance ${owner2.address} FRT`, {});
         balanceTwoStr = /Balance\s+([\d\.]+)/.exec(stdBalanceTwo)?.[1];
         let balanceTwoAfter = Number(balanceTwoStr);
         l`> Balance two after ${balanceTwoAfter}`;
@@ -154,7 +154,7 @@ UTest({
 
 
         l`> Call ERC20 interface with built-in openzeppelin contract`
-        stdBalanceTwo = await TestUtils.cli(`contract read erc20 balanceOf`, {
+        stdBalanceTwo = await TestUtils.fork(`contract read erc20 balanceOf`, {
             '--chain': 'hardhat',
             '--address': contract.address,
             '--account': owner1.address,
@@ -169,9 +169,9 @@ UTest({
         let acc = await $sig.$account.generate();
 
         l`> Transfer`;
-        await TestUtils.cli(`transfer 1.1 ETH --from ${acc1.key} --to ${acc.address}`, {});
+        await TestUtils.fork(`transfer 1.1 ETH --from ${acc1.key} --to ${acc.address}`, {});
 
-        let stdBalance = await TestUtils.cli(`account balance ${acc.address} ETH`, {});
+        let stdBalance = await TestUtils.fork(`account balance ${acc.address} ETH`, {});
         let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalance)[1];
         let balanceOneAfter = Number(balanceOneStr);
         eq_(balanceOneAfter, 1.1);
@@ -193,7 +193,7 @@ UTest({
         await contract.airdrop(owner1);
 
         l`> Add to known tokens`
-        await TestUtils.cli(`tokens add`, {
+        await TestUtils.fork(`tokens add`, {
             '--address': contract.address,
             '--symbol': 'FRT',
             '--decimals': 18,
@@ -201,7 +201,7 @@ UTest({
         });
 
         l`> Adding account to storage`;
-        let stdAddOne = await TestUtils.cli(`accounts add`, {
+        let stdAddOne = await TestUtils.fork(`accounts add`, {
             '--name': 'nokeyAcc',
             '--address': owner1.address
         });
@@ -216,7 +216,7 @@ UTest({
         await transferShell.onReadyAsync();
 
         l`> Signing the transfer signature`
-        let signStdout = await TestUtils.cli(`tx sign ./test/bin/tx.json`, {
+        let signStdout = await TestUtils.fork(`tx sign ./test/bin/tx.json`, {
             '--account': owner1.key,
         });
 
@@ -224,7 +224,7 @@ UTest({
         await transferShell.onCompleteAsync();
 
         l`> Transfer successful. Check the balances`
-        let stdBalance = await TestUtils.cli(`account balance ${owner2.address} FRT`, {});
+        let stdBalance = await TestUtils.fork(`account balance ${owner2.address} FRT`, {});
         let balanceOneStr = /Balance\s+([\d\.]+)/.exec(stdBalance)[1];
         let balanceOneAfter = Number(balanceOneStr);
         eq_(balanceOneAfter, 6);

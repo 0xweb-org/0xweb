@@ -10,6 +10,12 @@ import { CRpc } from '@core/commands/list/CRpc';
 import { CContract } from '@core/commands/list/CContract';
 import { CTx } from '@core/commands/list/CTx';
 import { CBlock } from '@core/commands/list/CBlock';
+import { CAuth } from '@core/commands/list/CAuth';
+import { CAccounts } from '@core/commands/list/CAccounts';
+import { Config } from '@dequanto/config/Config';
+import { AccountsService } from './AccountsService';
+import { $cli } from '@core/utils/$cli';
+import { $validate } from '@core/utils/$validate';
 
 export class ServerService {
 
@@ -26,6 +32,8 @@ export class ServerService {
             CRpc(),
             CTx(),
             CBlock(),
+            CAuth(),
+            CAccounts(),
         ], this.app);
 
         const debug = Boolean(params?.dev ?? false);
@@ -121,24 +129,17 @@ namespace ServerCommands {
     ) {
         return async function (req: { body?: Record<string, any> }, res: unknown, params: Record<string, any>) {
 
-            let appFromRequest: App | undefined;
-            let platform = params.chain;
-            if (platform) {
-                appFromRequest = new App();
-                await appFromRequest.ensureChain(platform);
-            }
-
             let cliArgs = [];
-            let cliParams = params;
+            let cliParams = { ...params };
             for (let key in params) {
                 let index = /^cliArg(?<i>\d+)$/.exec(key);
                 if (index) {
-                    cliArgs[Number(index[1])] = params[key];
+                    cliArgs[Number(index[1])] = decodeURIComponent(params[key]);
                     continue;
                 }
                 let named = command.arguments?.findIndex(x => x.name === key) ?? -1;
                 if (named > -1) {
-                    cliArgs[named] = params[key];
+                    cliArgs[named] = command.arguments[named].query ? params[key] : decodeURIComponent(params[key]);
                     continue;
                 }
             }
@@ -148,12 +149,34 @@ namespace ServerCommands {
                 }
             }
 
-            let app = appFromRequest ?? appFromCli;
-            app.config ??= {} as any;
+            let defaults = await AccountsService.getSession(cliParams);
+            cliParams = { ...defaults, ...cliParams };
+            if ($cli.isLocal(cliParams)) {
+                cliParams.isLocal = true;
+            }
+            await command.prepare?.(cliArgs, cliParams);
+            // HTTP requests must report missing input instead of prompting on stdin.
+            for (let [flags, definition] of Object.entries(command.params ?? {})) {
+                if (definition.required && definition.default == null
+                    && !$command.getAliases(flags).some(alias => cliParams[alias.name] != null)
+                    && cliParams[definition.fallback] == null
+                    && !definition.requiredUnless?.some(key => cliParams[key] != null)) {
+                    throw new Error(`Missing required parameter: ${flags}`);
+                }
+            }
+            cliParams = await $command.getParams(cliParams, command.params ?? {});
+            $validate.args(command, cliArgs);
+            $validate.params(command, command.params ?? {}, cliParams);
+            let app = new App();
+            app.chain = appFromCli.chain;
+            app.config = await Config.fetch(cliParams);
             app.config.env = 'api';
+            if (cliParams.chain) {
+                await app.ensureChain(cliParams.chain);
+            }
             let result = await process(cliArgs, cliParams, app, command);
             return new HttpResponse({
-                content: JSON.stringify(result),
+                content: JSON.stringify(result, (_key, value) => typeof value === 'bigint' ? value.toString() : value),
                 mimeType: 'application/json; charset=utf-8'
             });
         }

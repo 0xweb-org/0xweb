@@ -9,7 +9,7 @@ export class SafeUtils {
 
     static async create(owner: TAddress, name: string) {
         let path = await SafeUtils.prepare();
-        let stdCreateSafe = await TestUtils.cli(`safe new`, {
+        let stdCreateSafe = await TestUtils.fork(`safe new`, {
             '--owner': owner,
             '--name': name,
             '--contracts': path

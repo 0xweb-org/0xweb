@@ -27,6 +27,7 @@ export function CAuth() {
                 subcommands: [
                     {
                         command: 'status',
+                        api: { method: 'get' },
                         description: ['Show whether two-factor authentication is enabled'],
                         async process(args: string[], params) {
                             let status = await AccountsService.status2FA(params);
@@ -48,6 +49,7 @@ export function CAuth() {
                     },
                     {
                         command: 'setup',
+                        api: { method: 'post' },
                         description: [
                             'Set up an authenticator app for two-factor authentication'
                         ],
@@ -58,6 +60,9 @@ export function CAuth() {
                         },
                         async process(args: string[], params, app: App) {
                             let providedSeed = params.seed;
+                            if (app.config?.env === 'api') {
+                                $require.notNull(providedSeed, 'Provide seed for non-interactive 2FA setup');
+                            }
                             if (providedSeed != null) {
                                 await AccountsService.save2FA(providedSeed as TEth.Hex, params);
                                 $console.log('2FA enabled');
@@ -99,6 +104,7 @@ export function CAuth() {
             },
             {
                 command: 'status',
+                api: { method: 'get' },
                 description: [
                     'Returns account and 2fa status'
                 ],
@@ -115,6 +121,7 @@ export function CAuth() {
             },
             {
                 command: 'login',
+                api: { method: 'post' },
                 description: [
                     'Set the account as the default'
                 ],
