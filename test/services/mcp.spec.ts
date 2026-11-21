@@ -66,7 +66,8 @@ UTest.create({
             'block_get', 'contract_info', 'contract_list', 'contract_abi', 'contract_read',
             'contract_write', 'contract_simulate', 'contract_calldata', 'contract_calldata-parse',
             'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
-            'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list'
+            'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list',
+            'account_balance', 'account_view', 'account_current', 'account_rename'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -131,12 +132,103 @@ UTest.create({
         }
     },
 
-    async 'account mutations are not exposed over MCP'() {
+    async 'accounts management mutations are not exposed over MCP'() {
         let commands = ['new', 'add', 'remove', 'login', 'backup'];
         for (let command of commands) {
             let { error } = await $promise.caught(client.callTool({ name: `accounts_${command}`, arguments: {} }));
             notEq_(error, null);
             has_(error.message, 'Unknown tool');
+        }
+    },
+
+    async 'account tools inherit authentication and expose named inputs'() {
+        let { tools } = await client.listTools();
+        let balance = tools.find(x => x.name === 'account_balance').inputSchema;
+        deepEq_(balance.required, ['accountName', 'tokenSymbol']);
+        deepEq_(Object.keys(balance.properties), ['accountName', 'tokenSymbol', 'pin', '2fa', 'chain', 'block']);
+        eq_(balance.additionalProperties, false);
+        let view = tools.find(x => x.name === 'account_view').inputSchema;
+        deepEq_(view.required, ['accountName']);
+        eq_(view.properties['encrypted-key'].type, 'boolean');
+        let current = tools.find(x => x.name === 'account_current').inputSchema;
+        deepEq_(current.required, []);
+        let rename = tools.find(x => x.name === 'account_rename').inputSchema;
+        deepEq_(rename.required, ['oldAccountName', 'newAccountName']);
+    },
+
+    async 'views, selects and renames accounts through MCP without exposing keys by default'() {
+        let getSession = AccountsService.getSession;
+        let fetchConfig = Config.fetch;
+        const address = '0x0000000000000000000000000000000000000001';
+        let accounts = [{ name: 'Operator', address, key: 'p1:encrypted-key-fixture' }];
+        let source = {
+            data: { name: 'accounts' },
+            config: { accounts },
+            async write(value) { this.config = value; },
+        };
+        try {
+            AccountsService.getSession = async () => ({ pin: 'test-pin', 'session-account': 'Operator' });
+            Config.fetch = async () => ({ $sources: { array: [source] } } as any);
+            let calls = [
+                { name: 'account_view', arguments: { accountName: 'Operator' } },
+                { name: 'account_current', arguments: {} },
+            ];
+            for (let call of calls) {
+                let result = await client.callTool(call);
+                eq_(result.isError, undefined);
+                deepEq_(result.structuredContent, { name: 'Operator', address });
+                deepEq_(JSON.parse(result.content[0].text), result.structuredContent);
+            }
+            let encrypted = await client.callTool({ name: 'account_view', arguments: {
+                accountName: 'Operator', 'encrypted-key': true
+            } });
+            eq_(encrypted.isError, undefined);
+            deepEq_(encrypted.structuredContent, { name: 'Operator', address, encryptedKey: accounts[0].key });
+            let renamed = await client.callTool({ name: 'account_rename', arguments: {
+                oldAccountName: 'Operator', newAccountName: 'Renamed'
+            } });
+            eq_(renamed.isError, undefined);
+            deepEq_(renamed.structuredContent, { name: 'Renamed', address });
+            deepEq_(source.config.accounts, [{ name: 'Renamed', address, key: accounts[0].key }]);
+            let selected = await client.callTool({ name: 'account_current', arguments: { account: 'Renamed' } });
+            eq_(selected.isError, undefined);
+            deepEq_(selected.structuredContent, renamed.structuredContent);
+
+            let invalid = [
+                { name: 'account_view', arguments: {} },
+                { name: 'account_view', arguments: { accountName: 'missing' } },
+                { name: 'account_view', arguments: { accountName: 'Renamed', 'encrypted-key': 'true' } },
+                { name: 'account_rename', arguments: { oldAccountName: 'Renamed' } },
+            ];
+            for (let call of invalid) {
+                let result = await client.callTool(call);
+                eq_(result.isError, true);
+            }
+        } finally {
+            AccountsService.getSession = getSession;
+            Config.fetch = fetchConfig;
+        }
+    },
+
+    async 'reads account balances through MCP on Hardhat'() {
+        let getSession = AccountsService.getSession;
+        try {
+            AccountsService.getSession = async () => ({
+                pin: 'test-pin', 'config-accounts': './test/bin/mcp-balance/accounts.json'
+            });
+            const address = '0x0000000000000000000000000000000000000001';
+            let block = await chain.getBlock('latest');
+            let expected = await chain.getBalance(address, block.number);
+            let result = await client.callTool({ name: 'account_balance', arguments: {
+                accountName: address, tokenSymbol: 'ETH', chain: 'hardhat', block: String(block.number)
+            } });
+            eq_(result.isError, undefined, result.content[0].text);
+            eq_(result.structuredContent.address, address);
+            eq_(result.structuredContent.balance, expected.toString());
+            eq_(result.structuredContent.token.decimals, 18);
+            deepEq_(JSON.parse(result.content[0].text), result.structuredContent);
+        } finally {
+            AccountsService.getSession = getSession;
         }
     },
 

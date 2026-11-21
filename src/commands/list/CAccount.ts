@@ -26,12 +26,12 @@ export function CAccount ()  {
                 ],
                 arguments: [
                     {
-                        name: '<accountName>',
+                        name: 'accountName',
                         description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
                     {
-                        name: '<tokenSymbol>',
+                        name: 'tokenSymbol',
                         description: 'Token symbol or address',
                         required: true,
                     }
@@ -91,7 +91,7 @@ export function CAccount ()  {
                 ],
                 arguments: [
                     {
-                        name: '<accountName>',
+                        name: 'accountName',
                         description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
@@ -170,12 +170,12 @@ export function CAccount ()  {
                 },
                 arguments: [
                     {
-                        name: '<oldAccountName>',
+                        name: 'oldAccountName',
                         description: 'Account name saved with the "accounts" command',
                         required: true,
                     },
                     {
-                        name: '<newAccountName>',
+                        name: 'newAccountName',
                         description: 'New account name',
                         required: true,
                     }

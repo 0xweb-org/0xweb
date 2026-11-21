@@ -27,7 +27,7 @@ It accepts POST requests; GET/SSE and DELETE/session management return 405.
 The MCP endpoint accepts loopback Host headers and
 same-port loopback browser origins; remote hostnames/proxies are not configured.
 
-`accounts_list`, `block_get`, and the `contract_*` commands are exposed, except the continuous
+`accounts_list`, the `account_*` commands, `block_get`, and the `contract_*` commands are exposed, except the continuous
 `contract watch` command. This includes transaction writes and storage mutations.
 Discover their generated input schemas with
 `tools/list`. Argument names retain the command definition's spelling and case:
@@ -60,6 +60,15 @@ accepts a single `calldata` input for its positional argument/flag.
 and role keys), excluding private keys. It accepts `pin` or `2fa`; existing session
 credentials are used when available. Account creation, imports, removal, login,
 and backup are not exposed through MCP.
+
+The singular account commands are available as `account_balance`, `account_view`,
+`account_current`, and `account_rename`. Positional inputs use `accountName`,
+`tokenSymbol`, `oldAccountName`, and `newAccountName`, as applicable. They inherit
+`pin`, `2fa`, and `chain`. Balance reads need a chain and accept `block` as a decimal
+string; the returned balance is an exact decimal string in base units.
+`account_current` uses the session account unless `account` is supplied.
+`account_view` includes `encryptedKey` only when `encrypted-key` is `true`.
+`account_rename` updates the stored account name.
 
 ## Process handling
 

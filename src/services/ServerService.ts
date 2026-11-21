@@ -11,6 +11,7 @@ import { CContract } from '@core/commands/list/CContract';
 import { CTx } from '@core/commands/list/CTx';
 import { CBlock } from '@core/commands/list/CBlock';
 import { CAuth } from '@core/commands/list/CAuth';
+import { CAccount } from '@core/commands/list/CAccount';
 import { CAccounts } from '@core/commands/list/CAccounts';
 import { ServerCommandExecutor } from './ServerCommandExecutor';
 import { McpFactory } from './McpFactory';
@@ -72,7 +73,7 @@ export class ServerService {
         const accounts = CAccounts();
         // Expose account discovery without account creation, imports, or other mutations.
         accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
-        const mcp = new McpFactory([CBlock(), CContract(), accounts], this.app);
+        const mcp = new McpFactory([CBlock(), CContract(), accounts, CAccount()], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }
