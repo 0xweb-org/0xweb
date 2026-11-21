@@ -27,7 +27,9 @@ It accepts POST requests; GET/SSE and DELETE/session management return 405.
 The MCP endpoint accepts loopback Host headers and
 same-port loopback browser origins; remote hostnames/proxies are not configured.
 
-Only `block_get` is currently exposed. Discover its generated input schema with
+`block_get` and the `contract_*` commands are exposed, except the continuous
+`contract watch` command. This includes transaction writes and storage mutations.
+Discover their generated input schemas with
 `tools/list`. Argument names retain the command definition's spelling and case:
 
 ```json
@@ -46,6 +48,13 @@ This is the `params` object for `tools/call`. `NumberOrDate` also accepts
 the block in `structuredContent` and serialized JSON in text content. Invalid
 inputs and lookup failures return `isError: true`; unknown tool names are
 JSON-RPC errors. Date lookup remains approximate, as described in [blocks](./blocks.md).
+
+Contract method tools (`read`, `write`, `simulate`, and `calldata`) accept additional
+properties for ABI inputs, using the CLI names such as `arg0` or `arg:spender`.
+Use decimal strings for large integers; arrays and tuples can be JSON values.
+`contract_logs` also accepts additional event filters.
+Missing ABI inputs return tool errors without prompting. `contract_calldata-parse`
+accepts a single `calldata` input for its positional argument/flag.
 
 ## Process handling
 

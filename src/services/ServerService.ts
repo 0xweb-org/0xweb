@@ -69,7 +69,7 @@ export class ServerService {
 
         });
         await this.server.handlers.registerService('^/api', service);
-        const mcp = new McpFactory([CBlock()], this.app);
+        const mcp = new McpFactory([CBlock(), CContract()], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }

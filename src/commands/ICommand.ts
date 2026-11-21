@@ -34,6 +34,8 @@ export interface ICommand {
             requiredUnless?: string[]
         }
     }
+    /** MCP exposure and support for ABI-dependent CLI parameters. */
+    mcp?: false | { additionalProperties?: boolean }
     subcommands?: ICommand[]
     /** Normalize raw CLI input before required parameters and chain initialization. */
     prepare?: (args: string[], params: Record<string, any>) => void | Promise<void>

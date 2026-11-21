@@ -120,6 +120,10 @@ export function CContract() {
             },
             {
                 command: 'read',
+                mcp: {
+                    // Allows ABI inputs as additional properties, using parameter names or argN keys
+                    additionalProperties: true
+                },
                 description: ['Read from a contract. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
@@ -163,6 +167,7 @@ export function CContract() {
             },
             {
                 command: 'write',
+                mcp: { additionalProperties: true },
                 description: ['Send a contract transaction. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
@@ -212,7 +217,8 @@ export function CContract() {
             },
             {
                 command: 'simulate',
-                description: [''],
+                mcp: { additionalProperties: true },
+                description: ['Simulate a contract transaction on a local in-memory fork'],
                 arguments: [
                     {
                         name: 'NameOrAddress',
@@ -246,6 +252,7 @@ export function CContract() {
             },
             {
                 command: 'calldata',
+                mcp: { additionalProperties: true },
                 description: ['Encode transaction calldata. Supply method arguments as CLI flags or enter them when prompted'],
                 arguments: [
                     {
@@ -316,6 +323,7 @@ export function CContract() {
             },
             {
                 command: 'logs',
+                mcp: { additionalProperties: true },
                 api: { method: 'get' },
                 description: [ 'Fetch event logs for a contract' ],
                 arguments: [
@@ -560,6 +568,7 @@ export function CContract() {
             },
             {
                 command: 'watch',
+                mcp: false,
                 description: [ `Monitor contract logs` ],
                 arguments: [
                     {

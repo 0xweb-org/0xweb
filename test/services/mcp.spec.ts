@@ -58,15 +58,64 @@ UTest.create({
         if (http) await new Promise<void>((resolve, reject) => http.close(error => error ? reject(error) : resolve()));
     },
 
-    async 'discovers only block_get with original argument names'() {
+    async 'discovers block and contract tools with original argument names'() {
         let { tools } = await client.listTools();
-        deepEq_(tools.map(x => x.name), ['block_get']);
+        deepEq_(tools.map(x => x.name), [
+            'block_get', 'contract_info', 'contract_list', 'contract_abi', 'contract_read',
+            'contract_write', 'contract_simulate', 'contract_calldata', 'contract_calldata-parse',
+            'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
+            'contract_var', 'contract_var-set', 'contract_vars'
+        ]);
+        let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
+        deepEq_(decode.required, ['NameOrAddress', 'calldata']);
+        eq_(decode.properties.calldata.type, 'string');
+        eq_(tools.find(x => x.name === 'contract_read').inputSchema.additionalProperties, true);
 
         let schema = tools[0].inputSchema;
         deepEq_(schema.required, ['NumberOrDate', 'chain']);
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'reads a contract with dynamic ABI arguments and reports missing values'() {
+        let provider = new HardhatProvider();
+        let { contract } = await provider.deploySol('./test/fixtures/contracts/StorageCounter.sol', { client: chain });
+        let result = await client.callTool({ name: 'contract_read', arguments: {
+            NameOrAddress: contract.address, MethodOrAbi: 'getCountMethod():uint256', chain: 'hardhat'
+        } });
+        eq_(result.isError, undefined);
+        deepEq_(result.structuredContent, { result: '1' });
+
+        let { contract: echo } = await provider.deployCode(`
+            contract McpEcho {
+                function first(uint256[] calldata values) external pure returns (uint256) {
+                    return values[0];
+                }
+            }
+        `, { client: chain });
+        let inputs = [
+            { arg0: ['123456789012345678901234567890'] },
+            { values: ['123456789012345678901234567890'] },
+        ];
+        for (let input of inputs) {
+            let result = await client.callTool({ name: 'contract_read', arguments: {
+                NameOrAddress: echo.address, MethodOrAbi: 'first(uint256[] values):uint256',
+                chain: 'hardhat', ...input
+            } });
+            eq_(result.isError, undefined);
+            deepEq_(result.structuredContent, { result: '123456789012345678901234567890' });
+        }
+        let missing = await client.callTool({ name: 'contract_read', arguments: {
+            NameOrAddress: echo.address, MethodOrAbi: 'first(uint256[] values):uint256', chain: 'hardhat'
+        } });
+        eq_(missing.isError, true);
+        has_(missing.content[0].text, 'not provided');
+        let invalid = await client.callTool({ name: 'contract_read', arguments: {
+            NameOrAddress: echo.address, MethodOrAbi: 'first(uint256[] values):uint256', chain: 123
+        } });
+        eq_(invalid.isError, true);
+        has_(invalid.content[0].text, 'chain must be string');
     },
 
     async 'reads latest and numbered blocks and preserves API behavior'() {
@@ -114,7 +163,7 @@ UTest.create({
     },
 
     async 'unknown tools are protocol errors'() {
-        let { error } = await $promise.caught(client.callTool({ name: 'contract_write', arguments: {} }));
+        let { error } = await $promise.caught(client.callTool({ name: 'contract_watch', arguments: {} }));
         notEq_(error, null);
         has_(error.message, 'Unknown tool');
     },

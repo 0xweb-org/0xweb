@@ -173,6 +173,9 @@ export class McpFactory {
             }
             for (let [key, value] of Object.entries(input)) {
                 let property = Object.hasOwn(schema.properties, key) ? schema.properties[key] : null;
+                if (property == null && schema.additionalProperties) {
+                    continue;
+                }
                 $require.notNull(property, `Unknown argument: ${key}`);
                 $require.True(
                     typeof value === property.type && (typeof value !== 'number' || Number.isFinite(value)),
@@ -205,6 +208,9 @@ export class McpFactory {
     }
 
     private addCommand(command: ICommand, path: string[] = [], parent?: ICommand) {
+        if (command.mcp === false) {
+            return;
+        }
         let aliases = $command.getAliases(command.command);
         let name = aliases[aliases.length - 1].name;
         let parts = [...path, name];
@@ -243,6 +249,10 @@ export class McpFactory {
             if (key === 'json') {
                 continue;
             }
+            // A positional argument may also expose a CLI fallback flag.
+            if (merged.arguments.some(arg => arg.name === key && arg.fallback === key)) {
+                continue;
+            }
             $require.True(!Object.hasOwn(properties, key), `Duplicate MCP input: ${key}`);
             properties[key] = {
                 type: CliTypeMapper.toMcp(param),
@@ -265,7 +275,7 @@ export class McpFactory {
                     type: 'object',
                     properties,
                     required,
-                    additionalProperties: false
+                    additionalProperties: command.mcp?.additionalProperties ?? false
                 }
             }
         });
@@ -281,7 +291,7 @@ interface Tool {
         type: 'object';
         properties: Record<string, { type: string; description: string; enum?: (string | number)[]; default?: any }>;
         required: string[];
-        additionalProperties: false;
+        additionalProperties: boolean;
     };
 }
 
