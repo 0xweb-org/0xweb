@@ -27,7 +27,7 @@ It accepts POST requests; GET/SSE and DELETE/session management return 405.
 The MCP endpoint accepts loopback Host headers and
 same-port loopback browser origins; remote hostnames/proxies are not configured.
 
-`accounts_list`, the `account_*` commands, `block_get`, `rpc`, and the `contract_*` commands are exposed, except the continuous
+`accounts_list`, the `account_*` commands, `block_get`, `rpc`, `abi_*`, and the `contract_*` commands are exposed, except the continuous
 `contract watch` command. This includes transaction writes and storage mutations.
 Discover their generated input schemas with
 `tools/list`. Argument names retain the command definition's spelling and case:
@@ -76,6 +76,15 @@ For example, `arg0: "latest"` and `arg1: "false"` call `eth_getBlockByNumber`.
 JSON objects and arrays can be supplied as JSON strings. Omitting all `argN` inputs
 calls a method with no arguments. This exposes arbitrary node methods, including
 state-changing methods supported by the configured RPC endpoint.
+
+ABI tools are available as `abi_decode-calldata`, `abi_decode-error`,
+`abi_decode-result`, `abi_decode-log`, `abi_topic0`, and `abi_sig`.
+Use the required positional input names `Calldata`, `RevertData`, `ReturnData`,
+`EventData`, `event`, or `sig`, respectively. Supply `abi` and `topics` as strings
+(JSON-encoded when needed). Signatures and built-in errors work without a chain;
+contract-address ABI sources require `chain`. Decoded results include `name`,
+`args`, and `params`; hashes are returned as strings. MCP serializes bigint values
+as decimal strings.
 
 ## Process handling
 

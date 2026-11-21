@@ -6,6 +6,7 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CAbi } from '@core/commands/list/CAbi';
 import { CRpc } from '@core/commands/list/CRpc';
 import { CContract } from '@core/commands/list/CContract';
 import { CTx } from '@core/commands/list/CTx';
@@ -73,7 +74,7 @@ export class ServerService {
         const accounts = CAccounts();
         // Expose account discovery without account creation, imports, or other mutations.
         accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
-        const mcp = new McpFactory([CBlock(), CContract(), accounts, CAccount(), CRpc()], this.app);
+        const mcp = new McpFactory([CBlock(), CContract(), accounts, CAccount(), CRpc(), CAbi()], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }

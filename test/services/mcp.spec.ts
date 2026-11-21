@@ -1,3 +1,4 @@
+import { $abi } from '@dequanto/abi/$abi';
 import { UTest } from 'atma-utest';
 import { createServer, Server as HttpServer } from 'http';
 import { AddressInfo } from 'net';
@@ -68,7 +69,8 @@ UTest.create({
             'contract_write', 'contract_simulate', 'contract_calldata', 'contract_calldata-parse',
             'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
             'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list',
-            'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc'
+            'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
+            'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -288,6 +290,74 @@ UTest.create({
         ];
         for (let input of inputs) {
             let result = await client.callTool({ name: 'rpc', arguments: input });
+            eq_(result.isError, true);
+            eq_(result.content[0].type, 'text');
+        }
+    },
+
+    async 'ABI tools expose their required inputs without requiring a chain'() {
+        let { tools } = await client.listTools();
+        let cases = [
+            ['abi_decode-calldata', 'Calldata'], ['abi_decode-error', 'RevertData'],
+            ['abi_decode-result', 'ReturnData'], ['abi_decode-log', 'EventData'],
+            ['abi_topic0', 'event'], ['abi_sig', 'sig'],
+        ];
+        for (let [name, argument] of cases) {
+            let schema = tools.find(tool => tool.name === name).inputSchema;
+            deepEq_(schema.required, [argument]);
+            eq_(schema.properties[argument].type, 'string');
+            eq_(schema.properties.json, undefined);
+            eq_(schema.additionalProperties, false);
+        }
+    },
+
+    async 'computes ABI hashes and decodes calldata, errors, results and logs locally'() {
+        let zero = '0x0000000000000000000000000000000000000000';
+        let amount = 9_007_199_254_740_993n;
+        let topic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        let cases = [
+            { name: 'abi_sig', arguments: { sig: 'transfer(address to, uint256 amount)' }, expected: '0xa9059cbb' },
+            { name: 'abi_topic0', arguments: { event: 'event Transfer(address indexed from, address indexed to, uint256 value)' }, expected: topic },
+            { name: 'abi_decode-calldata', arguments: {
+                Calldata: $abi.encodeCall('transfer(address to, uint256 amount)', [zero, amount]),
+                abi: 'transfer(address to, uint256 amount)',
+            }, expected: { name: 'transfer', args: [zero, amount.toString()], params: { to: zero, amount: amount.toString() } } },
+            { name: 'abi_decode-error', arguments: {
+                RevertData: $abi.encodeCall('Error(string message)', ['Not allowed']),
+            }, expected: { name: 'Error', args: ['Not allowed'], params: { message: 'Not allowed' } } },
+            { name: 'abi_decode-result', arguments: {
+                ReturnData: $abi.encode(['uint256'], [amount]),
+                abi: JSON.stringify(['balanceOf() returns (uint256 balance)', 'other() returns (bool)']),
+                method: 'balanceOf',
+            }, expected: { name: 'balanceOf', args: [amount.toString()], params: { balance: amount.toString() } } },
+            { name: 'abi_decode-log', arguments: {
+                EventData: $abi.encode(['uint256'], [amount]),
+                abi: 'event Transfer(address indexed from, address indexed to, uint256 value)',
+                topics: JSON.stringify([topic, $abi.encode(['address'], [zero]), $abi.encode(['address'], [zero])]),
+            }, expected: { name: 'Transfer', args: [zero, zero, amount.toString()], params: { from: zero, to: zero, value: amount.toString() } } },
+        ];
+        for (let test of cases) {
+            let result = await client.callTool({ name: test.name, arguments: test.arguments });
+            eq_(result.isError, undefined, result.content[0].text);
+            deepEq_(JSON.parse(result.content[0].text), test.expected);
+            deepEq_(result.structuredContent, typeof test.expected === 'string' ? { result: test.expected } : test.expected);
+        }
+    },
+
+    async 'ABI input and decoding failures are tool errors'() {
+        let cases = [
+            { name: 'abi_sig', arguments: {} },
+            { name: 'abi_topic0', arguments: { event: 1 } },
+            { name: 'abi_decode-calldata', arguments: { Calldata: '0x123', abi: 'ping()' } },
+            { name: 'abi_decode-calldata', arguments: { Calldata: '0xa9059cbb', abi: 'approve(address,uint256)' } },
+            { name: 'abi_decode-error', arguments: { RevertData: '0x' } },
+            { name: 'abi_decode-result', arguments: { ReturnData: '0x', abi: 'read() returns (uint256)' } },
+            { name: 'abi_decode-log', arguments: { EventData: '0x', abi: 'event Ping()', topics: '{invalid}' } },
+            { name: 'abi_decode-result', arguments: { ReturnData: '0x', abi: '0x0000000000000000000000000000000000000001' } },
+            { name: 'abi_sig', arguments: { sig: 'ping()', unknown: true } },
+        ];
+        for (let test of cases) {
+            let result = await client.callTool(test);
             eq_(result.isError, true);
             eq_(result.content[0].type, 'text');
         }
