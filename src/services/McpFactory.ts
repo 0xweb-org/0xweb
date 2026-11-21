@@ -186,6 +186,10 @@ export class McpFactory {
                 }
             }
             let args = (entry.command.arguments ?? []).map(arg => input[arg.name]);
+            // Omitted optional inputs must not become explicit undefined positional arguments.
+            while (args.length > 0 && args[args.length - 1] === undefined) {
+                args.pop();
+            }
             let params = { ...input };
             for (let arg of entry.command.arguments ?? []) {
                 delete params[arg.name];

@@ -6,6 +6,7 @@ import { App } from '@core/app/App';
 import { ServerService } from '@core/services/ServerService';
 import { AccountsService } from '@core/services/AccountsService';
 import { Config } from '@dequanto/config/Config';
+import { RpcService } from '@core/services/RpcService';
 import { McpFactory } from '@core/services/McpFactory';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
@@ -67,7 +68,7 @@ UTest.create({
             'contract_write', 'contract_simulate', 'contract_calldata', 'contract_calldata-parse',
             'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
             'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list',
-            'account_balance', 'account_view', 'account_current', 'account_rename'
+            'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -229,6 +230,66 @@ UTest.create({
             deepEq_(JSON.parse(result.content[0].text), result.structuredContent);
         } finally {
             AccountsService.getSession = getSession;
+        }
+    },
+
+    async 'discovers RPC inputs and calls methods with zero, two and three arguments'() {
+        let { tools } = await client.listTools();
+        let schema = tools.find(x => x.name === 'rpc').inputSchema;
+        deepEq_(schema.required, ['RpcMethodName', 'chain']);
+        deepEq_(Object.keys(schema.properties), ['RpcMethodName', 'arg0', 'arg1', 'arg2', 'account', 'chain']);
+        eq_(schema.additionalProperties, true);
+        let chainId = await client.callTool({ name: 'rpc', arguments: {
+            RpcMethodName: 'eth_chainId', chain: 'hardhat'
+        } });
+        eq_(chainId.isError, undefined, chainId.content[0].text);
+        deepEq_(chainId.structuredContent, { result: await chain.getChainId() });
+        let block = await chain.getBlock('latest');
+        let result = await client.callTool({ name: 'rpc', arguments: {
+            RpcMethodName: 'eth_getBlockByNumber', chain: 'hardhat', arg0: String(block.number), arg1: 'false'
+        } });
+        eq_(result.isError, undefined, result.content[0].text);
+        eq_(result.structuredContent.hash, block.hash);
+        deepEq_(JSON.parse(result.content[0].text), result.structuredContent);
+        let storage = await client.callTool({ name: 'rpc', arguments: {
+            RpcMethodName: 'eth_getStorageAt', chain: 'hardhat',
+            arg0: '0x0000000000000000000000000000000000000001', arg1: '0', arg2: 'latest'
+        } });
+        eq_(storage.isError, undefined, storage.content[0].text);
+        eq_(BigInt(storage.structuredContent.result), 0n);
+    },
+
+    async 'forwards additional indexed RPC inputs'() {
+        let process = RpcService.prototype.process;
+        try {
+            RpcService.prototype.process = async (args, params) => ({ args, arg3: params.arg3, arg4: params.arg4 });
+            let result = await client.callTool({ name: 'rpc', arguments: {
+                RpcMethodName: 'test', chain: 'hardhat', arg0: '0', arg1: 'false', arg2: 'null',
+                arg3: 'json:[1,2]', arg4: 'string:123'
+            } });
+            eq_(result.isError, undefined);
+            deepEq_(result.structuredContent, {
+                args: ['test', '0', 'false', 'null'], arg3: 'json:[1,2]', arg4: 'string:123'
+            });
+        } finally {
+            RpcService.prototype.process = process;
+        }
+    },
+
+    async 'RPC validation and node failures return tool errors'() {
+        let inputs = [
+            { chain: 'hardhat' },
+            { RpcMethodName: 'eth_chainId' },
+            { RpcMethodName: 'eth_getBlockByNumber', chain: 'hardhat', arg1: 'false' },
+            { RpcMethodName: 'eth_getBlockByNumber', chain: 'hardhat', arg0: 'latest', arg3: 'false' },
+            { RpcMethodName: 'eth_getBlockByNumber', chain: 'hardhat', arg0: 'latest', arg1: 'boolean:invalid' },
+            { RpcMethodName: 'eth_call', chain: 'hardhat', arg0: '{invalid}' },
+            { RpcMethodName: 'unknown_mcp_test_method', chain: 'hardhat' },
+        ];
+        for (let input of inputs) {
+            let result = await client.callTool({ name: 'rpc', arguments: input });
+            eq_(result.isError, true);
+            eq_(result.content[0].type, 'text');
         }
     },
 

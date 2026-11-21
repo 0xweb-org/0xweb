@@ -72,7 +72,7 @@ export class CommandsHandler  {
         await command.prepare?.(args, cliParams);
         let params = await $command.getParams(cliParams, paramsDefinition);
         command.arguments?.forEach((argument, index) => {
-            if (args[index] == null && argument.fallback != null) {
+            if (args[index] == null && argument.fallback != null && params[argument.fallback] != null) {
                 args[index] = params[argument.fallback];
             }
         });

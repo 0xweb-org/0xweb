@@ -27,7 +27,7 @@ It accepts POST requests; GET/SSE and DELETE/session management return 405.
 The MCP endpoint accepts loopback Host headers and
 same-port loopback browser origins; remote hostnames/proxies are not configured.
 
-`accounts_list`, the `account_*` commands, `block_get`, and the `contract_*` commands are exposed, except the continuous
+`accounts_list`, the `account_*` commands, `block_get`, `rpc`, and the `contract_*` commands are exposed, except the continuous
 `contract watch` command. This includes transaction writes and storage mutations.
 Discover their generated input schemas with
 `tools/list`. Argument names retain the command definition's spelling and case:
@@ -69,6 +69,13 @@ string; the returned balance is an exact decimal string in base units.
 `account_current` uses the session account unless `account` is supplied.
 `account_view` includes `encryptedKey` only when `encrypted-key` is `true`.
 `account_rename` updates the stored account name.
+
+The `rpc` tool requires `RpcMethodName` and `chain`. Pass RPC arguments as contiguous
+`arg0`, `arg1`, ... properties, using strings with the same parsing rules as the CLI.
+For example, `arg0: "latest"` and `arg1: "false"` call `eth_getBlockByNumber`.
+JSON objects and arrays can be supplied as JSON strings. Omitting all `argN` inputs
+calls a method with no arguments. This exposes arbitrary node methods, including
+state-changing methods supported by the configured RPC endpoint.
 
 ## Process handling
 

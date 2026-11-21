@@ -10,6 +10,8 @@ import { RpcService } from '@core/services/RpcService';
 export function CRpc() {
     return <ICommand> {
         command: 'rpc',
+        // Allows indexed RPC inputs beyond the declared positional arguments.
+        mcp: { additionalProperties: true },
         description: [
             'Call an RPC method. Supply arguments positionally or with --arg0, --arg1, ... --argN; flags override the corresponding positional values. Do not skip indices.',
             'Decimal integers become hex quantities; true/false become booleans. Quote JSON objects and arrays as a single argument. null is a JSON null.',
@@ -24,16 +26,22 @@ export function CRpc() {
             },
             {
                 query: true,
+                name: 'arg0',
+                fallback: 'arg0',
                 description: 'Argument 1',
                 required: false
             },
             {
                 query: true,
+                name: 'arg1',
+                fallback: 'arg1',
                 description: 'Argument 2',
                 required: false
             },
             {
                 query: true,
+                name: 'arg2',
+                fallback: 'arg2',
                 description: 'Additional RPC arguments',
                 required: false
             }

@@ -133,6 +133,22 @@ UTest.create({
         }
     },
 
+    async 'does not fill omitted optional positional arguments with undefined'() {
+        let original = $validate.platforms;
+        try {
+            $validate.platforms = () => ['eth'];
+            let handler = new CommandsHandler().register(CRpc());
+            let empty = await handler.findCommand(['rpc', 'eth_chainId'], { chain: 'eth' });
+            deepEq_(empty.args, ['eth_chainId']);
+            let flagged = await handler.findCommand(['rpc', 'eth_getBlockByNumber'], {
+                chain: 'eth', arg0: 'latest', arg1: 'false'
+            });
+            deepEq_(flagged.args, ['eth_getBlockByNumber', 'latest', 'false']);
+        } finally {
+            $validate.platforms = original;
+        }
+    },
+
     async 'requires an RPC method before processing CLI parameters'() {
         let original = $validate.platforms;
         try {
