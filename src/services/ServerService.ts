@@ -12,10 +12,8 @@ import { CTx } from '@core/commands/list/CTx';
 import { CBlock } from '@core/commands/list/CBlock';
 import { CAuth } from '@core/commands/list/CAuth';
 import { CAccounts } from '@core/commands/list/CAccounts';
-import { Config } from '@dequanto/config/Config';
-import { AccountsService } from './AccountsService';
-import { $cli } from '@core/utils/$cli';
-import { $validate } from '@core/utils/$validate';
+import { ServerCommandExecutor } from './ServerCommandExecutor';
+import { McpFactory } from './McpFactory';
 
 export class ServerService {
 
@@ -71,6 +69,8 @@ export class ServerService {
 
         });
         await this.server.handlers.registerService('^/api', service);
+        const mcp = new McpFactory([CBlock()], this.app);
+        this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }
 
@@ -149,32 +149,7 @@ namespace ServerCommands {
                 }
             }
 
-            let defaults = await AccountsService.getSession(cliParams);
-            cliParams = { ...defaults, ...cliParams };
-            if ($cli.isLocal(cliParams)) {
-                cliParams.isLocal = true;
-            }
-            await command.prepare?.(cliArgs, cliParams);
-            // HTTP requests must report missing input instead of prompting on stdin.
-            for (let [flags, definition] of Object.entries(command.params ?? {})) {
-                if (definition.required && definition.default == null
-                    && !$command.getAliases(flags).some(alias => cliParams[alias.name] != null)
-                    && cliParams[definition.fallback] == null
-                    && !definition.requiredUnless?.some(key => cliParams[key] != null)) {
-                    throw new Error(`Missing required parameter: ${flags}`);
-                }
-            }
-            cliParams = await $command.getParams(cliParams, command.params ?? {});
-            $validate.args(command, cliArgs);
-            $validate.params(command, command.params ?? {}, cliParams);
-            let app = new App();
-            app.chain = appFromCli.chain;
-            app.config = await Config.fetch(cliParams);
-            app.config.env = 'api';
-            if (cliParams.chain) {
-                await app.ensureChain(cliParams.chain);
-            }
-            let result = await process(cliArgs, cliParams, app, command);
+            let result = await ServerCommandExecutor.execute(command, cliArgs, cliParams, appFromCli, process);
             return new HttpResponse({
                 content: JSON.stringify(result, (_key, value) => typeof value === 'bigint' ? value.toString() : value),
                 mimeType: 'application/json; charset=utf-8'

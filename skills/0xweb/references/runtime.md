@@ -17,6 +17,36 @@ Supported chain names come from loaded configuration. RPC endpoints and explorer
 
 The current skill's local-file inspection examples use `--chain hardhat`; ABI/source generation from those files does not require a running Hardhat node. Contract state reads and writes do require a working RPC endpoint.
 
+## MCP server
+
+Start the existing server with `0xweb server start --port 3000`. The HTTP API
+remains under `/api`; MCP clients connect to `http://localhost:3000/mcp` using
+Streamable HTTP (JSON responses, stateless requests). The built-in MCP handler
+supports protocol versions 2025-03-26, 2025-06-18 and 2025-11-25 without an SDK.
+It accepts POST requests; GET/SSE and DELETE/session management return 405.
+The MCP endpoint accepts loopback Host headers and
+same-port loopback browser origins; remote hostnames/proxies are not configured.
+
+Only `block_get` is currently exposed. Discover its generated input schema with
+`tools/list`. Argument names retain the command definition's spelling and case:
+
+```json
+{
+  "name": "block_get",
+  "arguments": {
+    "NumberOrDate": "2024-01-20T14:00:37Z",
+    "chain": "eth"
+  }
+}
+```
+
+This is the `params` object for `tools/call`. `NumberOrDate` also accepts
+`"latest"` or a decimal block number **as a string**. Both inputs are required;
+`json` is omitted because MCP always returns structured results. Results include
+the block in `structuredContent` and serialized JSON in text content. Invalid
+inputs and lookup failures return `isError: true`; unknown tool names are
+JSON-RPC errors. Date lookup remains approximate, as described in [blocks](./blocks.md).
+
 ## Process handling
 
 ### RPC arguments

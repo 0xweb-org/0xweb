@@ -323,7 +323,7 @@ export class ContractService extends BaseService {
             address: pkg.address,
             // Local Hardhat contracts have no explorer deployment metadata.
             fromBlock: this.chain.client.platform === 'hardhat' ? 0 : 'deployment',
-            params: args
+            params: args,
         });
         this.printLog(`Loaded bold<${logs.length}> ${eventName} Events`);
 

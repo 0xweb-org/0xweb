@@ -9,13 +9,13 @@ export function CServer() {
     return <ICommand>{
         command: 'server',
         description: [
-            'API server'
+            'HTTP API and MCP server'
         ],
         subcommands: [
             {
                 command: 'start',
                 description: [
-                    'Start the API and UI server'
+                    'Start the API, MCP (/mcp), and UI server. MCP currently exposes block_get'
                 ],
                 arguments: [
 
