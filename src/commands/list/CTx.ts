@@ -51,8 +51,11 @@ export function CTx() {
                     }
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the output path, signed transaction, signature, and signer address as JSON to stdout',
+                    },
                     ...Parameters.account(),
-                    '--output, -o': {
+                    '-o, --output': {
                         description: 'Override the output file path'
                     }
                 },
@@ -88,6 +91,7 @@ export function CTx() {
 
                     let output = params.output ?? path;
                     await File.writeAsync(output, json);
+                    return { path: output, ...txJson, signature: json.signature };
                 }
             },
             {
@@ -102,6 +106,9 @@ export function CTx() {
                     }
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the transaction receipt as JSON to stdout',
+                    },
                     to: {
                         description: 'Recipient address or contract name',
                     },
@@ -176,7 +183,9 @@ export function CTx() {
 
                     let hash = await writer.onSent;
                     let receipt = await writer.onCompleted;
-                    await TxService.printTx(app, hash as TEth.Hex, undefined, receipt);
+                    if (!$console.isJsonOnly()) {
+                        await TxService.printTx(app, hash as TEth.Hex, undefined, receipt);
+                    }
                     return receipt;
                 }
             },
@@ -193,6 +202,9 @@ export function CTx() {
                     }
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print transaction details, receipt, decoded logs, and transfers as JSON to stdout; null if not found',
+                    },
                     ...Parameters.chain()
                 },
                 api: {},
@@ -200,6 +212,9 @@ export function CTx() {
 
                     let [ hash ] = args as [ TEth.Hex ];
                     let service = new TxService(app);
+                    if ($console.isJsonOnly()) {
+                        service.opts.logger = false;
+                    }
                     return service.tx(hash);
                 }
             }
