@@ -27,7 +27,7 @@ It accepts POST requests; GET/SSE and DELETE/session management return 405.
 The MCP endpoint accepts loopback Host headers and
 same-port loopback browser origins; remote hostnames/proxies are not configured.
 
-`block_get` and the `contract_*` commands are exposed, except the continuous
+`accounts_list`, `block_get`, and the `contract_*` commands are exposed, except the continuous
 `contract watch` command. This includes transaction writes and storage mutations.
 Discover their generated input schemas with
 `tools/list`. Argument names retain the command definition's spelling and case:
@@ -55,6 +55,11 @@ Use decimal strings for large integers; arrays and tuples can be JSON values.
 `contract_logs` also accepts additional event filters.
 Missing ABI inputs return tool errors without prompting. `contract_calldata-parse`
 accepts a single `calldata` input for its positional argument/flag.
+
+`accounts_list` returns public account metadata (names, addresses, types, operators,
+and role keys), excluding private keys. It accepts `pin` or `2fa`; existing session
+credentials are used when available. Account creation, imports, removal, login,
+and backup are not exposed through MCP.
 
 ## Process handling
 

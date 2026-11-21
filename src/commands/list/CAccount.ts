@@ -37,6 +37,9 @@ export function CAccount ()  {
                     }
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the account address, token metadata, and balance in base units as a decimal string to stdout',
+                    },
                     '-b, --block': {
                         description: 'Block number to query. Default: latest',
                         map: Number
@@ -74,6 +77,11 @@ export function CAccount ()  {
                         ['Decimals', decimals.toString()],
                         ['Balance', `green<${eth}>`]
                     ]);
+                    return {
+                        address,
+                        token: { symbol: token.symbol, address: token.address, decimals },
+                        balance: balance.toString(),
+                    };
                 }
             },
             {
@@ -89,6 +97,9 @@ export function CAccount ()  {
                     },
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print account details as JSON to stdout. Includes an encrypted key only with --encrypted-key',
+                    },
                     '--encrypted-key': {
                         description: 'Also show the private key encrypted with the PIN',
                         type: 'boolean',
@@ -100,6 +111,10 @@ export function CAccount ()  {
                     let accounts = di.resolve(AccountsService, app.config, params);
                     let account = await accounts.get(accountName);
                     $require.notNull(account, `Account ${accountName} not found`);
+                    let result: { name: string; address: TAddress; encryptedKey?: string } = {
+                        name: account.name ?? accountName,
+                        address: account.address,
+                    };
                     let tableData = [
                         ['Account', accountName],
                         ['Address', account.address ?? ''],
@@ -113,9 +128,11 @@ export function CAccount ()  {
                                 key = encrypted;
                             }
                             tableData.push(['Key', key]);
+                            result.encryptedKey = key;
                         }
                     }
                     $console.table(tableData);
+                    return result;
                 }
             },
             {
@@ -124,6 +141,9 @@ export function CAccount ()  {
                     'Show the current account'
                 ],
                 params: {
+                    '--json': {
+                        description: 'Print the current account name and address as JSON to stdout',
+                    },
                     ...Parameters.account({ required: true })
                 },
                 async process(args: string[], params, app: App) {
@@ -135,6 +155,7 @@ export function CAccount ()  {
                         ['Name', account.name ?? ''],
                         ['Address', account.address ?? ''],
                     ]);
+                    return { name: account.name, address: account.address };
                 }
             },
             {
@@ -143,7 +164,9 @@ export function CAccount ()  {
                     'Rename an account'
                 ],
                 params: {
-
+                    '--json': {
+                        description: 'Print the renamed account name and address as JSON to stdout',
+                    },
                 },
                 arguments: [
                     {
@@ -170,6 +193,7 @@ export function CAccount ()  {
                         name: newName,
                     });
                     $console.log(`Renamed account from "${oldName}" to "${newName}"`);
+                    return { name: newName, address: account.address };
                 }
             },
         ],
@@ -179,7 +203,7 @@ export function CAccount ()  {
         },
 
         async process(args: string[], params, app: App) {
-            console.warn(`Command for an "accounts" not found: ${args[0]}. Call "0xweb accounts --help" to view the list of commands`);
+            throw new Error(`Unknown account subcommand: ${args[0] ?? '(missing)'}. Call "0xweb account --help" to view the list of commands`);
         }
     };
 };

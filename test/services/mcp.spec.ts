@@ -4,6 +4,8 @@ import { AddressInfo } from 'net';
 import { middleware } from 'atma-server';
 import { App } from '@core/app/App';
 import { ServerService } from '@core/services/ServerService';
+import { AccountsService } from '@core/services/AccountsService';
+import { Config } from '@dequanto/config/Config';
 import { McpFactory } from '@core/services/McpFactory';
 import { TestNode } from '../../dequanto/test/hardhat/TestNode';
 import { HardhatProvider } from '@dequanto/hardhat/HardhatProvider';
@@ -58,13 +60,13 @@ UTest.create({
         if (http) await new Promise<void>((resolve, reject) => http.close(error => error ? reject(error) : resolve()));
     },
 
-    async 'discovers block and contract tools with original argument names'() {
+    async 'discovers block, contract and account tools with original argument names'() {
         let { tools } = await client.listTools();
         deepEq_(tools.map(x => x.name), [
             'block_get', 'contract_info', 'contract_list', 'contract_abi', 'contract_read',
             'contract_write', 'contract_simulate', 'contract_calldata', 'contract_calldata-parse',
             'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
-            'contract_var', 'contract_var-set', 'contract_vars'
+            'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -76,6 +78,66 @@ UTest.create({
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'lists only public account metadata and supports empty storage'() {
+        let getSession = AccountsService.getSession;
+        let fetchConfig = Config.fetch;
+        let accounts = [{
+            name: 'Operator', address: '0x0000000000000000000000000000000000000001',
+            key: 'private-key-fixture',
+        }, {
+            name: 'Safe', address: '0x0000000000000000000000000000000000000002',
+            type: 'safe', operator: { name: 'Operator', key: 'nested-key-fixture' },
+        }, {
+            name: 'Role', address: '0x0000000000000000000000000000000000000003',
+            type: 'zodiac', operator: 'Operator', roleKey: '0x1234',
+        }];
+        try {
+            // Isolate account storage and session credentials from the developer's machine.
+            AccountsService.getSession = async () => ({});
+            Config.fetch = async () => ({
+                $sources: { array: [{ data: { name: 'accounts' }, config: { accounts } }] }
+            } as any);
+            let { tools } = await client.listTools();
+            let schema = tools.find(x => x.name === 'accounts_list').inputSchema;
+            deepEq_(Object.keys(schema.properties), ['pin', '2fa']);
+            deepEq_(schema.required, []);
+            eq_(schema.additionalProperties, false);
+
+            let result = await client.callTool({ name: 'accounts_list', arguments: { pin: 'test-pin' } });
+            eq_(result.isError, undefined);
+            let expected = [
+                { name: 'Operator', address: accounts[0].address, type: 'eoa' },
+                { name: 'Safe', address: accounts[1].address, type: 'safe', operator: 'Operator' },
+                { name: 'Role', address: accounts[2].address, type: 'zodiac', operator: 'Operator', roleKey: '0x1234' },
+            ];
+            deepEq_(result.structuredContent, { result: expected });
+            deepEq_(JSON.parse(result.content[0].text), expected);
+
+            accounts = [];
+            let empty = await client.callTool({ name: 'accounts_list', arguments: { '2fa': '123456' } });
+            eq_(empty.isError, undefined);
+            deepEq_(empty.structuredContent, { result: [] });
+            let missing = await client.callTool({ name: 'accounts_list', arguments: {} });
+            eq_(missing.isError, true);
+            has_(missing.content[0].text, 'Missing required parameter');
+            let invalid = await client.callTool({ name: 'accounts_list', arguments: { pin: 'test-pin', key: 'unexpected' } });
+            eq_(invalid.isError, true);
+            has_(invalid.content[0].text, 'Unknown argument: key');
+        } finally {
+            AccountsService.getSession = getSession;
+            Config.fetch = fetchConfig;
+        }
+    },
+
+    async 'account mutations are not exposed over MCP'() {
+        let commands = ['new', 'add', 'remove', 'login', 'backup'];
+        for (let command of commands) {
+            let { error } = await $promise.caught(client.callTool({ name: `accounts_${command}`, arguments: {} }));
+            notEq_(error, null);
+            has_(error.message, 'Unknown tool');
+        }
     },
 
     async 'reads a contract with dynamic ABI arguments and reports missing values'() {

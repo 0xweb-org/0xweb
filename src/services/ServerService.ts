@@ -69,7 +69,10 @@ export class ServerService {
 
         });
         await this.server.handlers.registerService('^/api', service);
-        const mcp = new McpFactory([CBlock(), CContract()], this.app);
+        const accounts = CAccounts();
+        // Expose account discovery without account creation, imports, or other mutations.
+        accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
+        const mcp = new McpFactory([CBlock(), CContract(), accounts], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }
