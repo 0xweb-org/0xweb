@@ -1,4 +1,5 @@
 import { $abi } from '@dequanto/abi/$abi';
+import { File } from 'atma-io';
 import { UTest } from 'atma-utest';
 import { createServer, Server as HttpServer } from 'http';
 import { AddressInfo } from 'net';
@@ -70,7 +71,8 @@ UTest.create({
             'contract_logs', 'contract_dump', 'contract_dump-restore', 'contract_slot',
             'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list',
             'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
-            'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig'
+            'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig',
+            'tx_sign', 'tx_send', 'tx_view'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -82,6 +84,71 @@ UTest.create({
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'transaction tools sign, send and view on the local chain'() {
+        let { tools } = await client.listTools();
+        let sign = tools.find(x => x.name === 'tx_sign').inputSchema;
+        deepEq_(sign.required, ['Path', 'chain']);
+        eq_(sign.properties.output.type, 'string');
+        eq_(sign.properties.pin.type, 'string');
+        let send = tools.find(x => x.name === 'tx_send').inputSchema;
+        deepEq_(send.required, ['chain']);
+        eq_(send.properties.value.type, 'string');
+        eq_(send.properties.data.type, 'string');
+        deepEq_(tools.find(x => x.name === 'tx_view').inputSchema.required, ['Hash', 'chain']);
+
+        let provider = new HardhatProvider();
+        let sender = provider.deployer(0);
+        let recipient = provider.deployer(1);
+        let input = './test/bin/mcp-tx/input.json';
+        let output = './test/bin/mcp-tx/signed.json';
+        let getSession = AccountsService.getSession;
+        try {
+            AccountsService.getSession = async () => ({});
+            await File.writeAsync(input, { tx: { to: recipient.address, value: '1' } });
+            let signed = await client.callTool({ name: 'tx_sign', arguments: {
+                Path: input, output, chain: 'hardhat', account: sender.key,
+            } });
+            eq_(signed.isError, undefined);
+            eq_(signed.structuredContent.path, output);
+            deepEq_(signed.structuredContent.account, { address: sender.address });
+            eq_(JSON.stringify(signed).includes(sender.key.slice(2)), false);
+            let saved = await File.readAsync<any>(output, { cached: false });
+            deepEq_(signed.structuredContent.signature, saved.signature);
+            deepEq_(signed.structuredContent.tx, saved.tx);
+
+            let before = await chain.getBalance(recipient.address);
+            let sent = await client.callTool({ name: 'tx_send', arguments: { Path: output, chain: 'hardhat' } });
+            eq_(sent.isError, undefined);
+            eq_(sent.structuredContent.status, 1);
+            eq_(await chain.getBalance(recipient.address) - before, 1n);
+            let viewed = await client.callTool({ name: 'tx_view', arguments: {
+                Hash: sent.structuredContent.transactionHash, chain: 'hardhat',
+            } });
+            eq_(viewed.isError, undefined);
+            eq_(viewed.structuredContent.status, 'success');
+            eq_(viewed.structuredContent.tx.hash, sent.structuredContent.transactionHash);
+            let missing = await client.callTool({ name: 'tx_view', arguments: {
+                Hash: `0x${'ab'.repeat(32)}`, chain: 'hardhat',
+            } });
+            deepEq_(missing.structuredContent, { result: null });
+
+            before = await chain.getBalance(recipient.address);
+            let value = 9_007_199_254_740_993n;
+            let direct = await client.callTool({ name: 'tx_send', arguments: {
+                to: recipient.address, value: value.toString(), data: '0x', account: sender.key, chain: 'hardhat',
+            } });
+            eq_(direct.isError, undefined);
+            eq_(direct.structuredContent.status, 1);
+            eq_(await chain.getBalance(recipient.address) - before, value);
+            let invalid = await client.callTool({ name: 'tx_send', arguments: { value: 1, chain: 'hardhat' } });
+            eq_(invalid.isError, true);
+            let required = await client.callTool({ name: 'tx_sign', arguments: { chain: 'hardhat' } });
+            eq_(required.isError, true);
+        } finally {
+            AccountsService.getSession = getSession;
+        }
     },
 
     async 'lists only public account metadata and supports empty storage'() {

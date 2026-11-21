@@ -308,7 +308,7 @@ type TParam = NonNullable<ICommand['params']>[''];
 
 namespace CliTypeMapper {
     export function toMcp (param: TParam) {
-        return param.type === 'address'
+        return param.type === 'address' || param.type === 'bigint' || param.type === 'hex'
             ? 'string'
             : (param.type ?? 'string');
     }

@@ -46,6 +46,7 @@ export function CTx() {
                 ],
                 arguments: [
                     {
+                        name: 'Path',
                         description: `Path to a transaction JSON file`,
                         required: true
                     }
@@ -54,6 +55,8 @@ export function CTx() {
                     '--json': {
                         description: 'Print the output path, signed transaction, signature, and signer address as JSON to stdout',
                     },
+                    ...Parameters.chain(),
+                    ...Parameters.pin({ required: false }),
                     ...Parameters.account(),
                     '-o, --output': {
                         description: 'Override the output file path'
@@ -101,6 +104,7 @@ export function CTx() {
                 ],
                 arguments: [
                     {
+                        name: 'Path',
                         description: `Path to a transaction JSON file. If omitted, supply transaction fields as CLI parameters`,
                         required: false
                     }
@@ -113,13 +117,15 @@ export function CTx() {
                         description: 'Recipient address or contract name',
                     },
                     value: {
-                        description: 'Amount to send',
+                        description: 'Amount to send in wei, as a decimal string',
                         type: 'bigint'
                     },
                     data: {
-                        description: 'Transaction data to send',
+                        description: 'Transaction data to send as a hex string',
                         type: 'hex'
                     },
+                    ...Parameters.chain(),
+                    ...Parameters.pin({ required: false }),
                     ...Parameters.account({ required: false }),
                 },
                 async process(args: string[], params: TTxSendParams, app: App) {
@@ -197,6 +203,7 @@ export function CTx() {
                 ],
                 arguments: [
                     {
+                        name: 'Hash',
                         description: `Transaction hash`,
                         required: true,
                     }

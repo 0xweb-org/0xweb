@@ -21,7 +21,7 @@ export interface ICommand {
             key?: string
             description: string
             required?: boolean
-            type?: 'number' | 'string' | 'boolean' | 'address',
+            type?: 'number' | 'string' | 'boolean' | 'address' | 'bigint' | 'hex',
             map?: <T>(input: string) => T
 
             oneOf?: (string | number)[]
@@ -54,7 +54,7 @@ export abstract class Command implements ICommand {
     params?: {
         [definition: string]: {
             // will be parsed from definition (the last one)
-            key?: string; description: string; required?: boolean; type?: 'string' | 'number' | 'boolean';
+            key?: string; description: string; required?: boolean; type?: NonNullable<ICommand['params']>[string]['type'];
         };
     };
     subcommands?: ICommand[];
