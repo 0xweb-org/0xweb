@@ -75,7 +75,7 @@ UTest.create({
             'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
             'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig',
             'tx_sign', 'tx_send', 'tx_view',
-            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login'
+            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login', 'gas'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -87,6 +87,23 @@ UTest.create({
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'gas returns fee data in wei through MCP'() {
+        let { tools } = await client.listTools();
+        let schema = tools.find(x => x.name === 'gas').inputSchema;
+        deepEq_(Object.keys(schema.properties), ['chain']);
+        eq_(schema.properties.chain.default, 'eth');
+        deepEq_(schema.required, []);
+        let result = await client.callTool({ name: 'gas', arguments: { chain: 'hardhat' } });
+        eq_(result.isError, undefined);
+        eq_(result.structuredContent.chain, 'hardhat');
+        let gas = await chain.getGasPrice();
+        let block = await chain.getBlock('latest');
+        eq_(result.structuredContent.price, gas.price.toString());
+        eq_(result.structuredContent.base, block.baseFeePerGas.toString());
+        eq_(result.structuredContent.priority, (await chain.getGasPriorityFee()).toString());
+        deepEq_(JSON.parse(result.content[0].text), result.structuredContent);
     },
 
     async 'auth tools manage an isolated session without interactive prompts'() {
