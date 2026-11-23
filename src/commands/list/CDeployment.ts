@@ -1,3 +1,4 @@
+import { $require } from '@dequanto/utils/$require';
 import { ICommand } from '../ICommand';
 import { Parameters } from '@core/utils/Parameters';
 import { $address } from '@dequanto/utils/$address';
@@ -16,25 +17,24 @@ export function CDeployment() {
                 description: ['Import an existing deployment into local deployment metadata and detect proxies'],
                 arguments: [
                     {
+                        name: 'ContractAddress',
                         description: 'Contract address',
                         required: true,
                     },
                     {
+                        name: 'ContractName',
                         description: 'Contract name matching a compiled artifact',
                         required: true
                     },
                 ],
                 params: {
-                    // file: {
-                    //     description: 'Local meta file with the deployments',
-                    //     required: false,
-                    // },
+                    '--json': { description: 'Print the chain, metadata directory, and imported deployment record as JSON' },
                     directory: {
                         description: 'Local deployment metadata directory. Updates <dir>/deployments-<chain>.json',
                         required: false,
                     },
                     id: {
-                        description: `ID to assign to the deployment`,
+                        description: `ID to assign to the deployment. Default: contract name`,
                         required: false,
                     },
                     main: {
@@ -45,10 +45,12 @@ export function CDeployment() {
                 },
                 async process(args, params, app) {
                     let [contractAddress, contractName] = args;
-                    let { file, chain } = params;
+                    $require.AddressNotEmpty(contractAddress);
+                    let id = params.id ?? contractName;
+                    $require.True(id.trim().length > 0, `Deployment ID must not be empty`);
                     let directory = params.directory ?? './0xc/deployments';
 
-                    let client = app!.chain!.client;
+                    let client = $require.notNull(app?.chain, `Chain not initialized`).client;
                     let deployments = new Deployments(client, {
                         address: $address.ZERO
                     }, {
@@ -58,9 +60,11 @@ export function CDeployment() {
                     await deployments.saveExisting({
                         contractAddress,
                         name: contractName,
-                        id: params.id ?? void 0,
-                        main: params.name
+                        id,
+                        main: params.main
                     });
+                    let deployment = await deployments.store.getDeploymentInfo(contractName, { id });
+                    return { chain: client.platform, directory, deployment };
                 }
             },
         ],
@@ -70,16 +74,3 @@ export function CDeployment() {
 
     };
 }
-
-interface IInstallParams {
-    name: string
-    contractName: string
-    implementation: string
-    target: 'js' | 'mjs' | 'ts'
-    chain: string
-    output: string
-    source: string
-    global: boolean
-    saveSources: boolean
-}
-

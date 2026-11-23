@@ -6,6 +6,7 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CDeployment } from '@core/commands/list/CDeployment';
 import { CNs } from '@core/commands/list/CNs';
 import { CConfig } from '@core/commands/list/CConfig';
 import { CGas } from '@core/commands/list/CGas';
@@ -91,7 +92,8 @@ export class ServerService {
             CAuth(),
             CGas(),
             config,
-            CNs()
+            CNs(),
+            CDeployment()
         ], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
