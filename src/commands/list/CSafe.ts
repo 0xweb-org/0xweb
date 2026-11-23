@@ -4,7 +4,7 @@ import { ICommand } from '../ICommand';
 import { AccountsService } from '@core/services/AccountsService';
 import { App } from '@core/app/App';
 import { $console } from '@core/utils/$console';
-import { EoAccount, SafeAccount, TAccount } from '@dequanto/models/TAccount';
+import { EoAccount, SafeAccount } from '@dequanto/models/TAccount';
 import { $address } from '@dequanto/utils/$address';
 import { GnosisSafeFactory } from '@dequanto/safe/GnosisSafeFactory';
 import { $require } from '@dequanto/utils/$require';
@@ -15,8 +15,6 @@ import { GnosisSafeHandler } from '@dequanto/safe/GnosisSafeHandler';
 import { TxDataBuilder } from '@dequanto/txs/TxDataBuilder';
 import { Web3Client } from '@dequanto/clients/Web3Client';
 import { FileServiceTransport } from '@dequanto/safe/transport/FileServiceTransport';
-import { $tx } from '@core/utils/$tx';
-import { $logger, l } from '@dequanto/utils/$logger';
 import { TxService } from '@core/services/TxService';
 import { TEth } from '@dequanto/models/TEth';
 

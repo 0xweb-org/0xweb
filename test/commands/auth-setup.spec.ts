@@ -1,3 +1,4 @@
+import { App } from '@core/app/App';
 import { UTest } from 'atma-utest';
 import { CAuth } from '@core/commands/list/CAuth';
 import { AccountsService } from '@core/services/AccountsService';
@@ -49,7 +50,7 @@ UTest.create({
                 saved++;
             };
             let setup = CAuth().subcommands.find(x => x.command === '2fa').subcommands.find(x => x.command === 'setup');
-            await setup.process([], params);
+            await setup.process([], params, new App());
             eq_(prompts, 2);
             eq_(saved, 1);
             eq_(errors.length, 1);
@@ -62,7 +63,7 @@ UTest.create({
             AccountsService.save2FA = async () => { throw failure; };
             let caught: Error;
             try {
-                await setup.process([], params);
+                await setup.process([], params, new App());
             } catch (error) {
                 caught = error as Error;
             }
@@ -82,7 +83,7 @@ UTest.create({
             AccountsService.save2FA = async () => { saved++; };
             caught = undefined;
             try {
-                await setup.process([], params);
+                await setup.process([], params, new App());
             } catch (error) {
                 caught = error as Error;
             }
@@ -97,7 +98,7 @@ UTest.create({
                 prompts++;
                 return prompts < 3 ? 'invalid' : (await new TotpService().generateTotpCode(seed)).code;
             }) as typeof $cli.ask;
-            await setup.process([], params);
+            await setup.process([], params, new App());
             eq_(prompts, 3);
             eq_(saved, 1);
             eq_(messages.join(''), '2FA enabled');
@@ -111,13 +112,13 @@ UTest.create({
                 eq_(savedParams, directParams);
                 saved++;
             };
-            await setup.process([], directParams);
+            await setup.process([], directParams, new App());
             eq_(saved, 2);
             eq_(messages.join(''), '2FA enabled');
 
             messages.length = 0;
             AccountsService.save2FA = async () => { throw failure; };
-            let { error } = await $promise.caught(setup.process([], directParams));
+            let { error } = await $promise.caught(setup.process([], directParams, new App()));
             eq_(error, failure);
             eq_(messages.length, 0);
         } finally {

@@ -14,6 +14,9 @@ import { TEth } from '@dequanto/models/TEth';
 export function CAuth() {
     return <ICommand>{
         command: 'auth',
+        params: {
+            ...Parameters.pin({ required: false }),
+        },
 
         description: [
             'Manage authenticated account'
@@ -127,6 +130,8 @@ export function CAuth() {
                 ],
                 arguments: [
                     {
+                        name: 'accountName',
+                        required: true,
                         description: 'Name of the account to set as default'
                     }
                 ],

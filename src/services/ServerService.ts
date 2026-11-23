@@ -74,7 +74,16 @@ export class ServerService {
         const accounts = CAccounts();
         // Expose account discovery without account creation, imports, or other mutations.
         accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
-        const mcp = new McpFactory([CBlock(), CContract(), accounts, CAccount(), CRpc(), CAbi(), CTx()], this.app);
+        const mcp = new McpFactory([
+            CBlock(),
+            CContract(),
+            accounts,
+            CAccount(),
+            CRpc(),
+            CAbi(),
+            CTx(),
+            CAuth()
+        ], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }

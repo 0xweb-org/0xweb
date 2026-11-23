@@ -1,4 +1,6 @@
 import { $abi } from '@dequanto/abi/$abi';
+import { TotpService } from '@core/services/TotpService';
+import { $cli } from '@core/utils/$cli';
 import { File } from 'atma-io';
 import { UTest } from 'atma-utest';
 import { createServer, Server as HttpServer } from 'http';
@@ -72,7 +74,8 @@ UTest.create({
             'contract_var', 'contract_var-set', 'contract_vars', 'accounts_list',
             'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
             'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig',
-            'tx_sign', 'tx_send', 'tx_view'
+            'tx_sign', 'tx_send', 'tx_view',
+            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -84,6 +87,72 @@ UTest.create({
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'auth tools manage an isolated session without interactive prompts'() {
+        let originals = {
+            local: AccountsService.DEFAULTS_PATH_LOCAL, global: AccountsService.DEFAULTS_PATH_GLOBAL,
+            fetch: Config.fetch, ask: $cli.ask,
+        };
+        let sessionPath = './test/bin/mcp-auth/session.json';
+        let account = { name: 'Alice', address: '0x0000000000000000000000000000000000000001', key: 'private-key-fixture' };
+        let seed = '0x3132333435363738393031323334353637383930' as const;
+        let call = (name: string, args: Record<string, unknown> = {}) => client.callTool({ name, arguments: args });
+        try {
+            AccountsService.DEFAULTS_PATH_LOCAL = sessionPath;
+            AccountsService.DEFAULTS_PATH_GLOBAL = sessionPath;
+            if (await File.existsAsync(sessionPath)) await File.removeAsync(sessionPath);
+            Config.fetch = async () => ({
+                $sources: { array: [{ data: { name: 'accounts' }, config: { accounts: [account] } }] }
+            } as any);
+            $cli.ask = (async () => { throw new Error('Unexpected interactive prompt'); }) as typeof $cli.ask;
+            let { tools } = await client.listTools();
+            let login = tools.find(x => x.name === 'auth_login').inputSchema;
+            deepEq_(login.required, ['accountName']);
+            eq_(login.properties.pin.type, 'string');
+            eq_(login.properties['2fa'].type, 'string');
+            let setup = tools.find(x => x.name === 'auth_2fa_setup').inputSchema;
+            eq_(setup.properties.seed.type, 'string');
+
+            let initial = await call('auth_status');
+            deepEq_(initial.structuredContent, { '2fa': false, account: '' });
+            let missing = await call('auth_login');
+            eq_(missing.isError, true);
+            let loggedIn = await call('auth_login', { accountName: account.name, pin: 'test-pin' });
+            eq_(loggedIn.isError, undefined);
+            deepEq_(loggedIn.structuredContent, { name: account.name, address: account.address });
+            eq_(JSON.stringify(loggedIn).includes(account.key), false);
+            let status = await call('auth_status');
+            deepEq_(status.structuredContent, { '2fa': false, account: account.name });
+
+            let missingSeed = await call('auth_2fa_setup', { pin: 'test-pin' });
+            eq_(missingSeed.isError, true);
+            has_(missingSeed.content[0].text, 'Provide seed');
+            let enabled = await call('auth_2fa_setup', { pin: 'test-pin', seed });
+            eq_(enabled.isError, undefined);
+            deepEq_(enabled.structuredContent, { success: true });
+            eq_(JSON.stringify(enabled).includes(seed), false);
+            let enabledStatus = await call('auth_2fa_status');
+            deepEq_(enabledStatus.structuredContent, { enabled: true, account: account.name });
+            let rejected = await call('auth_2fa_disable', { pin: 'test-pin' });
+            eq_(rejected.isError, true);
+            has_(rejected.content[0].text, '2FA');
+            let replacement = await call('auth_2fa_setup', { pin: 'test-pin', seed });
+            eq_(replacement.isError, true);
+            has_(replacement.content[0].text, '2FA');
+            let { code } = await new TotpService().generateTotpCode(seed);
+            let disabled = await call('auth_2fa_disable', { '2fa': code });
+            eq_(disabled.isError, undefined);
+            deepEq_(disabled.structuredContent, { success: true });
+            let final = await call('auth_2fa_status');
+            deepEq_(final.structuredContent, { enabled: false, account: account.name });
+        } finally {
+            AccountsService.DEFAULTS_PATH_LOCAL = originals.local;
+            AccountsService.DEFAULTS_PATH_GLOBAL = originals.global;
+            Config.fetch = originals.fetch;
+            $cli.ask = originals.ask;
+            if (await File.existsAsync(sessionPath)) await File.removeAsync(sessionPath);
+        }
     },
 
     async 'transaction tools sign, send and view on the local chain'() {

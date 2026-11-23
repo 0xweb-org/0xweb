@@ -1,8 +1,7 @@
 import { ICommand } from '../ICommand';
-import { $promise } from '@dequanto/utils/$promise';
 import { ServerService } from '@core/services/ServerService';
-import type { App } from '@core/app/App';
 import { TAppProcessResult } from '@core/app/types';
+import type { App } from '@core/app/App';
 
 
 export function CServer() {
@@ -15,7 +14,7 @@ export function CServer() {
             {
                 command: 'start',
                 description: [
-                    'Start the API, MCP (/mcp), and UI server. MCP currently exposes block_get'
+                    'Start the API, MCP (/mcp), and UI server.'
                 ],
                 arguments: [
 
