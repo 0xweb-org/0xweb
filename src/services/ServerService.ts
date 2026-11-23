@@ -6,6 +6,7 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CNs } from '@core/commands/list/CNs';
 import { CConfig } from '@core/commands/list/CConfig';
 import { CGas } from '@core/commands/list/CGas';
 import { CAbi } from '@core/commands/list/CAbi';
@@ -89,7 +90,8 @@ export class ServerService {
             CTx(),
             CAuth(),
             CGas(),
-            config
+            config,
+            CNs()
         ], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
