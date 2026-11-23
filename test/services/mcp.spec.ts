@@ -75,7 +75,7 @@ UTest.create({
             'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
             'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig',
             'tx_sign', 'tx_send', 'tx_view',
-            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login', 'gas'
+            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login', 'gas', 'config'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
@@ -87,6 +87,89 @@ UTest.create({
         deepEq_(Object.keys(schema.properties), ['NumberOrDate', 'chain']);
         has_(tools[0].description, 'date');
         has_((schema.properties.NumberOrDate as { description: string }).description, 'timezone');
+    },
+
+    async 'config tools view, get and write isolated configuration'() {
+        let fetchConfig = Config.fetch;
+        let getSession = AccountsService.getSession;
+        let writes: { values: unknown; deep: boolean }[] = [];
+        let received: Record<string, any>;
+        let config = { pin: 'mcp-fixture-secret', accounts: [{ key: 'mcp-fixture-key' }], settings: { target: 'cjs' }, e: false, edit: false, v: true, view: true };
+        try {
+            AccountsService.getSession = async () => ({});
+            Config.fetch = async params => {
+                received = params;
+                return {
+                    toJSON: () => ({ ...config }),
+                    $sources: { array: [{
+                        data: { name: 'main', path: './test/bin/mcp-config/config.yml' },
+                        write: async (values, deep) => { writes.push({ values, deep }); },
+                    }] },
+                } as any;
+            };
+            let { tools } = await client.listTools();
+            let schema = tools.find(x => x.name === 'config').inputSchema;
+            deepEq_(Object.keys(schema.properties), ['view', 'local', 'global', 'set', 'get']);
+            eq_(schema.properties.view.type, 'boolean');
+            eq_(schema.properties.local.type, 'boolean');
+            eq_(schema.properties.global.type, 'boolean');
+            eq_(schema.properties.set.type, 'string');
+            let call = (args: Record<string, unknown>) => client.callTool({ name: 'config', arguments: args });
+            let viewed = await call({ view: true });
+            deepEq_(viewed.structuredContent, { pin: '[REDACTED]', accounts: '[REDACTED]', settings: { target: 'cjs' } });
+            let secret = await call({ get: 'pin' });
+            deepEq_(secret.structuredContent, { result: '[REDACTED]' });
+            eq_(JSON.stringify(viewed).includes('mcp-fixture'), false);
+            let got = await call({ get: 'settings.target' });
+            deepEq_(got.structuredContent, { result: 'cjs' });
+            deepEq_(JSON.parse(got.content[0].text), 'cjs');
+            let missing = await call({ get: 'settings.missing' });
+            deepEq_(missing.structuredContent, { result: null });
+            let set = await call({ set: 'settings.target=esm;enabled=true;count=2;url=https://example.test/?a=b', local: true });
+            eq_(set.isError, undefined);
+            eq_(received.local, true);
+            eq_(received.isLocal, true);
+            let expected = { settings: { target: 'esm' }, enabled: true, count: 2, url: 'https://example.test/?a=b' };
+            deepEq_(writes[0], { values: expected, deep: true });
+            deepEq_(set.structuredContent, { path: './test/bin/mcp-config/config.yml', values: expected });
+            let json = { settings: { target: 'esm' }, endpoints: ['one', 'two'], enabled: false };
+            let setJson = await call({ set: JSON.stringify(json), global: true });
+            eq_(setJson.isError, undefined);
+            eq_(received.global, true);
+            deepEq_(writes[1], { values: json, deep: true });
+            let invalid = [{}, { get: 'settings', set: 'x=1' }, { view: true, local: true, global: true }, { set: '__proto__.polluted=true' }, { get: 'constructor' }, { edit: true }, { set: '{invalid' }, { set: '[]' }, { set: 'missing-assignment' }, { view: 'true' }];
+            for (let args of invalid) {
+                let result = await call(args);
+                eq_(result.isError, true);
+            }
+            eq_(writes.length, 2);
+        } finally {
+            Config.fetch = fetchConfig;
+            AccountsService.getSession = getSession;
+        }
+    },
+
+    async 'config MCP reads fresh values after a file-backed write'() {
+        let getSession = AccountsService.getSession;
+        let path = './test/bin/mcp-config/fresh.json';
+        try {
+            await File.writeAsync(path, { reviewValue: 'before' });
+            AccountsService.getSession = async () => ({ 'config-global': path } as any);
+            Config.clean();
+            let get = () => client.callTool({ name: 'config', arguments: { get: 'reviewValue', local: true } });
+            let before = await get();
+            deepEq_(before.structuredContent, { result: 'before' });
+            let set = await client.callTool({ name: 'config', arguments: { set: 'reviewValue=after', local: true } });
+            eq_(set.isError, undefined);
+            let saved = await File.readAsync<any>(path, { cached: false });
+            eq_(saved.reviewValue, 'after');
+            let after = await get();
+            deepEq_(after.structuredContent, { result: 'after' });
+        } finally {
+            AccountsService.getSession = getSession;
+            Config.clean();
+            if (await File.existsAsync(path)) await File.removeAsync(path);
+        }
     },
 
     async 'gas returns fee data in wei through MCP'() {

@@ -6,6 +6,7 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CConfig } from '@core/commands/list/CConfig';
 import { CGas } from '@core/commands/list/CGas';
 import { CAbi } from '@core/commands/list/CAbi';
 import { CRpc } from '@core/commands/list/CRpc';
@@ -75,6 +76,9 @@ export class ServerService {
         const accounts = CAccounts();
         // Expose account discovery without account creation, imports, or other mutations.
         accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
+        const config = CConfig();
+        // Opening a desktop editor is only available through the CLI.
+        delete config.params['-e, --edit'];
         const mcp = new McpFactory([
             CBlock(),
             CContract(),
@@ -84,7 +88,8 @@ export class ServerService {
             CAbi(),
             CTx(),
             CAuth(),
-            CGas()
+            CGas(),
+            config
         ], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
