@@ -29,6 +29,7 @@ export function CAccounts() {
         subcommands: [
             {
                 command: 'add',
+                mcp: false,
                 api: { method: 'post' },
                 description: [
                     'Add an existing account'
@@ -123,6 +124,7 @@ export function CAccounts() {
             },
             {
                 command: 'remove',
+                mcp: false,
                 description: [
                     'Remove an account'
                 ],
@@ -163,6 +165,7 @@ export function CAccounts() {
             },
             {
                 command: 'new',
+                mcp: false,
                 description: [
                     'Create a new account'
                 ],
@@ -197,6 +200,7 @@ export function CAccounts() {
             },
             {
                 command: 'login',
+                mcp: false,
                 description: [
                     'Set the account as the default'
                 ],
@@ -228,6 +232,7 @@ export function CAccounts() {
             },
             {
                 command: 'backup',
+                mcp: false,
                 arguments: [
                     {
                         name: 'Path',

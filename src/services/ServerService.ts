@@ -1,5 +1,5 @@
 import alot from 'alot';
-import memd  from 'memd';
+import memd from 'memd';
 import { env } from 'atma-io';
 import { Application, HttpResponse, HttpService, middleware } from 'atma-server';
 import { App } from '../app/App';
@@ -28,20 +28,12 @@ export class ServerService {
 
     server: Application | undefined;
 
-    constructor (public app: App) {
+    constructor(public app: App) {
 
     }
 
     @memd.deco.memoize()
-    async createServer (params?: { dev?: boolean }) {
-        const service = ServerCommands.toService([
-            CContract(),
-            CRpc(),
-            CTx(),
-            CBlock(),
-            CAuth(),
-            CAccounts(),
-        ], this.app);
+    async createServer(params?: { dev?: boolean }) {
 
         const debug = Boolean(params?.dev ?? false);
         this.server = await Application.create({
@@ -77,35 +69,22 @@ export class ServerService {
             },
 
         });
-        await this.server.handlers.registerService('^/api', service);
-        const accounts = CAccounts();
-        // Expose account discovery without account creation, imports, or other mutations.
-        accounts.subcommands = accounts.subcommands.filter(command => command.command === 'list');
-        const config = CConfig();
-        // Opening a desktop editor is only available through the CLI.
-        delete config.params['-e, --edit'];
-        const mcp = new McpFactory([
-            CBlock(),
-            CContract(),
-            accounts,
-            CAccount(),
-            CRpc(),
-            CAbi(),
-            CTx(),
-            CAuth(),
-            CGas(),
-            config,
-            CNs(),
-            CDeployment(),
-            CInfo(),
-            CToken(),
-            CTokens()
-        ], this.app);
+
+        const api = ServerCommands.toService(
+            createServerCommands(),
+            this.app
+        )
+        await this.server.handlers.registerService('^/api', api);
+
+        const mcp = new McpFactory(
+            createServerCommands(),
+            this.app
+        );
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;
     }
 
-    async start (params: {
+    async start(params: {
         port: number,
         dev: boolean
     }) {
@@ -220,4 +199,29 @@ namespace ServerCommands {
         //console.log('Routes', routes.map(x => x.path));
         return routes;
     }
+}
+
+function createServerCommands() {
+    const config = CConfig();
+
+    // Opening a desktop editor is only available through the CLI.
+    delete config.params!['-e, --edit'];
+
+    return [
+        CBlock(),
+        CContract(),
+        CAccounts(),
+        CAccount(),
+        CRpc(),
+        CAbi(),
+        CTx(),
+        CAuth(),
+        CGas(),
+        config,
+        CNs(),
+        CDeployment(),
+        CInfo(),
+        CToken(),
+        CTokens()
+    ];
 }
