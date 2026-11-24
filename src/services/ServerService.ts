@@ -35,7 +35,7 @@ export class ServerService {
 
     }
 
-    @memd.deco.memoize()
+    @memd.deco.memoize({ perInstance: true })
     async createServer(params?: { dev?: boolean }) {
 
         const debug = Boolean(params?.dev ?? false);
