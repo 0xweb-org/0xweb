@@ -19,12 +19,22 @@ export function CInfo() {
                     'Show network details'
                 ],
                 params: {
-                    ...Parameters.chain()
+                    ...Parameters.chain(),
+                    '--json': { description: 'Print the chain and node statuses, including syncing details and errors, as JSON' },
                 },
                 async process(args, params, app: App) {
                     let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let client = chainTools.client;
                     let info: IWeb3ClientStatus[] = await client.getNodeInfos();
+
+                    let result = {
+                        chain: client.platform,
+                        nodes: info.map(node => ({
+                            ...node,
+                            ...(node.error ? { error: { name: node.error.name, message: node.error.message } } : {}),
+                        })),
+                    };
+                    if ($console.isJsonOnly() || app.config?.env === 'api') return result;
 
                     $console.table([
                         [
@@ -54,7 +64,7 @@ export function CInfo() {
                                 diffBlock = highestBlock - currentBlock;
                                 status = 'sync';
 
-                                let stages = info.syncing.stages as { stage_name: string, block_number: string | number }[];
+                                let stages = (info.syncing.stages ?? []) as { stage_name: string, block_number: string | number }[];
 
                                 let chars = alot(stages).max(x => x.stage_name.length);
 
@@ -75,7 +85,7 @@ export function CInfo() {
                                 highestBlockStr,
                                 status,
                                 syncingStr,
-                                info.pingMs ? info.pingMs + 'ms' : '',
+                                info.pingMs != null ? info.pingMs + 'ms' : '',
                                 info.peers,
                                 (info.node ?? '—')
                             ];
@@ -88,6 +98,7 @@ export function CInfo() {
                             return rows;
                         }).toArray()
                     ]);
+                    return result;
                 }
             }
         ],

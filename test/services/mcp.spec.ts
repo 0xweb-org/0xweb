@@ -75,7 +75,7 @@ UTest.create({
             'account_balance', 'account_view', 'account_current', 'account_rename', 'rpc',
             'abi_decode-calldata', 'abi_decode-error', 'abi_decode-result', 'abi_decode-log', 'abi_topic0', 'abi_sig',
             'tx_sign', 'tx_send', 'tx_view',
-            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login', 'gas', 'config', 'ns_view', 'deployment_fetch'
+            'auth_2fa_status', 'auth_2fa_disable', 'auth_2fa_setup', 'auth_status', 'auth_login', 'gas', 'config', 'ns_view', 'deployment_fetch', 'info_network'
         ]);
         let decode = tools.find(x => x.name === 'contract_calldata-parse').inputSchema;
         deepEq_(decode.required, ['NameOrAddress', 'calldata']);
