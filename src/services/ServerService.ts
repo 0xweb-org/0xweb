@@ -6,6 +6,8 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CToken } from '@core/commands/list/CToken';
+import { CTokens } from '@core/commands/list/CTokens';
 import { CInfo } from '@core/commands/list/CInfo';
 import { CDeployment } from '@core/commands/list/CDeployment';
 import { CNs } from '@core/commands/list/CNs';
@@ -95,7 +97,9 @@ export class ServerService {
             config,
             CNs(),
             CDeployment(),
-            CInfo()
+            CInfo(),
+            CToken(),
+            CTokens()
         ], this.app);
         this.server.handlers.registerHandler('/mcp', { controller: mcp.createHandler() }, null);
         return this.server;

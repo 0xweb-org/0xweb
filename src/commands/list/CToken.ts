@@ -25,7 +25,7 @@ export function CToken() {
                 ],
                 arguments: [
                     {
-                        name: '<token>',
+                        name: 'token',
                         description: 'Token symbol or address',
                         required: true,
                     }
@@ -33,7 +33,8 @@ export function CToken() {
                 params: {
                     '-b, --block': {
                         description: 'Block number to query. Default: latest',
-                        map: Number
+                        type: 'number',
+                        validate: value => $require.True(Number.isSafeInteger(value) && value >= 0, 'Block must be a non-negative safe integer')
                     }
                 },
                 async process(args: string[], params: any, app: App) {
@@ -59,19 +60,32 @@ export function CToken() {
                         block: params.block,
                     });
 
+                    let result = {
+                        chain: chainTools.client.platform,
+                        token,
+                        ...priceData,
+                        error: priceData.error ? { name: priceData.error.name, message: priceData.error.message } : undefined,
+                    };
+                    if ($console.isJsonOnly() || app.config?.env === 'api') {
+                        return result;
+                    }
                     $console.table([
                         ['Symbol', token.symbol ?? ''],
                         ['Address', token.address],
                         ['Decimals', token.decimals?.toString() ?? ''],
-                        ['Price', `green<${priceData.price}>`]
+                        ['Price', priceData.error?.message ?? `green<${priceData.price}>`]
                     ]);
+                    return result;
                 }
             },
 
         ],
         params: {
+            '--json': { description: 'Print token information as JSON' },
             '-c, --chain': {
-                description: `Default: eth. Available: ${$validate.platforms().join(', ')}`
+                description: `Default: eth. Available: ${$validate.platforms().join(', ')}`,
+                default: 'eth',
+                oneOf: $validate.platforms()
             }
         },
 

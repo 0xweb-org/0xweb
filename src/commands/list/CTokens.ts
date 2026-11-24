@@ -7,7 +7,6 @@ import { $console } from '@core/utils/$console';
 import { IToken } from '@dequanto/models/IToken';
 import { $require } from '@dequanto/utils/$require';
 import { ERC20 } from '@dequanto-contracts/openzeppelin/ERC20';
-import { TokensService } from '@dequanto/tokens/TokensService';
 import { TokenPriceService } from '@dequanto/tokens/TokenPriceService';
 import { $bigint } from '@dequanto/utils/$bigint';
 import { TEth } from '@dequanto/models/TEth';
@@ -31,6 +30,7 @@ export function CTokens() {
                     '-a, --address': {
                         description: 'Token contract address',
                         required: true,
+                        type: 'address',
                         validate: $require.Address,
                     },
                     '-s, --symbol': {
@@ -40,20 +40,23 @@ export function CTokens() {
                     '-d, --decimals': {
                         description: 'Number of token decimals. Default: 18',
                         default: 18,
-                        type: 'number'
+                        type: 'number',
+                        validate: value => $require.True(Number.isInteger(value) && value >= 0 && value <= 255, 'Decimals must be an integer between 0 and 255')
                     }
                 },
                 async process(args: string[], params: any, app: App) {
                     let chainTools = $require.notNull(app?.chain, `Chain not initialized`);
                     let { address, symbol, decimals, chain } = params;
 
-                    await chainTools.tokens.addKnownToken(<IToken>{
+                    let token: IToken = {
                         address,
                         symbol,
                         decimals,
-                        platform: chain
-                    });
+                        platform: chainTools.client.platform
+                    };
+                    await chainTools.tokens.addKnownToken(token);
                     $console.result(`Added token ${symbol} [${address}] in ${chain}`);
+                    return token;
                 }
             },
             {
@@ -64,7 +67,9 @@ export function CTokens() {
                 ],
                 arguments: [
                     {
-                        name: '<symbol>'
+                        name: 'symbol',
+                        description: 'Token symbol or address',
+                        required: true
                     }
                 ],
                 params: {
@@ -75,13 +80,17 @@ export function CTokens() {
                     let [query] = args;
 
                     try {
-                        let token = await chainTools.tokens.getKnownToken(query);
+                        let token = $require.notNull(await chainTools.tokens.getKnownToken(query), `Token '${query}' not found`);
+                        if ($console.isJsonOnly() || app.config?.env === 'api') {
+                            return token;
+                        }
                         $console.table([
                             ['Symbol', token.symbol ?? ''],
                             ['Address', token.address],
                             ['Decimals', token.decimals ?? ''],
                             ['Platform', token.platform],
                         ]);
+                        return token;
                     } catch (error) {
                         throw new Error(`Token '${query}' not found for '${params.chain}'`);
                     }
@@ -95,7 +104,9 @@ export function CTokens() {
                 ],
                 arguments: [
                     {
-                        address: '<address>'
+                        name: 'address',
+                        description: 'Account address',
+                        required: true
                     }
                 ],
                 params: {
@@ -123,7 +134,7 @@ export function CTokens() {
                     $console.log(`Got bold<cyan<${tokenAddresses.length}>> tokens for ${eoa}`);
 
                     $console.toast(`Loading tokens info...`);
-                    let tokensService = di.resolve(TokensService, chainTools.platform);
+                    let tokensService = chainTools.tokens;
                     let tokens = await alot(tokenAddresses)
                         .mapAsync(async address => {
                             return tokensService.getKnownToken(address);
@@ -131,7 +142,7 @@ export function CTokens() {
                         .toArrayAsync({ errors: 'include' });
 
                     let knownTokens = tokens
-                        .filter(x => x instanceof Error === false)
+                        .filter((x): x is IToken => x != null && x instanceof Error === false);
 
                     $console.log(`Got bold<cyan<${knownTokens.length}>> known ERC20 tokens`);
 
@@ -148,11 +159,19 @@ export function CTokens() {
                             return {
                                 token,
                                 balance: $bigint.toEther(balance, token.decimals),
-                                priceInfo
+                                balanceWei: balance.toString(),
+                                priceInfo: {
+                                    ...priceInfo,
+                                    error: priceInfo.error ? { name: priceInfo.error.name, message: priceInfo.error.message } : undefined,
+                                }
                             };
                         })
                         .toArrayAsync();
 
+                    let result = { chain: chainTools.client.platform, address: eoa, balances };
+                    if ($console.isJsonOnly() || app.config?.env === 'api') {
+                        return result;
+                    }
                     let table = balances.map(result => {
                         return [
                             result.token.symbol ?? result.token.name ?? '',
@@ -167,12 +186,14 @@ export function CTokens() {
                         ['Token', 'Address', 'Balance(Ξ)', '$'],
                         ...table,
                     ]);
+                    return result;
                 }
             },
         ],
         params: {
+            '--json': { description: 'Print token information and balances as JSON' },
             '-c, --chain': {
-                description: `Default: eth. Available: ${$validate.platforms().join(', ')}`,
+                description: `Available: ${$validate.platforms().join(', ')}`,
                 required: true,
                 oneOf: $validate.platforms()
             }
