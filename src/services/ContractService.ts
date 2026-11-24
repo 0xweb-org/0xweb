@@ -111,7 +111,9 @@ export class ContractService extends BaseService {
         }
         let abi = await this.getAbi(pkg);
         let abiItem = abi.find(x => x.name === method && x.type === 'function');
-        return abiItem;
+        return $require.notNull(abiItem,
+            `Function "${method}" is not present in the ABI for contract "${pkg.name ?? pkg.address}". `
+            + `Run "0xweb c abi ${pkg.name ?? pkg.address}" to list available functions, or supply an explicit function ABI.`);
     }
 
     async call(nameOrAddress: string, method: string, params: ICallParams, action: 'read' | 'write') {
@@ -122,13 +124,6 @@ export class ContractService extends BaseService {
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
         let abiItem = await this.getAbiItem(method, pkg, params);
-        if (abiItem == null) {
-            let str = [
-                `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
-                `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
-            ].join(' ');
-            throw new Error(str);
-        }
 
         let methodSignature = this.stringifyAbi(abiItem);
         let isRead = typeof action === 'string'
@@ -164,13 +159,6 @@ export class ContractService extends BaseService {
             ? { address: nameOrAddress } as IPackageItem
             : await this.getPackage(nameOrAddress);
         let abiItem = await this.getAbiItem(method, pkg, params);
-        if (abiItem == null) {
-            let str = [
-                `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
-                `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
-            ].join(' ');
-            throw new Error(str);
-        }
 
         let methodSignature = this.stringifyAbi(abiItem);
 
@@ -261,13 +249,6 @@ export class ContractService extends BaseService {
         if (method != null) {
             abiItem = await this.getAbiItem(method, pkg, params);
 
-            if (abiItem == null) {
-                let str = [
-                    `Method ${method} not found. 0xweb c abi ${nameOrAddress} to view available methods.`,
-                    `Or provide the ABI e.g.: 0xweb c read ${nameOrAddress} "decimals() returns (uint16)"`
-                ].join(' ');
-                throw new Error(str);
-            }
             if (abi == null) {
                 abi = [abiItem];
             }
@@ -543,7 +524,19 @@ export class ContractService extends BaseService {
         }
 
         let reader = await this.getContractReader(params);
-        let result = await reader.readAsync(address, abi, ...args);
+        let result;
+        try {
+            result = await reader.readAsync(address, abi, ...args);
+        } catch (error) {
+            if (params.block == null && error.message?.includes('Function call returned undefined')) {
+                const { result: code, error: codeError } = await $promise.caught(this.chain.client.getCode(address));
+                if (codeError == null && (code == null || code === '0x')) {
+                    throw new Error(`No contract bytecode found at ${address} on ${this.chain.client.platform}. `
+                        + `Cannot read "${abi.name}". Check the contract address and chain; the saved deployment may be stale after a local chain reset.`);
+                }
+            }
+            throw error;
+        }
 
         let output = result != null && typeof result === 'object'
             ? JSON.stringify(result, null, '  ')
