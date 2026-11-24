@@ -554,7 +554,7 @@ export function CContract() {
                     },
                 ],
                 params: {
-                    ...Parameters.chain(),
+                    ...Parameters.chain({ required: false }),
                     '--json': {
                         description: 'Print the storage variable layout as a JSON array to stdout'
                     },

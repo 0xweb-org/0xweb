@@ -51,7 +51,17 @@ UTest.create({
         eq_(response.error, undefined);
 
         let result = JSON.parse(response.stdout);
-        deepEq_(result, expected);
+        // Separate CLI runs can generate bindings on opposite sides of a minute boundary.
+        const normalize = value => ({
+            ...value,
+            files: value.files.map(file => ({
+                ...file,
+                content: file.kind === 'binding'
+                    ? file.content.replace(/^( \*  AUTO-Generated Class: )\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?=\r?$)/m, '$1<TIMESTAMP>')
+                    : file.content,
+            })),
+        });
+        deepEq_(normalize(result), normalize(expected));
         eq_(existsSync(resolve(cwd, '0xweb.json')), false);
 
         for (let file of result.files) {

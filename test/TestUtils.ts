@@ -36,6 +36,8 @@ export const TestUtils = {
 
         await File.removeAsync(ACCOUNTS_PATH);
         await File.removeAsync(CONFIG_PATH);
+        await File.removeAsync('./0xc/config/account.json');
+        await File.removeAsync('./0xc/config/accounts.json');
         try { await Directory.removeAsync(HH_CONTRACTS); } catch { }
         try { await Directory.removeAsync(HH_CACHE); } catch { }
         try { await Directory.removeAsync(HH_ASSETS); } catch { }

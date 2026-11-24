@@ -32,7 +32,7 @@ export function CGas() {
                     ? $promise.caught(client.getGasPriorityFee())
                     : null,
             ]);
-            let base = gasData.base ?? block?.result?.value?.baseFeePerGas ?? null;
+            let base = gasData.base ?? block?.result?.baseFeePerGas ?? null;
             let tip = gasData.priority ?? priority?.result ?? null;
             let result = {
                 chain: client.platform,

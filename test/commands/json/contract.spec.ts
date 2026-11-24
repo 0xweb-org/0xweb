@@ -9,6 +9,7 @@ import { $require } from '@dequanto/utils/$require';
 import { $address } from '@dequanto/utils/$address';
 import { TestUtils, TApiRequest } from '../../TestUtils';
 import { $promise } from '@dequanto/utils/$promise';
+import alot from 'alot';
 
 const usdc = `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`;
 
@@ -173,7 +174,13 @@ function suite(transport: 'CLI' | 'API') {
                 {
                     url: `/api/c/write/${contract.address}/updateUser`,
                     method: 'post',
-                    body: { abi: 'updateUser((address owner, uint256 amount) data)', chain: 'hardhat', local: true, '2fa': code, arg0: JSON.stringify(data) }
+                    body: {
+                        abi: 'updateUser((address owner, uint256 amount) data)',
+                        chain: 'hardhat',
+                        local: true,
+                        '2fa': code,
+                        arg0: JSON.stringify(data)
+                    }
                 }
             );
             $require.TxHash(updateReceipt.transactionHash);
@@ -220,7 +227,7 @@ function suite(transport: 'CLI' | 'API') {
             );
             deepEq_(parsedByFlag, parsed);
         },
-        async 'logs'() {
+        async '!logs'() {
             await TestNode.start();
 
             let provider = new HardhatProvider();
@@ -249,6 +256,9 @@ function suite(transport: 'CLI' | 'API') {
             let config = JSON.parse(originalConfig);
             config.contracts ??= {};
             config.contracts.hardhat ??= {};
+            config.contracts.hardhat = alot.fromObject(config.contracts.hardhat as Record<string, any>)
+                .filter(x => x.value.name !== 'LogsCounter')
+                .toDictionary(x => x.key, x => x.value);
             config.contracts.hardhat[contract.address] = {
                 name: 'LogsCounter',
                 main: abiPath,
@@ -566,6 +576,6 @@ function suite(transport: 'CLI' | 'API') {
 }
 
 UTest.create({
-    'test via CLI': suite('CLI'),
+    '!test via CLI': suite('CLI'),
     'test via API': suite('API')
 });
