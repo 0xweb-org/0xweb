@@ -23,6 +23,8 @@ import { CAccount } from '@core/commands/list/CAccount';
 import { CAccounts } from '@core/commands/list/CAccounts';
 import { ServerCommandExecutor } from './ServerCommandExecutor';
 import { McpFactory } from './McpFactory';
+import { OpenApiFactory } from './OpenApiFactory';
+import type { THttpServiceDefinition } from 'atma-server/HttpService/types';
 
 export class ServerService {
 
@@ -129,7 +131,14 @@ namespace ServerCommands {
                 };
             });
 
-        return HttpService(definition);
+        const document = OpenApiFactory.create(apiRoutes);
+        definition['$get /discovery'] = {
+            meta: { origins: '*' },
+            async process() {
+                return new HttpResponse({ content: document, mimeType: 'application/json; charset=utf-8' });
+            },
+        };
+        return HttpService(definition as any as THttpServiceDefinition);
     }
 
     function wrapProcessor(
@@ -149,7 +158,7 @@ namespace ServerCommands {
                 }
                 let named = command.arguments?.findIndex(x => x.name === key) ?? -1;
                 if (named > -1) {
-                    cliArgs[named] = command.arguments[named].query ? params[key] : decodeURIComponent(params[key]);
+                    cliArgs[named] = command.arguments![named].query ? params[key] : decodeURIComponent(params[key]);
                     continue;
                 }
             }

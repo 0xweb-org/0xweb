@@ -165,6 +165,17 @@ The package has the built-in web interface to make the blockchain analyze and in
 0xweb server start
 ```
 
+`GET /api/discovery` returns an OpenAPI 3.1.1 document for the registered HTTP API
+routes, without requiring a chain or account. It describes path/query parameters
+and JSON request bodies, including declared types, defaults, and allowed values.
+POST parameters can also be supplied in the query string; JSON body values take
+precedence. Conditional requirements and CLI examples are included as `x-*`
+extensions. Response schemas remain open because commands do not declare output
+schemas. The document's `info.version` tracks the API description version.
+
+No Swagger SDK or UI is required. Fetch the document from the running server or
+load its URL in an OpenAPI-compatible client.
+
 ## Config
 
 > ❗❣️❗ We include our default KEYs for etherscan/co and infura. They are rate-limited. Please, create and insert your keys. Thank you!
