@@ -6,6 +6,7 @@ import { App } from '../app/App';
 import { ICommand } from '@core/commands/ICommand';
 import { $command } from '@core/commands/utils/$command';
 
+import { CVersion } from '@core/commands/list/CVersion';
 import { CToken } from '@core/commands/list/CToken';
 import { CTokens } from '@core/commands/list/CTokens';
 import { CInfo } from '@core/commands/list/CInfo';
@@ -231,6 +232,7 @@ function createServerCommands() {
         CDeployment(),
         CInfo(),
         CToken(),
-        CTokens()
+        CTokens(),
+        { ...CVersion, command: 'version' }
     ];
 }

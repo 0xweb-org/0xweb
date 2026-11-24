@@ -1,21 +1,27 @@
+import { File, env } from 'atma-io';
 import { UTest } from 'atma-utest';
 import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';
 import { App } from '@core/app/App';
 import { ServerService } from '@core/services/ServerService';
 import { OpenApiFactory } from '@core/services/OpenApiFactory';
+import { middleware } from 'atma-server';
 import { ICommand } from '@core/commands/ICommand';
 
+const applicationDir = env.applicationDir;
 let http: Server;
 let endpoint: string;
 UTest.create({
     async $before() {
+        env.applicationDir = env.currentDir;
         const app = await new ServerService(new App()).createServer();
+        app.processor({ middleware: [middleware.bodyJson()] });
         http = createServer((req, res) => app.process(req, res));
         await new Promise<void>(resolve => http.listen(0, '127.0.0.1', resolve));
         endpoint = `http://127.0.0.1:${(http.address() as AddressInfo).port}`;
     },
     async $after() {
+        env.applicationDir = applicationDir;
         await new Promise<void>((resolve, reject) => http.close(error => error ? reject(error) : resolve()));
     },
     async 'discovery returns OpenAPI without chain or credentials'() {
@@ -64,6 +70,22 @@ UTest.create({
         }
         const post = await fetch(`${endpoint}/api/discovery`, { method: 'POST' });
         eq_(post.status >= 400, true);
+    },
+    async 'version endpoint exposes package metadata and stays out of MCP'() {
+        const pkg = await File.readAsync<any>('./package.json');
+        const response = await fetch(`${endpoint}/api/version`);
+        eq_(response.status, 200);
+        deepEq_(await response.json(), { name: pkg.name, version: pkg.version });
+        const doc = await (await fetch(`${endpoint}/api/discovery`)).json();
+        notEq_(doc.paths['/version'].get, undefined);
+        eq_(doc.paths['/v'], undefined);
+        const responseMcp = await fetch(`${endpoint}/mcp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+        });
+        const message = await responseMcp.json();
+        eq_(message.result.tools.some(x => x.name === 'version' || x.name === 'v'), false);
     },
     'schema generation preserves types and conditional requirements'() {
         const command: ICommand = {
